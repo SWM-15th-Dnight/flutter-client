@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_client/widget/bottom_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:logger/web.dart';
 
@@ -41,6 +42,6 @@ class App extends StatelessWidget {
               fontFamily: 'NotoSans',
             ),
             debugShowCheckedModeBanner: false,
-            home: LoginScreen()));
+            home: BottomBar()));
   }
 }
