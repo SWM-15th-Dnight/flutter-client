@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:logger/web.dart';
 
 import 'package:mobile_client/app_state.dart';
-import 'package:mobile_client/user/view/login_screen.dart';
+import 'package:mobile_client/screens/login.dart';
 
 import 'firebase_options.dart';
 
