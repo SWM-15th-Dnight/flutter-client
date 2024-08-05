@@ -1,50 +1,55 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:mobile_client/entities/user.dart';
 
 User? user;
 String? idToken; // Firebase Auth, idToken;
 
-class AppState extends ChangeNotifier {
+class FBAuthService {
+  FBAuthService();
+
   // TableCalendar
-  final CalendarFormat calendarFormat = CalendarFormat.month;
-  DateTime focusedDay = DateTime(DateTime.now().year, DateTime.now().month, 1);
-  DateTime? selectedDay;
+  // final CalendarFormat calendarFormat = CalendarFormat.month;
+  // DateTime focusedDay = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  // DateTime? selectedDay;
 
-  Future<void> UpdateFocusedDay(DateTime focusedDay) async {
-    print('onPageChanged: $focusedDay, $focusedDay');
-    //_focusedDay = focusedDay;
+  // Future<void> UpdateFocusedDay(DateTime focusedDay) async {
+  //   print('onPageChanged: $focusedDay, $focusedDay');
+  //   //_focusedDay = focusedDay;
 
-    if (focusedDay == DateTime.now().month) {
-      focusedDay = DateTime.now();
-    } else {
-      focusedDay = DateTime(focusedDay.year, focusedDay.month, 1);
-    }
-    print('result: $focusedDay');
-    notifyListeners();
+  //   if (focusedDay == DateTime.now().month) {
+  //     focusedDay = DateTime.now();
+  //   } else {
+  //     focusedDay = DateTime(focusedDay.year, focusedDay.month, 1);
+  //   }
+  //   print('result: $focusedDay');
+  // }
+
+  /// 현재 사용자가 로그인되어 있는지 확인합니다.
+  bool isSignedIn() {
+    return getCurrentUser() != null;
   }
 
-  Future<void> signIn(String provider) async {
-    idToken = null; // init when login
-    if (provider == 'google') {
-      user = await signInWithGoogle();
-    } else if (provider == 'microsoft') {
-      user = await signInWithMicrosoft();
-    }
-    idToken = await user?.getIdToken();
-    notifyListeners();
+  /// 사용자 인증 상태 변화를 스트림으로 반환합니다.
+  Stream<FBUser?> getUserStream() {
+    return FirebaseAuth.instance.authStateChanges().map((User? user) {
+      return user?.toFBUser();
+    });
   }
 
-  Future<void> signOut() async {
-    await FirebaseAuth.instance.signOut();
-    user = null;
-    notifyListeners();
+  /// 현재 인증된 사용자를 가져옵니다. (있다면)
+  FBUser? getCurrentUser() {
+    return FirebaseAuth.instance.currentUser?.toFBUser();
   }
 
-  Future<User?> signInWithGoogle() async {
+  /// 현재 세션의 JWT 액세스 토큰을 가져옵니다.
+  Future<String?>? getJWTToken() {
+    return FirebaseAuth.instance.currentUser?.getIdToken();
+  }
+
+  Future<bool> signInWithGoogle() async {
     try {
       // Sign out from any existing Google account
       await GoogleSignIn(signInOption: SignInOption.standard).signOut();
@@ -68,19 +73,21 @@ class AppState extends ChangeNotifier {
         idToken: googleAuth?.idToken,
       );
 
-      printLongString("(test) google's idToken: ${googleAuth?.idToken}");
-
       // Once signed in, return the UserCredential
       return await FirebaseAuth.instance
           .signInWithCredential(credential)
-          .then((userCredential) => userCredential.user);
+          .then((userCredential) {
+        userCredential.user?.toFBUser();
+
+        return true;
+      });
     } catch (e) {
       print(e);
-      return null;
+      return false;
     }
   }
 
-  Future<User?> signInWithMicrosoft() async {
+  Future<bool?> signInWithMicrosoft() async {
     try {
       final microsoftProvider = OAuthProvider('microsoft.com');
       final String tenant = dotenv.env['MS_TENANT_ID']!;
@@ -96,15 +103,14 @@ class AppState extends ChangeNotifier {
             await FirebaseAuth.instance.signInWithProvider(microsoftProvider);
       }
 
-      return userCredential.user;
+      return true;
     } catch (e) {
       print(e);
-      return null;
+      return false;
     }
   }
-}
 
-void printLongString(String text) {
-  final RegExp pattern = RegExp('.{1,800}'); // Adjust the chunk size as needed
-  pattern.allMatches(text).forEach((match) => print(match.group(0)));
+  Future<void> signOut() async {
+    return await FirebaseAuth.instance.signOut();
+  }
 }

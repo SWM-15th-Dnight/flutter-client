@@ -134,6 +134,9 @@ flutter:
           weight: 300
         - asset: asset/fonts/english/Roboto-Thin.ttf
           weight: 100
+    - family: Rockwell
+      fonts:
+        - asset: asset/fonts/english/Rockwell.ttc
     - family: TestFamily
       fonts:
         - asset: asset/fonts/SCDream1.otf

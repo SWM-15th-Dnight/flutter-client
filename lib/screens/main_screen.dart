@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../app_state.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -24,7 +23,6 @@ class _MainScreen extends State<MainScreen> {
       print('Signed null currentUser error');
     }
 
-    printLongString('idToken: ${idToken}');
     return Scaffold(
         appBar: AppBar(
           title: Text('Calinify'),
