@@ -60,8 +60,10 @@ class FBAuthService {
       ];
 
       // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser =
-          await GoogleSignIn(signInOption: SignInOption.standard).signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+        signInOption: SignInOption.standard,
+        scopes: scopes,
+      ).signIn();
 
       // Obtain the auth details from the request
       final GoogleSignInAuthentication? googleAuth =

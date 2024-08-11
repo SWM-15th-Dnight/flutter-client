@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_client/screens/calendar/calendar_view.dart';
 import 'package:mobile_client/screens/home/home_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +27,16 @@ class HomeView extends StatelessWidget {
                     viewModel.signOut();
                   },
                   child: Text('로그아웃'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => CalendarView(),
+                      ),
+                    );
+                  },
+                  child: Text('캘린더보기'),
                 ),
               ],
             ),

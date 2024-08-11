@@ -30,7 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   //crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _Logo(),
+                    const SizedBox(height: 20),
                     _Title(),
+                    const SizedBox(height: 20),
                     _StartButton(),
                   ],
                 ),
@@ -124,74 +126,121 @@ class _StartButton extends StatelessWidget {
     // var appState = context.watch<AppState>();
     var viewModel = Provider.of<SignInViewModel>(context);
 
-    return ElevatedButton(
-      onPressed: () {
-        showModalBottomSheet<void>(
-          context: context,
-          builder: (BuildContext context) {
-            return Container(
-                height: 200,
-                color: BG_COLOR,
-                child: Center(
+    return SizedBox(
+      width: 185,
+      child: ElevatedButton(
+        onPressed: () {
+          showModalBottomSheet<void>(
+            context: context,
+            builder: (BuildContext context) {
+              return ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16.0),
+                  topRight: Radius.circular(16.0),
+                ),
+                child: Container(
+                  height: 200,
+                  color: BG_COLOR,
+                  child: Center(
                     child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        viewModel.signInWithGoogle();
-                        Navigator.pop(context);
-                      },
-                      icon: SvgPicture.asset(
-                        'assets/images/google_logo.svg',
-                        width: 24,
-                        height: 24,
-                      ),
-                      label: const Text.rich(
-                        TextSpan(children: [
-                          TextSpan(
-                              text: 'Google',
-                              style: TextStyle(
-                                fontFamily: 'Rockwell',
-                                fontWeight: FontWeight.normal,
-                              )),
-                          TextSpan(
-                            text: '로 계속하기',
-                          )
-                        ]),
-                      ),
+                      //mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        // Align(
+                        //   alignment: Alignment.topCenter,
+                        //   child: Container(
+                        //     width: 40,
+                        //     height: 5,
+                        //     margin: const EdgeInsets.only(bottom: 10),
+                        //     decoration: BoxDecoration(
+                        //       color: Colors.grey[300],
+                        //       borderRadius: BorderRadius.circular(10),
+                        //     ),
+                        //   ),
+                        // ),
+                        Center(
+                          child: Column(
+                            children: <Widget>[
+                              SizedBox(
+                                width: 220,
+                                height: 40,
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    viewModel.signInWithGoogle();
+                                    Navigator.pop(context);
+                                  },
+                                  icon: SvgPicture.asset(
+                                    'assets/images/google_logo.svg',
+                                    width: 24,
+                                    height: 24,
+                                  ),
+                                  label: const Text.rich(
+                                    TextSpan(children: [
+                                      TextSpan(
+                                        text: 'Google',
+                                        style: TextStyle(
+                                            // fontFamily: 'Rockwell',
+                                            // fontWeight: FontWeight.normal,
+                                            ),
+                                      ),
+                                      TextSpan(
+                                        text: '로 계속하기',
+                                      )
+                                    ]),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8.0))),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: 220,
+                                height: 40,
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    viewModel.signInWithMicrosoft();
+                                    Navigator.pop(context);
+                                  },
+                                  icon: SvgPicture.asset(
+                                    'assets/images/microsoft_logo.svg',
+                                    width: 24,
+                                    height: 24,
+                                  ),
+                                  label: const Text('Microsoft로 계속하기'),
+                                  style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8.0))),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        viewModel.signInWithMicrosoft();
-                        Navigator.pop(context);
-                      },
-                      icon: SvgPicture.asset(
-                        'assets/images/microsoft_logo.svg',
-                        width: 24,
-                        height: 24,
-                      ),
-                      label: const Text('Microsoft로 계속하기'),
-                    ),
-                  ],
-                )));
-          },
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-        // backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(5.0),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
+          // backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
         ),
-      ),
-      child: Text(
-        '시작',
-        style: TextStyle(
-          color: ColorPalette.GRAY_COLOR[50]!,
-          fontSize: 18,
-          fontWeight: FontWeight.w500,
+        child: Text(
+          '시작',
+          style: TextStyle(
+            color: ColorPalette.GRAY_COLOR[50]!,
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );

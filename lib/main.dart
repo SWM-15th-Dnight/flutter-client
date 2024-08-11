@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:mobile_client/common/view/splash_screen.dart';
 import 'package:mobile_client/screens/home/home_view_model.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
 import 'package:mobile_client/screens/root/root_view_model.dart';
@@ -12,6 +14,8 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
+
   await dotenv.load(fileName: '.env');
 
   await Firebase.initializeApp(
@@ -42,7 +46,7 @@ class _App extends StatelessWidget {
         fontFamily: 'NotoSans',
       ),
       debugShowCheckedModeBanner: false,
-      home: const RootView(),
+      home: const SplashScreen(),
     );
   }
 }
