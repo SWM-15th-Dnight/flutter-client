@@ -60,15 +60,12 @@ class _CalendarViewState extends State<CalendarView>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) {
       setState(() {
         _currentUser = account;
-
         if (_currentUser != null) {
           _getCalendarList();
-          //getGoogleEventsData();
         }
       });
     });
@@ -76,7 +73,6 @@ class _CalendarViewState extends State<CalendarView>
       if (account != null) {
         setState(() {
           _currentUser = account;
-          _getCalendarList();
         });
       }
     });
