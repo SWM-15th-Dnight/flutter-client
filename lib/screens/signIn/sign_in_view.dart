@@ -127,7 +127,7 @@ class _StartButton extends StatelessWidget {
     var viewModel = Provider.of<SignInViewModel>(context);
 
     return SizedBox(
-      width: 185,
+      width: MediaQuery.of(context).size.width * 0.45,
       child: ElevatedButton(
         onPressed: () {
           showModalBottomSheet<void>(
@@ -139,87 +139,86 @@ class _StartButton extends StatelessWidget {
                   topRight: Radius.circular(16.0),
                 ),
                 child: Container(
-                  height: 200,
-                  color: BG_COLOR,
-                  child: Center(
-                    child: Column(
-                      //mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        // Align(
-                        //   alignment: Alignment.topCenter,
-                        //   child: Container(
-                        //     width: 40,
-                        //     height: 5,
-                        //     margin: const EdgeInsets.only(bottom: 10),
-                        //     decoration: BoxDecoration(
-                        //       color: Colors.grey[300],
-                        //       borderRadius: BorderRadius.circular(10),
-                        //     ),
-                        //   ),
-                        // ),
-                        Center(
-                          child: Column(
-                            children: <Widget>[
-                              SizedBox(
-                                width: 220,
-                                height: 40,
-                                child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    viewModel.signInWithGoogle();
-                                    Navigator.pop(context);
-                                  },
-                                  icon: SvgPicture.asset(
-                                    'assets/images/google_logo.svg',
-                                    width: 24,
-                                    height: 24,
-                                  ),
-                                  label: const Text.rich(
-                                    TextSpan(children: [
-                                      TextSpan(
-                                        text: 'Google',
-                                        style: TextStyle(
-                                            // fontFamily: 'Rockwell',
-                                            // fontWeight: FontWeight.normal,
-                                            ),
-                                      ),
-                                      TextSpan(
-                                        text: '로 계속하기',
-                                      )
-                                    ]),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0))),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              SizedBox(
-                                width: 220,
-                                height: 40,
-                                child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    viewModel.signInWithMicrosoft();
-                                    Navigator.pop(context);
-                                  },
-                                  icon: SvgPicture.asset(
-                                    'assets/images/microsoft_logo.svg',
-                                    width: 24,
-                                    height: 24,
-                                  ),
-                                  label: const Text('Microsoft로 계속하기'),
-                                  style: ElevatedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0))),
-                                ),
-                              ),
-                            ],
+                  height: MediaQuery.of(context).size.height * 0.25,
+                  width: double.infinity,
+                  // color: BG_COLOR,
+                  child: Column(
+                    //mainAxisAlignment: MainAxisAlignment.center,
+                    //mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: Container(
+                          width: 40,
+                          height: 2,
+                          margin: const EdgeInsets.only(top: 8),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFAAAAAA),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      Spacer(),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.55,
+                        height: 40,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            viewModel.signInWithGoogle();
+                            Navigator.pop(context);
+                          },
+                          icon: SvgPicture.asset(
+                            'assets/images/google_logo.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text.rich(
+                            TextSpan(children: [
+                              TextSpan(
+                                text: 'Google로 계속하기',
+                                style: TextStyle(
+                                  color: Color(0xFFF7F8F9),
+                                  // fontFamily: 'Rockwell',
+                                  // fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ]),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.0))),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.55,
+                        height: 40,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            viewModel.signInWithMicrosoft();
+                            Navigator.pop(context);
+                          },
+                          icon: SvgPicture.asset(
+                            'assets/images/microsoft_logo.svg',
+                            width: 24,
+                            height: 24,
+                          ),
+                          label: const Text(
+                            'Microsoft로 계속하기',
+                            style: TextStyle(
+                              color: Color(0xFFF7F8F9),
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  ColorPalette.SECONDARY_COLOR[400]!,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.0))),
+                        ),
+                      ),
+                      Spacer(),
+                    ],
                   ),
                 ),
               );
