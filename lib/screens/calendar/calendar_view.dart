@@ -53,29 +53,16 @@ class _CalendarViewState extends State<CalendarView>
   );
 
   GoogleSignInAccount? _currentUser;
-  Map<String, dynamic>? cals;
+  late Future<Map<String, dynamic>?> _calendarData;
 
   final String timeMin = '2024-08-01T00:00:00Z';
-  final String timeMax = '2024-08-11T23:59:59Z';
+  final String timeMax = '2024-08-31T23:59:59Z';
 
   @override
   void initState() {
     super.initState();
-    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) {
-      setState(() {
-        _currentUser = account;
-        if (_currentUser != null) {
-          _getCalendarList();
-        }
-      });
-    });
-    _googleSignIn.signIn().then((GoogleSignInAccount? account) {
-      if (account != null) {
-        setState(() {
-          _currentUser = account;
-        });
-      }
-    });
+    print('=================================================== initState');
+    fetchAndSignIn();
   }
 
   @override
@@ -112,25 +99,56 @@ class _CalendarViewState extends State<CalendarView>
     );
   }
 
-  void _getCalendarList() async {
+  Future<Map<String, dynamic>> fetchCalendarData() async {
+    print(
+        '=================================================== start fetchCalendarData');
     http.Client client = http.Client();
     var headers = await _currentUser?.authHeaders;
     var resp = await client.get(Uri.parse(
             // "https://www.googleapis.com/calendar/v3/users/me/calendarList"),
             "https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${timeMin}&timeMax=${timeMax}"),
         headers: headers);
-    cals = jsonDecode(resp.body);
+    print('status code: ${resp.statusCode}');
+    return jsonDecode(resp.body) as Map<String, dynamic>;
     print('====================');
     print('headers: ${headers}');
-    print(cals);
+    // print(_calendarData);
     print('====================');
-    // for (var i = 0; i < cals?['items'].length; i++) {
-    //   print(cals?['items'][i]['summary']);
+    // for (var i = 0; i < _calendarData?['items'].length; i++) {
+    //   print(_calendarData?['items'][i]['summary']);
+    // }
+  }
+
+  Future<void> fetchAndSignIn() async {
+    await _googleSignIn.onCurrentUserChanged
+        .listen((GoogleSignInAccount? account) {
+      setState(() {
+        _currentUser = account;
+        if (_currentUser != null) {
+          _calendarData = fetchCalendarData();
+          print(
+              '=================================================== end fetchCalendarData');
+        }
+      });
+    });
+    await _googleSignIn.signIn().then((GoogleSignInAccount? account) {
+      if (account != null) {
+        setState(() {
+          _currentUser = account;
+        });
+      }
+    });
+
+    // final GoogleSignIn _googleSignIn = GoogleSignIn();
+    // _currentUser = await _googleSignIn.signInSilently();
+    // if (_currentUser == null) {
+    //   _currentUser = await _googleSignIn.signIn();
     // }
   }
 
   @override
   Widget build(BuildContext context) {
+    print('=================================================== build');
     return Scaffold(
       floatingActionButton: SpeedDial(
         backgroundColor: ColorPalette.PRIMARY_COLOR[400],
@@ -178,41 +196,45 @@ class _CalendarViewState extends State<CalendarView>
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              //color: Colors.red.withOpacity(0.3),
-              child: CustomHeader(
-                focusedDay: _focusedDay,
-                onSidebarButtonPressed: () {
-                  _showSidebarModal(context);
-                },
-                onProfileButtonPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => PreferenceView(),
+        child: FutureBuilder(
+            future: _calendarData,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+              // else if (snapshot.hasError) {
+              //   return Center(child: Text('Error: ${snapshot.error}'));
+              // }
+
+              else if (snapshot.hasData) {
+                final cals = snapshot.data!;
+                return Column(
+                  children: [
+                    Container(
+                      //color: Colors.red.withOpacity(0.3),
+                      child: CustomHeader(
+                        focusedDay: _focusedDay,
+                        onSidebarButtonPressed: () {
+                          _showSidebarModal(context);
+                        },
+                        onProfileButtonPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => PreferenceView(),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  );
-                },
-              ),
-            ),
-            MainCalendar(
-                // selectedDate: selectedDate, // 선택된 날짜 전달하기
-                // // 날짜가 선택됐을 때 실행할 함수
-                // onDaySelected: onDaySelected,
-                ),
-            const SizedBox(height: 16.0),
-            // TodayBanner
-            const SizedBox(height: 16.0),
-            // ScheduleCard
-            // TODO. delete Expanded
-            // Expanded(
-            //   child: Text(
-            //     'Expanded',
-            //   ),
-            // ),
-          ],
-        ),
+                    MainCalendar(cals: cals),
+                  ],
+                );
+              } else {
+                return Center(child: Text('No data available'));
+              }
+            }),
       ),
     );
   }
