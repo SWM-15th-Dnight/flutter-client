@@ -44,8 +44,6 @@ class _CalendarViewState extends State<CalendarView>
   ];
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    // clientId:
-    //     '395329198158-om6u5im4g5lul9nossmlg7fk43tfclq2.apps.googleusercontent.com',
     //scopes: <String>[GoogleAPI.CalendarApi.calendarScope],
     scopes: [
       'https://www.googleapis.com/auth/calendar',
