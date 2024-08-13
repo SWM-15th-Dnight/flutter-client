@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_client/entities/user.dart';
 import 'package:mobile_client/screens/calendar/calendar_view.dart';
+import 'package:mobile_client/screens/calendar/main_calendar.dart';
 import 'package:mobile_client/screens/calendar/sfc_view.dart';
 import 'package:mobile_client/screens/home/home_view.dart';
 import 'package:mobile_client/screens/home/home_view_model.dart';
@@ -25,7 +26,7 @@ class RootView extends StatelessWidget {
                 ChangeNotifierProvider(
                     create: (BuildContext content) => HomeViewModel())
               ],
-              child: CalendarView(),
+              child: MainCalendar(fbUser: snapshot.data!),
             );
           } else {
             return MultiProvider(

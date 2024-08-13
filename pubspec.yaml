@@ -103,8 +103,6 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 
   assets:
-    - assets/images/google_logo.svg
-    - assets/images/microsoft_logo.svg
     - .env
     - asset/img/logo/
     - asset/svg/icon/

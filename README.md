@@ -6,7 +6,7 @@
 - feat: monthly view with dummy data
 - feat: layout LoginScreen in ratio
 - feat: avoid redundancy of _getCalendarList
-- feat: 
+- feat: display the number of daily events in monthly view
 
 ### 1. Read
 

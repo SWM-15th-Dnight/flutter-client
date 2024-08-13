@@ -30,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
       child: SizedBox(
         width: MediaQuery.of(context).size.width,
-        child: Column(
+        child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Calinify',

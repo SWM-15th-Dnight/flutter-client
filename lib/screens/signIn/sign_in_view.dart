@@ -168,7 +168,7 @@ class _StartButton extends StatelessWidget {
                             Navigator.pop(context);
                           },
                           icon: SvgPicture.asset(
-                            'assets/images/google_logo.svg',
+                            'asset/img/logo/google_logo.svg',
                             width: 24,
                             height: 24,
                           ),
@@ -200,7 +200,7 @@ class _StartButton extends StatelessWidget {
                             Navigator.pop(context);
                           },
                           icon: SvgPicture.asset(
-                            'assets/images/microsoft_logo.svg',
+                            'asset/img/logo/microsoft_logo.svg',
                             width: 24,
                             height: 24,
                           ),
