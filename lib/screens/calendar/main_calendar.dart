@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -28,7 +29,9 @@ class _MainCalendarState extends State<MainCalendar> {
   DateTime _focusedDay = DateTime.now();
 
   // TODO. delete dummy data
-  final Map<String, dynamic> cals = {
+  late final Future<Map<String, dynamic>> cals;
+  /*
+  {
     'items': [
       {
         'start': {'dateTime': '2024-08-01T10:00:00Z'},
@@ -40,6 +43,7 @@ class _MainCalendarState extends State<MainCalendar> {
       }
     ]
   };
+  */
   // final Map<DateTime, List<Event>> events = {
   //   // DateTime(2024, 08, 01): ['Event 1', 'Event 2', 'Event 3'],
   //   // DateTime(2024, 08, 02): ['Event 4', 'Event 5'],
@@ -49,7 +53,7 @@ class _MainCalendarState extends State<MainCalendar> {
   @override
   void initState() {
     super.initState();
-    fetchCalendarData();
+    cals = fetchCalendarData();
   }
 
   @override
@@ -82,27 +86,37 @@ class _MainCalendarState extends State<MainCalendar> {
           "https://www.googleapis.com/calendar/v3/calendars/primary/events",
         ),
         headers: headers);
+
+    if (resp.statusCode == 403) {
+      headers = await widget.fbUser.getAuthHeader();
+      resp = await client.get(
+          Uri.parse(
+            "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+          ),
+          headers: headers);
+    }
+
+    print('headers: $headers');
     print('status code: ${resp.statusCode}');
+    print('body: ${resp.body}');
+    print(
+        '${widget.fbUser.email} ${widget.fbUser.displayName} ${widget.fbUser.uid}');
+
     return jsonDecode(resp.body) as Map<String, dynamic>;
   }
 
   @override
   Widget build(BuildContext context) {
     /*
-
-
-if (events[DateFormat('yyyy-MM-dd').format(day)] !=
-    null) {
-  eventTitle =
-      '${events[DateFormat('yyyy-MM-dd').format(day)]!.length}';
-}
-
-
-          //if (cals?['item']['start'])
-*/
+    if (events[DateFormat('yyyy-MM-dd').format(day)] !=
+        null) {
+      eventTitle =
+          '${events[DateFormat('yyyy-MM-dd').format(day)]!.length}';
+    }
+    if (cals?['item']['start'])
+    */
 
     /*
-
     Map<String, List<Map<String, dynamic>>> events = {};
     if (cals['items'] == null) {
       return Container();

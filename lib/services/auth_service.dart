@@ -20,6 +20,7 @@ class FBAuthService {
 
   /// 사용자 인증 상태 변화를 스트림으로 반환합니다.
   Stream<FBUser?> getUserStream() {
+    print('getUserStream');
     return FirebaseAuth.instance.authStateChanges().map((User? user) {
       return user?.toFBUser(
         googleSignInAccount: googleUser,
@@ -52,6 +53,7 @@ class FBAuthService {
   }
 
   Future<bool> signInWithGoogle() async {
+    print('call check call check call check call check call check');
     try {
       // Sign out from any existing Google account
       await GoogleSignIn(signInOption: SignInOption.standard).signOut();
