@@ -2,30 +2,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+
 import 'package:mobile_client/entities/user.dart';
 
 User? user;
-String? idToken; // Firebase Auth, idToken;
+String? idToken;
+GoogleSignInAccount? googleUser;
+Map<String, String>? authHeaders;
 
 class FBAuthService {
   FBAuthService();
-
-  // TableCalendar
-  // final CalendarFormat calendarFormat = CalendarFormat.month;
-  // DateTime focusedDay = DateTime(DateTime.now().year, DateTime.now().month, 1);
-  // DateTime? selectedDay;
-
-  // Future<void> UpdateFocusedDay(DateTime focusedDay) async {
-  //   print('onPageChanged: $focusedDay, $focusedDay');
-  //   //_focusedDay = focusedDay;
-
-  //   if (focusedDay == DateTime.now().month) {
-  //     focusedDay = DateTime.now();
-  //   } else {
-  //     focusedDay = DateTime(focusedDay.year, focusedDay.month, 1);
-  //   }
-  //   print('result: $focusedDay');
-  // }
 
   /// 현재 사용자가 로그인되어 있는지 확인합니다.
   bool isSignedIn() {
@@ -35,7 +21,11 @@ class FBAuthService {
   /// 사용자 인증 상태 변화를 스트림으로 반환합니다.
   Stream<FBUser?> getUserStream() {
     return FirebaseAuth.instance.authStateChanges().map((User? user) {
-      return user?.toFBUser();
+      return user?.toFBUser(
+        googleSignInAccount: googleUser,
+        authHeaders: authHeaders,
+        idToken: idToken,
+      );
     });
   }
 
@@ -49,6 +39,18 @@ class FBAuthService {
     return FirebaseAuth.instance.currentUser?.getIdToken();
   }
 
+  Future<Map<String, String>> getAuthHeader() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      idToken = await user.getIdToken();
+      return {
+        'Authorization': 'Bearer $idToken',
+      };
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
   Future<bool> signInWithGoogle() async {
     try {
       // Sign out from any existing Google account
@@ -60,7 +62,7 @@ class FBAuthService {
       ];
 
       // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+      googleUser = await GoogleSignIn(
         signInOption: SignInOption.standard,
         scopes: scopes,
       ).signIn();
@@ -78,7 +80,11 @@ class FBAuthService {
       // Once signed in, return the UserCredential
       return await FirebaseAuth.instance
           .signInWithCredential(credential)
-          .then((userCredential) {
+          .then((userCredential) async {
+        // user = userCredential.user;
+        // idToken = googleAuth?.idToken;
+        idToken = await userCredential.user?.getIdToken();
+        authHeaders = await googleUser?.authHeaders;
         userCredential.user?.toFBUser();
 
         return true;

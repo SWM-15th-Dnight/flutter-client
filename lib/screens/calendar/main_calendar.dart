@@ -1,13 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:mobile_client/common/const/color.dart';
-import 'package:mobile_client/entities/user.dart';
-import 'package:mobile_client/screens/calendar/event.dart';
-import 'package:mobile_client/screens/calendar/schedule_bottom_sheet.dart';
-import 'package:mobile_client/widget/custom_sidebar_modal.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import 'package:mobile_client/common/const/color.dart';
+import 'package:mobile_client/entities/user.dart';
+import 'package:mobile_client/widget/custom_sidebar_modal.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
 
@@ -24,10 +24,10 @@ class MainCalendar extends StatefulWidget {
 }
 
 class _MainCalendarState extends State<MainCalendar> {
-  //OnDaySelected onDaySelected; // ➊ 날짜 선택 시 실행할 함수
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
 
+  // TODO. delete dummy data
   final Map<String, dynamic> cals = {
     'items': [
       {
@@ -40,7 +40,6 @@ class _MainCalendarState extends State<MainCalendar> {
       }
     ]
   };
-
   // final Map<DateTime, List<Event>> events = {
   //   // DateTime(2024, 08, 01): ['Event 1', 'Event 2', 'Event 3'],
   //   // DateTime(2024, 08, 02): ['Event 4', 'Event 5'],
@@ -49,15 +48,12 @@ class _MainCalendarState extends State<MainCalendar> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    print(widget.fbUser.uid);
-    print(widget.fbUser.photoURL);
+    fetchCalendarData();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -78,9 +74,35 @@ class _MainCalendarState extends State<MainCalendar> {
     }
   }
 
+  Future<Map<String, dynamic>> fetchCalendarData() async {
+    http.Client client = http.Client();
+    var headers = await widget.fbUser.authHeaders;
+    var resp = await client.get(
+        Uri.parse(
+          "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        ),
+        headers: headers);
+    print('status code: ${resp.statusCode}');
+    return jsonDecode(resp.body) as Map<String, dynamic>;
+  }
+
   @override
   Widget build(BuildContext context) {
     /*
+
+
+if (events[DateFormat('yyyy-MM-dd').format(day)] !=
+    null) {
+  eventTitle =
+      '${events[DateFormat('yyyy-MM-dd').format(day)]!.length}';
+}
+
+
+          //if (cals?['item']['start'])
+*/
+
+    /*
+
     Map<String, List<Map<String, dynamic>>> events = {};
     if (cals['items'] == null) {
       return Container();
@@ -108,10 +130,6 @@ class _MainCalendarState extends State<MainCalendar> {
     }
     */
 
-    final screenHeight = MediaQuery.of(context).size.height;
-    final calendarHeight = screenHeight * 0.7;
-    //final cellWidth = constraints.maxWidth / 7;
-
     return Scaffold(
       floatingActionButton: const Align(
         alignment: Alignment(0.96, 0.99),
@@ -128,30 +146,25 @@ class _MainCalendarState extends State<MainCalendar> {
               onProfileButtonPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) =>
-                        PreferenceView(photoURL: widget.fbUser.photoURL),
+                    builder: (_) => PreferenceView(fbUser: widget.fbUser),
                   ),
                 );
               },
               photoURL: widget.fbUser.photoURL,
             ),
             Flexible(
-              //height: 600,
               flex: 10,
-              //color: Colors.blue.withOpacity(0.3),
-              //     final cellHeight = calendarHeight / 6;
               child: TableCalendar(
                 locale: 'ko_KR',
-                shouldFillViewport:
-                    true, // notice. TableCalendar should be in Container
+                // notice. TableCalendar should be in Container
+                shouldFillViewport: true,
                 focusedDay: _focusedDay,
                 firstDay: DateTime.utc(1800, 1, 1),
                 lastDay: DateTime.utc(3000, 1, 1),
                 onPageChanged: _onPageChanged,
                 daysOfWeekHeight: 30.0,
-                daysOfWeekStyle: DaysOfWeekStyle(
-                    //weekendStyle: TextStyle(color: Colors.red),
-                    ),
+                // TODO. WeekDays' Style
+                daysOfWeekStyle: DaysOfWeekStyle(),
                 calendarStyle: CalendarStyle(
                   defaultTextStyle: TextStyle(color: Colors.black),
                   //weekendTextStyle: TextStyle(color: Colors.red),
@@ -160,11 +173,9 @@ class _MainCalendarState extends State<MainCalendar> {
                 headerVisible: false,
                 headerStyle: HeaderStyle(
                   titleCentered: true,
-                  formatButtonVisible:
-                      false, // 달력 크기 선택 옵션 없애기 (ex. 2 Weeks button)
-                  // ex. 2024년 8월 -> 8월, import intl
-                  // titleTextFormatter: (date, locale) =>
-                  //     DateFormat.MMMM(locale).format(date),
+                  // delete calendar view mode button
+                  // ex. 2 Weeks
+                  formatButtonVisible: false,
                   titleTextStyle: TextStyle(
                     fontWeight: FontWeight.w400,
                     fontSize: 16.0,
@@ -198,7 +209,7 @@ class _MainCalendarState extends State<MainCalendar> {
                     return CustomCalendarBuilder(
                       day: day,
                       focusedDay: focusedDay,
-                      /*
+                      /* debug - border
                       decoration: BoxDecoration(
                         border: Border.all(
                             color: ColorPalette.PRIMARY_COLOR[400]!,
@@ -305,19 +316,6 @@ class CustomHeader extends StatelessWidget {
   }
 }
 
-/*
-
-
-if (events[DateFormat('yyyy-MM-dd').format(day)] !=
-    null) {
-  eventTitle =
-      '${events[DateFormat('yyyy-MM-dd').format(day)]!.length}';
-}
-
-
-          //if (cals?['item']['start'])
-*/
-
 class CustomCalendarBuilder extends StatelessWidget {
   final DateTime day;
   final DateTime focusedDay;
@@ -349,7 +347,6 @@ class CustomCalendarBuilder extends StatelessWidget {
     if (day.year == today.year &&
         day.month == today.month &&
         day.day == today.day) {
-      print('focusedDay: $focusedDay');
       isTargetDay = 1.0;
       dayColor = Colors.white;
       dayFontWeight = FontWeight.w400;

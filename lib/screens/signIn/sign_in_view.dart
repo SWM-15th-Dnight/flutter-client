@@ -14,20 +14,15 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
-    // print('< LoginScreen >');
-
     return Material(
       child: SafeArea(
         child: Padding(
             padding: const EdgeInsets.all(20),
             child: Center(
               child: Container(
-                //color: Colors.yellow,
                 height: MediaQuery.of(context).size.height * 0.50,
                 alignment: Alignment.center,
                 child: const Column(
-                  // mainAxisAlignment: MainAxisAlignment.center,
-                  //crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _Logo(),
                     const SizedBox(height: 20),
@@ -42,45 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-/*
-class RootPage extends StatefulWidget {
-  @override
-  State<RootPage> createState() => _RootPageState();
-}
-
-class _RootPageState extends State<RootPage> {
-  //var selectedIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<AppState>();
-    Widget page = Placeholder();
-
-    if (FirebaseAuth.instance.currentUser == null) {
-      //print('User is currently signed out!');
-      page = HomePage();
-    } else {
-      //print('User is signed in!');
-      page = MainScreen();
-    }
-
-    return LayoutBuilder(builder: (context, constraints) {
-      return Scaffold(
-        body: Row(
-          children: [
-            Expanded(
-                child: Container(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              child: page,
-            ))
-          ],
-        ),
-      );
-    });
-  }
-}
-*/
 
 class _Title extends StatelessWidget {
   const _Title();
@@ -104,8 +60,6 @@ class _Logo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      //width: 300,
-      //height: 270,
       child: Align(
         alignment: Alignment.center,
         child: Image.asset(
@@ -123,7 +77,6 @@ class _StartButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // var appState = context.watch<AppState>();
     var viewModel = Provider.of<SignInViewModel>(context);
 
     return SizedBox(
@@ -141,10 +94,7 @@ class _StartButton extends StatelessWidget {
                 child: Container(
                   height: MediaQuery.of(context).size.height * 0.25,
                   width: double.infinity,
-                  // color: BG_COLOR,
                   child: Column(
-                    //mainAxisAlignment: MainAxisAlignment.center,
-                    //mainAxisSize: MainAxisSize.min,
                     children: [
                       Align(
                         alignment: Alignment.topCenter,
@@ -178,8 +128,6 @@ class _StartButton extends StatelessWidget {
                                 text: 'Google로 계속하기',
                                 style: TextStyle(
                                   color: Color(0xFFF7F8F9),
-                                  // fontFamily: 'Rockwell',
-                                  // fontWeight: FontWeight.normal,
                                 ),
                               ),
                             ]),
@@ -227,7 +175,6 @@ class _StartButton extends StatelessWidget {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-          // backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),

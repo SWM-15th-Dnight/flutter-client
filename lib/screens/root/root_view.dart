@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:mobile_client/entities/user.dart';
-import 'package:mobile_client/screens/calendar/calendar_view.dart';
 import 'package:mobile_client/screens/calendar/main_calendar.dart';
-import 'package:mobile_client/screens/calendar/sfc_view.dart';
-import 'package:mobile_client/screens/home/home_view.dart';
 import 'package:mobile_client/screens/home/home_view_model.dart';
 import 'package:mobile_client/screens/root/root_view_model.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view_model.dart';
-import 'package:provider/provider.dart';
 
 class RootView extends StatelessWidget {
   const RootView({super.key});

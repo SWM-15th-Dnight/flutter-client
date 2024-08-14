@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/common/layout/default_layout.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
@@ -40,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   fontWeight: FontWeight.bold,
                   fontSize: 32,
                 )),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             CircularProgressIndicator(
               color: Colors.white,
             ),
@@ -55,8 +56,9 @@ class _SplashScreenState extends State<SplashScreen> {
 class FadePageRoute extends PageRouteBuilder {
   final WidgetBuilder builder;
 
-  FadePageRoute({required this.builder})
-      : super(
+  FadePageRoute({
+    required this.builder,
+  }) : super(
           pageBuilder: (context, animation, secondaryAnimation) =>
               builder(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
