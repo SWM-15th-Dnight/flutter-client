@@ -21,13 +21,13 @@ class FBUser {
     this.idToken,
   });
 
-  String getIdToken() {
-    return FBAuthService().getCurrentUser()?.getIdToken() ?? '';
-  }
-
-  Future<Map<String, String>> getAuthHeader() {
-    return FBAuthService().getAuthHeader();
-  }
+  // String getIdToken() {
+  //   return FBAuthService().getCurrentUser()?.getIdToken() ?? '';
+  // }
+  //
+  // Future<Map<String, String>> getAuthHeader() {
+  //   return FBAuthService().getAuthHeader();
+  // }
 
   factory FBUser.fromGoogleSignInAccount(GoogleSignInAccount account,
       {Map<String, String>? authHeaders, String? idToken}) {

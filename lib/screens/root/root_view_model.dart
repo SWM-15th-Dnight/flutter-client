@@ -8,11 +8,11 @@ class RootViewModel extends ChangeNotifier {
 
   RootViewModel() : _model = RootModel(UserService());
 
-  Stream<FBUser?> getUserStream() {
-    return _model.getUserStream();
-  }
-
-  bool isSignedIn() {
-    return _model.isSignedIn();
-  }
+  // Stream<FBUser?> getUserStream() {
+  //   return _model.getUserStream();
+  // }
+  //
+  // bool isSignedIn() {
+  //   return _model.isSignedIn();
+  // }
 }

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/common/layout/default_layout.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
+import '../../screens/signIn/sign_in_view.dart';
+import '../../services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,6 +14,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final FBAuthService _auth = FBAuthService();
+
   @override
   void initState() {
     super.initState();
@@ -19,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.pushReplacement(
         context,
         FadePageRoute(
-          builder: (context) => RootView(),
+          builder: (context) => RootView(auth: _auth),
         ), // Replace with your target screen
       );
     });

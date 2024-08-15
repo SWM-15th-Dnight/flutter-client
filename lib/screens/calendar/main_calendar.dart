@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -9,15 +10,16 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/entities/user.dart';
 import 'package:mobile_client/widget/custom_sidebar_modal.dart';
+import '../../services/auth_service.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
 
 class MainCalendar extends StatefulWidget {
-  final FBUser fbUser;
+  final FBAuthService auth;
 
-  const MainCalendar({
+  MainCalendar({
     super.key,
-    required this.fbUser,
+    required this.auth,
   });
 
   @override
@@ -50,10 +52,14 @@ class _MainCalendarState extends State<MainCalendar> {
   //   // Add more dates and events as needed
   // };
 
+  User? user;
+
   @override
   void initState() {
     super.initState();
-    cals = fetchCalendarData();
+    user = widget.auth.getCurrentUser();
+
+    someFutureFunction();
   }
 
   @override
@@ -78,6 +84,16 @@ class _MainCalendarState extends State<MainCalendar> {
     }
   }
 
+  Future<void> someFutureFunction() async {
+    print((await http.Client().get(
+            Uri.parse(
+              'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+            ),
+            headers: await widget.auth.getAuthHeaders()))
+        .statusCode);
+  }
+
+  /*
   Future<Map<String, dynamic>> fetchCalendarData() async {
     http.Client client = http.Client();
     var headers = await widget.fbUser.authHeaders;
@@ -104,6 +120,7 @@ class _MainCalendarState extends State<MainCalendar> {
 
     return jsonDecode(resp.body) as Map<String, dynamic>;
   }
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -160,11 +177,11 @@ class _MainCalendarState extends State<MainCalendar> {
               onProfileButtonPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => PreferenceView(fbUser: widget.fbUser),
+                    builder: (_) => PreferenceView(auth: widget.auth),
                   ),
                 );
               },
-              photoURL: widget.fbUser.photoURL,
+              photoURL: user?.photoURL,
             ),
             Flexible(
               flex: 10,

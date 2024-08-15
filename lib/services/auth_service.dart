@@ -1,59 +1,48 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
-import 'package:mobile_client/entities/user.dart';
-
-User? user;
-String? idToken;
-GoogleSignInAccount? googleUser;
-Map<String, String>? authHeaders;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FBAuthService {
   FBAuthService();
 
-  /// 현재 사용자가 로그인되어 있는지 확인합니다.
-  bool isSignedIn() {
-    return getCurrentUser() != null;
+  final _auth = FirebaseAuth.instance;
+  Map<String, String>? _authHeaders;
+
+  Stream<User?> getUserStream() {
+    return _auth.authStateChanges();
   }
 
-  /// 사용자 인증 상태 변화를 스트림으로 반환합니다.
-  Stream<FBUser?> getUserStream() {
-    print('getUserStream');
-    return FirebaseAuth.instance.authStateChanges().map((User? user) {
-      return user?.toFBUser(
-        googleSignInAccount: googleUser,
-        authHeaders: authHeaders,
-        idToken: idToken,
-      );
-    });
+  User? getCurrentUser() {
+    return _auth.currentUser;
   }
 
-  /// 현재 인증된 사용자를 가져옵니다. (있다면)
-  FBUser? getCurrentUser() {
-    return FirebaseAuth.instance.currentUser?.toFBUser();
+  Future<String?> getIdToken() async {
+    return await getCurrentUser()?.getIdToken();
   }
 
-  /// 현재 세션의 JWT 액세스 토큰을 가져옵니다.
-  Future<String?>? getJWTToken() {
-    return FirebaseAuth.instance.currentUser?.getIdToken();
-  }
-
-  Future<Map<String, String>> getAuthHeader() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      idToken = await user.getIdToken();
-      return {
-        'Authorization': 'Bearer $idToken',
-      };
-    } else {
-      throw Exception('No user is currently signed in.');
+  Future<Map<String, String>?> getAuthHeaders() async {
+    if (_authHeaders != null) {
+      return _authHeaders;
     }
+
+    final prefs = await SharedPreferences.getInstance();
+    final authHeadersJson = prefs.getString('authHeaders');
+    if (authHeadersJson != null) {
+      _authHeaders = Map<String, String>.from(jsonDecode(authHeadersJson));
+    }
+    return _authHeaders;
   }
 
-  Future<bool> signInWithGoogle() async {
-    print('call check call check call check call check call check');
+  Future<void> _saveAuthHeaders(Map<String, String> authHeaders) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('authHeaders', jsonEncode(authHeaders));
+  }
+
+  Future<UserCredential?> signInWithGoogle() async {
     try {
       // Sign out from any existing Google account
       await GoogleSignIn(signInOption: SignInOption.standard).signOut();
@@ -64,10 +53,12 @@ class FBAuthService {
       ];
 
       // Trigger the authentication flow
-      googleUser = await GoogleSignIn(
+      GoogleSignInAccount? googleUser = await GoogleSignIn(
         signInOption: SignInOption.standard,
         scopes: scopes,
       ).signIn();
+
+      _saveAuthHeaders(await googleUser!.authHeaders);
 
       // Obtain the auth details from the request
       final GoogleSignInAuthentication? googleAuth =
@@ -80,21 +71,11 @@ class FBAuthService {
       );
 
       // Once signed in, return the UserCredential
-      return await FirebaseAuth.instance
-          .signInWithCredential(credential)
-          .then((userCredential) async {
-        // user = userCredential.user;
-        // idToken = googleAuth?.idToken;
-        idToken = await userCredential.user?.getIdToken();
-        authHeaders = await googleUser?.authHeaders;
-        userCredential.user?.toFBUser();
-
-        return true;
-      });
+      return await _auth.signInWithCredential(credential);
     } catch (e) {
-      print(e);
-      return false;
+      print(e.toString());
     }
+    return null;
   }
 
   Future<bool?> signInWithMicrosoft() async {
@@ -121,6 +102,8 @@ class FBAuthService {
   }
 
   Future<void> signOut() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('authHeaders');
     return await FirebaseAuth.instance.signOut();
   }
 }

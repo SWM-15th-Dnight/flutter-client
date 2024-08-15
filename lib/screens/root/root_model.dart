@@ -6,11 +6,11 @@ class RootModel {
 
   RootModel(this.userService);
 
-  Stream<FBUser?> getUserStream() {
-    return userService.getUserStream();
-  }
-
-  bool isSignedIn() {
-    return userService.isSignedIn();
-  }
+  // Stream<FBUser?> getUserStream() {
+  //   return userService.getUserStream();
+  // }
+  //
+  // bool isSignedIn() {
+  //   return userService.isSignedIn();
+  // }
 }

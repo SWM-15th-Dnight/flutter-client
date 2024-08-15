@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mobile_client/screens/signIn/sign_in_view.dart';
+import 'package:mobile_client/services/auth_service.dart';
 
 import '../../entities/user.dart';
 import '../root/root_view.dart';
 
 class PreferenceView extends StatefulWidget {
-  final FBUser fbUser;
+  final FBAuthService auth;
 
-  const PreferenceView({
+  PreferenceView({
     super.key,
-    required this.fbUser,
+    required this.auth,
   });
 
   @override
@@ -17,10 +19,6 @@ class PreferenceView extends StatefulWidget {
 }
 
 class _PreferenceViewState extends State<PreferenceView> {
-  Future<void> signOut() async {
-    return await FirebaseAuth.instance.signOut();
-  }
-
   void _showAlertDialog(BuildContext context) {
     AlertDialog alert = AlertDialog(
       title: Text('로그아웃'),
@@ -29,8 +27,8 @@ class _PreferenceViewState extends State<PreferenceView> {
         CancelButton(),
         AcceptButton(
           text: '로그아웃',
-          onPressed: signOut(),
-          navigator: RootView(),
+          onPressed: widget.auth.signOut(),
+          navigator: RootView(auth: widget.auth),
         )
       ],
     );
@@ -47,7 +45,7 @@ class _PreferenceViewState extends State<PreferenceView> {
   Widget build(BuildContext context) {
     final double photoLength = MediaQuery.of(context).size.width * 0.4;
     // TODO. use shared preference before using local DB
-    final String displayName = widget.fbUser.displayName ?? '익명';
+    final String displayName = '익명';
 
     return Scaffold(
       appBar: PreferredSize(
@@ -76,9 +74,10 @@ class _PreferenceViewState extends State<PreferenceView> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(161616.0),
-            child: widget.fbUser.photoURL != null
+            child: false
                 ? Image.network(
-                    widget.fbUser.photoURL!,
+                    'https://picsum.photos/200/300',
+                    //widget.fbUser.photoURL!,
                     width: photoLength,
                     height: photoLength,
                     fit: BoxFit.cover,

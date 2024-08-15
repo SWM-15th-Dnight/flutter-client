@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mobile_client/common/const/color.dart';
+import 'package:mobile_client/screens/calendar/main_calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view_model.dart';
+import 'package:mobile_client/services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,6 +14,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final FBAuthService _auth = FBAuthService();
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -22,13 +26,13 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.50,
                 alignment: Alignment.center,
-                child: const Column(
+                child: Column(
                   children: [
                     _Logo(),
                     const SizedBox(height: 20),
                     _Title(),
                     const SizedBox(height: 20),
-                    _StartButton(),
+                    _StartButton(auth: _auth),
                   ],
                 ),
               ),
@@ -73,11 +77,13 @@ class _Logo extends StatelessWidget {
 }
 
 class _StartButton extends StatelessWidget {
-  const _StartButton();
+  final FBAuthService auth;
+
+  const _StartButton({required this.auth});
 
   @override
   Widget build(BuildContext context) {
-    var viewModel = Provider.of<SignInViewModel>(context);
+    //var viewModel = Provider.of<SignInViewModel>(context);
 
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.45,
@@ -114,8 +120,14 @@ class _StartButton extends StatelessWidget {
                         height: 40,
                         child: ElevatedButton.icon(
                           onPressed: () async {
-                            viewModel.signInWithGoogle();
+                            //viewModel.signInWithGoogle();
+                            await auth.signInWithGoogle();
                             Navigator.pop(context);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        MainCalendar(auth: auth)));
                           },
                           icon: SvgPicture.asset(
                             'asset/img/logo/google_logo.svg',
@@ -144,7 +156,7 @@ class _StartButton extends StatelessWidget {
                         height: 40,
                         child: ElevatedButton.icon(
                           onPressed: () async {
-                            viewModel.signInWithMicrosoft();
+                            //viewModel.signInWithMicrosoft();
                             Navigator.pop(context);
                           },
                           icon: SvgPicture.asset(
