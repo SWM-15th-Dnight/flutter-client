@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/common/layout/default_layout.dart';
+import 'package:mobile_client/screens/calendar/main_calendar.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
 import '../../screens/signIn/sign_in_view.dart';
 import '../../services/auth_service.dart';
@@ -19,13 +20,24 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        FadePageRoute(
-          builder: (context) => RootView(auth: _auth),
-        ), // Replace with your target screen
-      );
+    Future.delayed(Duration(seconds: 3), () async {
+      if (await _auth.signInSilentlyWithGoogle() != null) {
+        //print('SplashScreen to MainCalendar');
+        Navigator.pushReplacement(
+          context,
+          FadePageRoute(
+            builder: (context) => MainCalendar(auth: _auth),
+          ), // Replace with your target screen
+        );
+      } else {
+        //print('SplashScreen to LoginScreen');
+        Navigator.pushReplacement(
+          context,
+          FadePageRoute(
+            builder: (context) => LoginScreen(),
+          ), // Replace with your target screen
+        );
+      }
     });
   }
 

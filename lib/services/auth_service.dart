@@ -45,7 +45,7 @@ class FBAuthService {
   Future<UserCredential?> signInWithGoogle() async {
     try {
       // Sign out from any existing Google account
-      await GoogleSignIn(signInOption: SignInOption.standard).signOut();
+      //await GoogleSignIn(signInOption: SignInOption.standard).signOut();
 
       const List<String> scopes = <String>[
         'email',
@@ -64,6 +64,8 @@ class FBAuthService {
       final GoogleSignInAuthentication? googleAuth =
           await googleUser?.authentication;
 
+      //print(googleAuth!.accessToken);
+
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth?.accessToken,
@@ -72,6 +74,50 @@ class FBAuthService {
 
       // Once signed in, return the UserCredential
       return await _auth.signInWithCredential(credential);
+    } catch (e) {
+      print(e.toString());
+    }
+    return null;
+  }
+
+  Future<UserCredential?> signInSilentlyWithGoogle() async {
+    try {
+      // Sign out from any existing Google account
+      //await GoogleSignIn(signInOption: SignInOption.standard).signOut();
+
+      const List<String> scopes = <String>[
+        'email',
+        'https://www.googleapis.com/auth/calendar',
+      ];
+
+      // Trigger the authentication flow
+      GoogleSignInAccount? googleUser = await GoogleSignIn(
+        signInOption: SignInOption.standard,
+        scopes: scopes,
+      ).signInSilently();
+
+      if (googleUser != null) {
+        _saveAuthHeaders(await googleUser!.authHeaders);
+
+        // Obtain the auth details from the request
+        final GoogleSignInAuthentication? googleAuth =
+            await googleUser?.authentication;
+
+        //print(googleAuth!.accessToken);
+
+        // Create a new credential
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth?.accessToken,
+          idToken: googleAuth?.idToken,
+        );
+
+        //print('User silently signed in with Google.');
+        // Once signed in, return the UserCredential
+        return await _auth.signInWithCredential(credential);
+      } else {
+        //print('No user signed in silently.');
+        return null;
+      }
     } catch (e) {
       print(e.toString());
     }
@@ -104,6 +150,7 @@ class FBAuthService {
   Future<void> signOut() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('authHeaders');
+    await GoogleSignIn(signInOption: SignInOption.standard).signOut();
     return await FirebaseAuth.instance.signOut();
   }
 }

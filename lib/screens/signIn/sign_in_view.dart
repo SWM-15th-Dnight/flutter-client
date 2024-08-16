@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('LoginScreen build');
     return Material(
       child: SafeArea(
         child: Padding(

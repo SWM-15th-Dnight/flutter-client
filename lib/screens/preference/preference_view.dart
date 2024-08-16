@@ -45,7 +45,8 @@ class _PreferenceViewState extends State<PreferenceView> {
   Widget build(BuildContext context) {
     final double photoLength = MediaQuery.of(context).size.width * 0.4;
     // TODO. use shared preference before using local DB
-    final String displayName = '익명';
+    final String displayName =
+        widget.auth.getCurrentUser()?.displayName ?? '익명';
 
     return Scaffold(
       appBar: PreferredSize(
@@ -74,10 +75,9 @@ class _PreferenceViewState extends State<PreferenceView> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(161616.0),
-            child: false
+            child: widget.auth.getCurrentUser()?.photoURL != null
                 ? Image.network(
-                    'https://picsum.photos/200/300',
-                    //widget.fbUser.photoURL!,
+                    widget.auth.getCurrentUser()!.photoURL!,
                     width: photoLength,
                     height: photoLength,
                     fit: BoxFit.cover,

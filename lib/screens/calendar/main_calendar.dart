@@ -1,10 +1,14 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:mobile_client/screens/root/root_view.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import 'package:mobile_client/common/const/color.dart';
@@ -27,39 +31,23 @@ class MainCalendar extends StatefulWidget {
 }
 
 class _MainCalendarState extends State<MainCalendar> {
+  User? user;
+  final dio = Dio();
+  Map<String, dynamic>? _calendarData;
+
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
 
-  // TODO. delete dummy data
-  late final Future<Map<String, dynamic>> cals;
-  /*
-  {
-    'items': [
-      {
-        'start': {'dateTime': '2024-08-01T10:00:00Z'},
-        'summary': 'Event 1'
-      },
-      {
-        'start': {'dateTime': '2024-08-02T12:00:00Z'},
-        'summary': 'Event 2'
-      }
-    ]
-  };
-  */
-  // final Map<DateTime, List<Event>> events = {
-  //   // DateTime(2024, 08, 01): ['Event 1', 'Event 2', 'Event 3'],
-  //   // DateTime(2024, 08, 02): ['Event 4', 'Event 5'],
-  //   // Add more dates and events as needed
-  // };
-
-  User? user;
+  // TODO.
+  final String timeMin = '2023-01-01T00:00:00Z';
+  final String timeMax = '2024-12-31T23:59:59Z';
 
   @override
   void initState() {
     super.initState();
     user = widget.auth.getCurrentUser();
 
-    someFutureFunction();
+    fetchCalendarData();
   }
 
   @override
@@ -84,13 +72,27 @@ class _MainCalendarState extends State<MainCalendar> {
     }
   }
 
-  Future<void> someFutureFunction() async {
-    print((await http.Client().get(
-            Uri.parse(
-              'https://www.googleapis.com/calendar/v3/calendars/primary/events',
-            ),
-            headers: await widget.auth.getAuthHeaders()))
-        .statusCode);
+  Future<void> fetchCalendarData() async {
+    var headers = await widget.auth.getAuthHeaders();
+    try {
+      final resp = await dio.get(
+          'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+          queryParameters: {
+            'timeMin': timeMin,
+            'timeMax': timeMax,
+          },
+          options: Options(headers: headers));
+      print('status code: ${resp.statusCode}');
+      // for (var event in resp.data['items']) {
+      //   print(event);
+      // }
+
+      setState(() {
+        _calendarData = resp.data;
+      });
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   /*
@@ -133,33 +135,35 @@ class _MainCalendarState extends State<MainCalendar> {
     if (cals?['item']['start'])
     */
 
-    /*
-    Map<String, List<Map<String, dynamic>>> events = {};
-    if (cals['items'] == null) {
-      return Container();
+    if (_calendarData == null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+            ],
+          ),
+        ),
+      );
     }
 
-    for (var i = 0; cals['items'] != null && i < cals['items'].length; i++) {
-      print(cals['items']);
-      var stringEventDT;
-      if (cals['items'][i]['start']['dateTime'] == null) {
-        stringEventDT = cals['items'][i]['start']['date'];
-      } else {
-        stringEventDT = cals['items'][i]['start']['dateTime'];
+    // TODO. Range Event
+    List<dynamic> events = _calendarData?['items'];
+    Map<String, List<Map<String, dynamic>>> dateEvents = {};
+
+    print('events.length: ${events.length}');
+    if (events.length != 0) {
+      for (var i = 0; i < events.length; i++) {
+        String startDateTime =
+            events[i]['start']['dateTime'] ?? events[i]['start']['date'];
+        startDateTime =
+            DateFormat('yyyy-MM-dd').format(DateTime.parse(startDateTime));
+        //print(startDateTime);
+
+        addEventToMap(dateEvents, startDateTime, events[i]);
       }
-      var dateTimeEventDT = DateTime.parse(stringEventDT);
-      // print(dateTimeEventDT.runtimeType);
-      // print(DateFormat('yyyy-MM-dd').format(dateTimeEventDT));
-      // print(DateFormat('yyyy-MM-dd').format(dateTimeEventDT).runtimeType);
-      String dateKey = DateFormat('yyyy-MM-dd').format(dateTimeEventDT);
-      // print(widget.cals['items'].runtimeType);
-      // print(widget.cals['items'][i].runtimeType);
-
-      addEventToMap(events, dateKey, cals['items'][i]);
-      // print(events);
-      // events.addAll(DateFormat('yyyy-MM-dd').format(dateTimeEventDT).runtimeType: widget.cals?['items'][i]);
     }
-    */
 
     return Scaffold(
       floatingActionButton: const Align(
@@ -227,43 +231,52 @@ class _MainCalendarState extends State<MainCalendar> {
                     return CustomCalendarBuilder(
                       day: day,
                       focusedDay: focusedDay,
+                      events: dateEvents,
                     );
                   },
                   outsideBuilder: (context, day, focusedDay) {
                     return CustomCalendarBuilder(
                       day: day,
                       focusedDay: focusedDay,
-                      dayColor: Colors.grey,
+                      dayColor: Color(0XFFAAAAAA),
+                      events: dateEvents,
                     );
                   },
                   todayBuilder: (context, day, focusedDay) {
                     return CustomCalendarBuilder(
                       day: day,
                       focusedDay: focusedDay,
+                      events: dateEvents,
                       /* debug - border
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: ColorPalette.PRIMARY_COLOR[400]!,
-                            width: 0.8),
-                        borderRadius: BorderRadius.circular(3.0),
-                      ),
-                      */
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: ColorPalette.PRIMARY_COLOR[400]!,
+                                width: 0.8),
+                            borderRadius: BorderRadius.circular(3.0),
+                          ),
+                          */
                     );
                   },
                   selectedBuilder: (context, day, focusedDay) {
                     return CustomCalendarBuilder(
                       day: day,
                       focusedDay: focusedDay,
+                      events: dateEvents,
+                      isSelected:
+                          ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.05),
+                      /*
                       decoration: BoxDecoration(
                         color:
                             ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.05),
-                        border: Border.all(
-                            color: ColorPalette.SECONDARY_COLOR[400]!
-                                .withOpacity(0.0),
-                            width: 0.8),
-                        borderRadius: BorderRadius.circular(3.0),
+                        // border: Border.all(
+                        //     color: ColorPalette.SECONDARY_COLOR[400]!
+                        //         .withOpacity(0.0),
+                        //     width: 0.8),
+                        // borderRadius: BorderRadius.circular(3.0),
                       ),
-                      dayFontWeight: FontWeight.w500,
+                      */
+
+                      //dayFontWeight: FontWeight.w500,
                     );
                   },
                 ),
@@ -350,29 +363,21 @@ class CustomHeader extends StatelessWidget {
 class CustomCalendarBuilder extends StatelessWidget {
   final DateTime day;
   final DateTime focusedDay;
-  final String? eventTitle;
   final Map<String, List<Map<String, dynamic>>>? events;
-  final BoxDecoration decoration;
 
   Color? dayColor = Colors.black;
   double isTargetDay = 0.0;
   FontWeight? dayFontWeight = FontWeight.w400;
+  Color? isSelected;
 
   CustomCalendarBuilder({
     super.key,
     required this.day,
     required this.focusedDay,
-    this.eventTitle = 'asdf',
     this.events,
-    this.decoration = const BoxDecoration(
-      border: Border(
-          top: BorderSide(
-        color: Color(0xFFE8EBED),
-        width: 0.5,
-      )),
-    ),
     this.dayColor,
     this.dayFontWeight,
+    this.isSelected,
   }) {
     DateTime today = DateTime.now();
     if (day.year == today.year &&
@@ -386,10 +391,19 @@ class CustomCalendarBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double fontSize = calculateFontSize(context);
+
     return Container(
       child: Container(
         padding: const EdgeInsets.all(1.5),
-        decoration: decoration,
+        decoration: BoxDecoration(
+          color: isSelected ?? Colors.transparent,
+          border: Border(
+              top: BorderSide(
+            color: Color(0xFFE8EBED),
+            width: 0.5,
+          )),
+        ),
         child: Column(
           children: [
             Align(
@@ -414,17 +428,119 @@ class CustomCalendarBuilder extends StatelessWidget {
                 ),
               ),
             ),
-            ...?events?[day.toString()]!.map(
-              (event) => Text(
-                //event,
-                'asdf',
-                style: TextStyle(fontSize: 12.0),
+            Expanded(
+              child: Container(
+                //color: Colors.yellow.withOpacity(0.3),
+                child: LayoutBuilder(builder: (context, constraints) {
+                  double totalHeight = 0;
+                  int displayEvents = 0;
+                  int remainingEvents = 0;
+
+                  List<Widget> eventWidgets = [];
+
+                  if (events?[DateFormat('yyyy-MM-dd').format(day)] != null) {
+                    for (var event
+                        in events![DateFormat('yyyy-MM-dd').format(day)]!) {
+                      final bool isAllDay =
+                          event['start']['dateTime'] == null ? false : true;
+                      final text = event['summary'];
+                      // TODO. lineHeight / fontSize
+                      final textStyle = TextStyle(
+                        color: isAllDay
+                            ? ColorPalette.PRIMARY_COLOR[300]!
+                            : Colors.white,
+                        fontSize: fontSize,
+                        height: 1.4,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.05,
+                      );
+                      final textSpan = TextSpan(text: text, style: textStyle);
+                      final textPainter = TextPainter(
+                        text: textSpan,
+                        maxLines: 1,
+                        textDirection: ui.TextDirection.ltr,
+                      );
+                      textPainter.layout(maxWidth: constraints.maxWidth);
+
+                      // final isOverflow = textPainter.didExceedMaxLines ||
+                      //     textPainter.width > constraints.maxWidth;
+
+                      final textHeight =
+                          textPainter.height + (2.0 + 1.0); // Add padding + 2
+                      // print(
+                      //     '${day}: ${totalHeight} + ${textHeight} > ${constraints.maxHeight}');
+                      if (totalHeight + textHeight > constraints.maxHeight) {
+                        remainingEvents++;
+                      } else {
+                        totalHeight += textHeight;
+                        displayEvents++;
+                        eventWidgets.add(ClipRRect(
+                          borderRadius: BorderRadius.circular(4.0),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 1.0),
+                            child: Container(
+                              //margin: const EdgeInsets.symmetric(horizontal: 1.0),
+                              color: isAllDay
+                                  ? ColorPalette.PRIMARY_COLOR[300]!
+                                      .withOpacity(0.15)
+                                  : ColorPalette.PRIMARY_COLOR[300]!,
+                              width: double.infinity,
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  text,
+                                  style: textStyle,
+                                  overflow: TextOverflow.clip,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ));
+                      }
+                    }
+
+                    if (remainingEvents > 0) {
+                      remainingEvents += 1;
+                      displayEvents -= 1;
+                      eventWidgets.add(Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 1.0),
+                        child: Container(
+                          color: Color(0xFFAAAAAA).withOpacity(0.3),
+                          width: double.infinity,
+                          child: Center(
+                            child: Text(
+                              '+${remainingEvents}',
+                              style: TextStyle(fontSize: fontSize),
+                              overflow: TextOverflow.clip,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ),
+                      ));
+                    }
+                  }
+
+                  return Column(
+                    children: eventWidgets,
+                  );
+                }),
               ),
             ),
-            Text(eventTitle ?? ''),
           ],
         ),
       ),
     );
+  }
+
+  double calculateFontSize(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth < 360) {
+      return 8.0;
+    } else if (screenWidth < 720) {
+      return 10.0;
+    } else {
+      return 12.0;
+    }
   }
 }
