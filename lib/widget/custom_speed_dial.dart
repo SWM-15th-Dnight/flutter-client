@@ -42,7 +42,10 @@ class CustomSpeedDial extends StatelessWidget {
           ),
           label: '자연어로 등록',
           backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-          onTap: () {},
+          onTap: () {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text('지원 예정인 기능입니다.')));
+          },
         ),
         SpeedDialChild(
           shape: CircleBorder(),
@@ -52,7 +55,10 @@ class CustomSpeedDial extends StatelessWidget {
           ),
           label: '음성 입력',
           backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-          onTap: () {},
+          onTap: () {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text('지원 예정인 기능입니다.')));
+          },
         )
       ],
     );

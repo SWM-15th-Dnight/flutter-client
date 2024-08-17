@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Future.delayed(Duration(seconds: 3), () async {
-      if (await _auth.signInSilentlyWithGoogle() != null) {
+      if (await _auth.checkToken()) {
         //print('SplashScreen to MainCalendar');
         Navigator.pushReplacement(
           context,

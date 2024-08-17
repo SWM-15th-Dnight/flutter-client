@@ -47,7 +47,7 @@ class _MainCalendarState extends State<MainCalendar> {
     super.initState();
     user = widget.auth.getCurrentUser();
 
-    fetchCalendarData();
+    //fetchCalendarData();
   }
 
   @override
@@ -86,6 +86,31 @@ class _MainCalendarState extends State<MainCalendar> {
       // for (var event in resp.data['items']) {
       //   print(event);
       // }
+
+      // TODO. holiday
+      // ISSUE. Uri.encodeFull(uri) doesn't work
+      var holiday = 'ko.south_korea%23holiday%40group.v.calendar.google.com';
+      var uri =
+          'https://www.googleapis.com/calendar/v3/calendars/${holiday}/events';
+
+      final resp2 = await dio.get(uri,
+          queryParameters: {
+            'timeMin': timeMin,
+            'timeMax': timeMax,
+            'key': dotenv.env['GOOGLE_CALENDAR_API_KEY'],
+          },
+          options: Options(headers: headers));
+      print('status code2: ${resp2.statusCode}');
+      print(resp2.data);
+
+      final resp0 = await dio.get(
+          'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+          options: Options(headers: headers));
+      print('status code0: ${resp0.statusCode}');
+      print(resp0.data);
+
+      // 9fe1e7, 000000
+      // 16a765, 000000
 
       setState(() {
         _calendarData = resp.data;
@@ -135,6 +160,7 @@ class _MainCalendarState extends State<MainCalendar> {
     if (cals?['item']['start'])
     */
 
+    /*
     if (_calendarData == null) {
       return Scaffold(
         body: Center(
@@ -147,9 +173,10 @@ class _MainCalendarState extends State<MainCalendar> {
         ),
       );
     }
+    */
 
     // TODO. Range Event
-    List<dynamic> events = _calendarData?['items'];
+    List<dynamic> events = []; //_calendarData?['items'];
     Map<String, List<Map<String, dynamic>>> dateEvents = {};
 
     print('events.length: ${events.length}');
@@ -466,7 +493,7 @@ class CustomCalendarBuilder extends StatelessWidget {
                       //     textPainter.width > constraints.maxWidth;
 
                       final textHeight =
-                          textPainter.height + (2.0 + 1.0); // Add padding + 2
+                          textPainter.height + (2.0 + 4.0); // Add padding + 2
                       // print(
                       //     '${day}: ${totalHeight} + ${textHeight} > ${constraints.maxHeight}');
                       if (totalHeight + textHeight > constraints.maxHeight) {
