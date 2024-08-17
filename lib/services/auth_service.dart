@@ -100,10 +100,14 @@ class FBAuthService {
       return false;
     }
 
-    var resp = await dio.get(dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
-        options: Options(headers: {
-          'authorization': 'Bearer $accessToken',
-        }));
+    var resp = await dio.get(
+      dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
+      options: Options(
+        headers: {
+          'authorization': 'Bearer $refreshToken',
+        },
+      ),
+    );
 
     print('resp: $resp');
     print('resp.statusCode: ${resp.statusCode}');

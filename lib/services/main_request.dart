@@ -2,11 +2,13 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mobile_client/services/auth_service.dart';
 
 class MainRequest {
   MainRequest();
 
   final dio = Dio();
+  final auth = FBAuthService(); // only for checkToken()
 
   Future<Response?> postRequest(String path, Map<String, dynamic> data) async {
     final Response<dynamic> response =
@@ -16,5 +18,20 @@ class MainRequest {
     print('response.runTimeType ${response.runtimeType}');
     print('response.data.runTimeType ${response.data.runtimeType}');
     return response;
+  }
+
+  Future<Response> getColorSet() async {
+    await auth.checkToken();
+    final String? accessToken = dotenv.env['ACCESS_TOKEN'];
+    final String? refreshToken = dotenv.env['REFRESH_TOKEN'];
+
+    return await dio.get(
+      dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
+      options: Options(
+        headers: {
+          'authorization': 'Bearer $refreshToken',
+        },
+      ),
+    );
   }
 }

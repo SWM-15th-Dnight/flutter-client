@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 class CustomSidebarModal {
+  final List<dynamic>? calendarList;
+  final Function(int)? onCalendarSelected;
+
+  CustomSidebarModal(this.calendarList, {this.onCalendarSelected});
+
   void sidebarModal(BuildContext context) {
     showModalSideSheet(
       context: context,
@@ -10,14 +15,17 @@ class CustomSidebarModal {
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
               children: [
-                ListTile(
-                  title: Text('Item 1'),
-                  onTap: () {},
-                ),
-                ListTile(
-                  title: Text('Item 2'),
-                  onTap: () {},
-                ),
+                ...calendarList!.map((calendar) {
+                  return ListTile(
+                    title: Text('캘린더 ${calendar['calendarId']}번'),
+                    onTap: () {
+                      // set calendarId to the selected calendar
+                      if (onCalendarSelected != null) {
+                        onCalendarSelected!(calendar['calendarId']);
+                      }
+                    },
+                  );
+                }).toList(),
                 // Add more items as needed
               ],
             ),
