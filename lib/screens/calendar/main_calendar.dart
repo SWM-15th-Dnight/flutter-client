@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
 import 'package:mobile_client/services/main_request.dart';
+import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import 'package:mobile_client/common/const/color.dart';
@@ -19,6 +20,7 @@ import '../../common/const/data.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
+import 'form_bottom_sheet.dart';
 
 class MainCalendar extends StatefulWidget {
   final FBAuthService auth;
@@ -277,137 +279,151 @@ class _MainCalendarState extends State<MainCalendar> {
     }
 
     return Scaffold(
-      floatingActionButton: const Align(
+      resizeToAvoidBottomInset: false,
+      floatingActionButton: Align(
         alignment: Alignment(0.96, 0.99),
-        child: CustomSpeedDial(),
+        child: CustomSpeedDial(currentCalendarId: currentCalendarId),
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            CustomHeader(
-              focusedDay: _focusedDay,
-              onSidebarButtonPressed: () {
-                CustomSidebarModal(calendarList,
-                    onCalendarSelected: (int selectedCalendarId) {
-                  print(
-                      '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
-                  setState(() {
-                    currentCalendarId = selectedCalendarId;
-                  });
-                }).sidebarModal(context);
-              },
-              onProfileButtonPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => PreferenceView(auth: widget.auth),
-                  ),
-                );
-              },
-              photoURL: user?.photoURL,
-            ),
-            Flexible(
-              flex: 10,
-              child: TableCalendar(
-                locale: 'ko_KR',
-                // notice. TableCalendar should be in Container
-                shouldFillViewport: true,
-                focusedDay: _focusedDay,
-                firstDay: DateTime.utc(1800, 1, 1),
-                lastDay: DateTime.utc(3000, 1, 1),
-                onPageChanged: _onPageChanged,
-                daysOfWeekHeight: 30.0,
-                // TODO. WeekDays' Style
-                daysOfWeekStyle: DaysOfWeekStyle(),
-                calendarStyle: CalendarStyle(
-                  defaultTextStyle: TextStyle(color: Colors.black),
-                  //weekendTextStyle: TextStyle(color: Colors.red),
-                  cellMargin: EdgeInsets.symmetric(vertical: 12.0),
-                ),
-                headerVisible: false,
-                headerStyle: HeaderStyle(
-                  titleCentered: true,
-                  // delete calendar view mode button
-                  // ex. 2 Weeks
-                  formatButtonVisible: false,
-                  titleTextStyle: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 16.0,
-                    color: ColorPalette.PRIMARY_COLOR[400],
-                  ),
-                  leftChevronVisible: false,
-                  rightChevronVisible: false,
-                ),
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                },
-                calendarBuilders: CalendarBuilders(
-                  defaultBuilder: (context, day, focusedDay) {
-                    return CustomCalendarBuilder(
-                      day: day,
-                      focusedDay: focusedDay,
-                      events: dateEvents,
-                      eventColor: calendarColorMap[currentCalendarId]!,
-                    );
+            Column(
+              children: [
+                CustomHeader(
+                  focusedDay: _focusedDay,
+                  onSidebarButtonPressed: () {
+                    CustomSidebarModal(calendarList,
+                        onCalendarSelected: (int selectedCalendarId) {
+                      print(
+                          '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
+                      setState(() {
+                        currentCalendarId = selectedCalendarId;
+                      });
+                    }).sidebarModal(context);
                   },
-                  outsideBuilder: (context, day, focusedDay) {
-                    return CustomCalendarBuilder(
-                      day: day,
-                      focusedDay: focusedDay,
-                      dayColor: Color(0XFFAAAAAA),
-                      events: dateEvents,
-                      eventColor: calendarColorMap[currentCalendarId]!,
-                    );
-                  },
-                  todayBuilder: (context, day, focusedDay) {
-                    return CustomCalendarBuilder(
-                      day: day,
-                      focusedDay: focusedDay,
-                      events: dateEvents,
-                      eventColor: calendarColorMap[currentCalendarId]!,
-                      /* debug - border
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: ColorPalette.PRIMARY_COLOR[400]!,
-                                width: 0.8),
-                            borderRadius: BorderRadius.circular(3.0),
-                          ),
-                          */
-                    );
-                  },
-                  selectedBuilder: (context, day, focusedDay) {
-                    return CustomCalendarBuilder(
-                      day: day,
-                      focusedDay: focusedDay,
-                      events: dateEvents,
-                      eventColor: calendarColorMap[currentCalendarId]!,
-                      isSelected:
-                          ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.05),
-                      /*
-                      decoration: BoxDecoration(
-                        color:
-                            ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.05),
-                        // border: Border.all(
-                        //     color: ColorPalette.SECONDARY_COLOR[400]!
-                        //         .withOpacity(0.0),
-                        //     width: 0.8),
-                        // borderRadius: BorderRadius.circular(3.0),
+                  onProfileButtonPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => PreferenceView(auth: widget.auth),
                       ),
-                      */
-
-                      //dayFontWeight: FontWeight.w500,
                     );
                   },
+                  photoURL: user?.photoURL,
                 ),
-              ),
+                Expanded(
+                  child: TableCalendar(
+                    locale: 'ko_KR',
+                    // notice. TableCalendar should be in Container
+                    shouldFillViewport: true,
+                    focusedDay: _focusedDay,
+                    firstDay: DateTime.utc(1800, 1, 1),
+                    lastDay: DateTime.utc(3000, 1, 1),
+                    onPageChanged: _onPageChanged,
+                    daysOfWeekHeight: 30.0,
+                    // TODO. WeekDays' Style
+                    daysOfWeekStyle: DaysOfWeekStyle(),
+                    calendarStyle: CalendarStyle(
+                      defaultTextStyle: TextStyle(color: Colors.black),
+                      //weekendTextStyle: TextStyle(color: Colors.red),
+                      cellMargin: EdgeInsets.symmetric(vertical: 12.0),
+                    ),
+                    headerVisible: false,
+                    headerStyle: HeaderStyle(
+                      titleCentered: true,
+                      // delete calendar view mode button
+                      // ex. 2 Weeks
+                      formatButtonVisible: false,
+                      titleTextStyle: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16.0,
+                        color: ColorPalette.PRIMARY_COLOR[400],
+                      ),
+                      leftChevronVisible: false,
+                      rightChevronVisible: false,
+                    ),
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    calendarBuilders: CalendarBuilders(
+                      defaultBuilder: (context, day, focusedDay) {
+                        return CustomCalendarBuilder(
+                          day: day,
+                          focusedDay: focusedDay,
+                          events: dateEvents,
+                          eventColor: calendarColorMap[currentCalendarId]!,
+                        );
+                      },
+                      outsideBuilder: (context, day, focusedDay) {
+                        return CustomCalendarBuilder(
+                          day: day,
+                          focusedDay: focusedDay,
+                          dayColor: Color(0XFFAAAAAA),
+                          events: dateEvents,
+                          eventColor: calendarColorMap[currentCalendarId]!,
+                        );
+                      },
+                      todayBuilder: (context, day, focusedDay) {
+                        return CustomCalendarBuilder(
+                          day: day,
+                          focusedDay: focusedDay,
+                          events: dateEvents,
+                          eventColor: calendarColorMap[currentCalendarId]!,
+                          /* debug - border
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: ColorPalette.PRIMARY_COLOR[400]!,
+                                            width: 0.8),
+                                        borderRadius: BorderRadius.circular(3.0),
+                                      ),
+                                      */
+                        );
+                      },
+                      selectedBuilder: (context, day, focusedDay) {
+                        return CustomCalendarBuilder(
+                          day: day,
+                          focusedDay: focusedDay,
+                          events: dateEvents,
+                          eventColor: calendarColorMap[currentCalendarId]!,
+                          isSelected: ColorPalette.PRIMARY_COLOR[400]!
+                              .withOpacity(0.05),
+                          /*
+                                  decoration: BoxDecoration(
+                                    color:
+                                        ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.05),
+                                    // border: Border.all(
+                                    //     color: ColorPalette.SECONDARY_COLOR[400]!
+                                    //         .withOpacity(0.0),
+                                    //     width: 0.8),
+                                    // borderRadius: BorderRadius.circular(3.0),
+                                  ),
+                                  */
+
+                          //dayFontWeight: FontWeight.w500,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                /*
+                Flexible(
+                  flex: 10,
+                  child: ,
+                ),
+                */
+                /*
+                Flexible(
+                  flex: 1,
+                  child: Container(),
+                )
+                */
+              ],
             ),
-            Flexible(
-              flex: 1,
-              child: Container(),
-            )
+            // TODO.
+            //FormBottomSheet(),
           ],
         ),
       ),

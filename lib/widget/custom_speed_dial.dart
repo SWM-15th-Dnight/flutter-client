@@ -1,4 +1,6 @@
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:mobile_client/screens/calendar/form_bottom_sheet.dart';
+import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 
 import '../common/const/color.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +8,12 @@ import 'package:flutter/material.dart';
 import '../screens/calendar/schedule_bottom_sheet.dart';
 
 class CustomSpeedDial extends StatelessWidget {
-  const CustomSpeedDial({super.key});
+  final int? currentCalendarId;
+
+  const CustomSpeedDial({
+    super.key,
+    required this.currentCalendarId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +34,14 @@ class CustomSpeedDial extends StatelessWidget {
           backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
           onTap: () {
             showModalBottomSheet(
+              backgroundColor: Colors.transparent,
+              barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+              useSafeArea: true,
+              isDismissible: true,
               context: context,
-              isDismissible: true, // 배경 탭했을 때 BottomSheet 닫기
               isScrollControlled: true,
-              builder: (_) => ScheduleBottomSheet(),
+              builder: (context) =>
+                  CustomBottomSheet(currentCalendarId: currentCalendarId),
             );
           },
         ),
