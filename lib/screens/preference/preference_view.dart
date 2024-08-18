@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/component/header_text_style.dart';
+import '../../common/const/color.dart';
 import '../../entities/user.dart';
 import '../root/root_view.dart';
 
@@ -227,10 +228,19 @@ class _PreferenceViewState extends State<PreferenceView> {
               onPressed: () {
                 _showAlertDialog(context);
               },
-              child: const Text(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: Text(
                 '로그아웃',
                 style: TextStyle(
+                  color: ColorPalette.GRAY_COLOR[50]!,
                   fontSize: 18,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
