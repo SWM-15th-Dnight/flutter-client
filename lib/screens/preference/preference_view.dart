@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/services/auth_service.dart';
 
+import '../../common/component/header_text_style.dart';
 import '../../entities/user.dart';
 import '../root/root_view.dart';
 
@@ -55,10 +56,7 @@ class _PreferenceViewState extends State<PreferenceView> {
           margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
           child: AppBar(
             centerTitle: true,
-            title: Text('프로필 및 설정',
-                style: TextStyle(
-                  fontSize: 22,
-                )),
+            title: HeaderTextStyle(text: '프로필 및 설정'),
             leading: IconButton(
               icon: Icon(
                 Icons.arrow_back,

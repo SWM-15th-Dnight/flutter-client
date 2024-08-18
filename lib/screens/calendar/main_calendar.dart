@@ -16,6 +16,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/entities/user.dart';
 import 'package:mobile_client/widget/custom_sidebar_modal.dart';
+import '../../common/component/header_text_style.dart';
 import '../../common/const/data.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_speed_dial.dart';
@@ -465,14 +466,7 @@ class CustomHeader extends StatelessWidget {
             ),
             onPressed: onSidebarButtonPressed,
           ),
-          Text(
-            headerTile!,
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              fontSize: 18.0,
-              color: ColorPalette.PRIMARY_COLOR[400],
-            ),
-          ),
+          HeaderTextStyle(text: headerTile!),
           photoURL != null
               ? Padding(
                   // (icon_button.dart) it defaults to 8.0 padding on all sides.
