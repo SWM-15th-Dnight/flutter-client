@@ -149,7 +149,10 @@ class _MainCalendarState extends State<MainCalendar> {
     print('getCalendarList() resp: ${resp.data.runtimeType}');
     setState(() {
       calendarList = resp.data;
-      currentCalendarId = calendarList![0]['calendarId'];
+      print('현재 캘린더 아이디: ${currentCalendarId}');
+      print('비교할 아이디: ${calendarList![0]['calendarId']}');
+      currentCalendarId = currentCalendarId ?? calendarList![0]['calendarId'];
+      showSnackbar('현재 ${currentCalendarId! - 1}번 캘린더가 선택되었습니다!');
       displayCalendarIdSet?.add(currentCalendarId!);
       for (var cal in calendarList!) {
         calendarIdSet.add(cal['calendarId']);
@@ -162,6 +165,7 @@ class _MainCalendarState extends State<MainCalendar> {
   Future<void> makeCalendarColorMap() async {
     widget.auth.checkToken();
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
+    print('refreshToken: $refreshToken');
 
     var resp = await dio.get(
       dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
@@ -196,6 +200,8 @@ class _MainCalendarState extends State<MainCalendar> {
     widget.auth.checkToken();
     var accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
 
+    eventList = [];
+
     for (var i = 1; i < 100; i++) {
       try {
         var resp = await dio.get(
@@ -212,6 +218,15 @@ class _MainCalendarState extends State<MainCalendar> {
     setState(() {
       isGetEventListDone = true;
     });
+  }
+
+  void showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   /*
@@ -308,7 +323,10 @@ class _MainCalendarState extends State<MainCalendar> {
                             setState(() {
                               currentCalendarId = selectedCalendarId;
                             });
+                            showSnackbar(
+                                '현재 ${currentCalendarId! - 1}번 캘린더가 선택되었습니다!');
                           },
+                          onCalendarCreated: getCalendarList,
                         );
                       },
                     );
@@ -448,6 +466,7 @@ class _MainCalendarState extends State<MainCalendar> {
   }) {
     showGeneralDialog(
       context: context,
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       //barrierColor: Colors.black, // turn off the background color
