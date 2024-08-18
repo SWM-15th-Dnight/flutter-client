@@ -49,7 +49,9 @@ class _MainCalendarState extends State<MainCalendar> {
 
   List<dynamic>? calendarList;
   Set<int> calendarIdSet = {};
+
   int? currentCalendarId; // assign at getCalendarList()
+  Set<int>? displayCalendarIdSet = {}; // assign at getCalendarList()
 
   //calendarList![currentCalendarId!]['colorSetId']
   Map<int, Color> calendarColorMap = {};
@@ -148,6 +150,7 @@ class _MainCalendarState extends State<MainCalendar> {
     setState(() {
       calendarList = resp.data;
       currentCalendarId = calendarList![0]['calendarId'];
+      displayCalendarIdSet?.add(currentCalendarId!);
       for (var cal in calendarList!) {
         calendarIdSet.add(cal['calendarId']);
       }
@@ -271,11 +274,10 @@ class _MainCalendarState extends State<MainCalendar> {
       for (var i = 0; i < eventList!.length; i++) {
         String dateKey = DateFormat('yyyy-MM-dd')
             .format(DateTime.parse(eventList![i]['startAt']));
-        print('dateKey: $dateKey');
-        if (eventList![i]['calendarId'] != currentCalendarId) {
-          continue;
+        //print('dateKey: $dateKey');
+        if (displayCalendarIdSet!.contains(eventList![i]['calendarId'])) {
+          addEventToMap(dateEvents, dateKey, eventList![i]);
         }
-        addEventToMap(dateEvents, dateKey, eventList![i]);
       }
     }
 
@@ -283,6 +285,7 @@ class _MainCalendarState extends State<MainCalendar> {
       resizeToAvoidBottomInset: false,
       floatingActionButton: Align(
         alignment: Alignment(0.96, 0.99),
+        // TODO. 따라서 사이드바에서 토스트가 떠야하고, 입력 폼에서 currentCalendarId가 보여져야 한다.
         child: CustomSpeedDial(currentCalendarId: currentCalendarId),
       ),
       body: SafeArea(
@@ -293,14 +296,22 @@ class _MainCalendarState extends State<MainCalendar> {
                 CustomHeader(
                   focusedDay: _focusedDay,
                   onSidebarButtonPressed: () {
-                    CustomSidebarModal(calendarList,
-                        onCalendarSelected: (int selectedCalendarId) {
-                      print(
-                          '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
-                      setState(() {
-                        currentCalendarId = selectedCalendarId;
-                      });
-                    }).sidebarModal(context);
+                    showModalSideSheet(
+                      context: context,
+                      builder: (context) {
+                        return CustomSidebarModal(
+                          calendarList: calendarList,
+                          displayCalendarIdSet: displayCalendarIdSet,
+                          onCalendarSelected: (int selectedCalendarId) {
+                            print(
+                                '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
+                            setState(() {
+                              currentCalendarId = selectedCalendarId;
+                            });
+                          },
+                        );
+                      },
+                    );
                   },
                   onProfileButtonPressed: () {
                     Navigator.of(context).push(
@@ -355,7 +366,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          eventColor: calendarColorMap[currentCalendarId]!,
+                          calendarColorMap: calendarColorMap,
                         );
                       },
                       outsideBuilder: (context, day, focusedDay) {
@@ -364,7 +375,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           focusedDay: focusedDay,
                           dayColor: Color(0XFFAAAAAA),
                           events: dateEvents,
-                          eventColor: calendarColorMap[currentCalendarId]!,
+                          calendarColorMap: calendarColorMap,
                         );
                       },
                       todayBuilder: (context, day, focusedDay) {
@@ -372,7 +383,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          eventColor: calendarColorMap[currentCalendarId]!,
+                          calendarColorMap: calendarColorMap,
                           /* debug - border
                                       decoration: BoxDecoration(
                                         border: Border.all(
@@ -388,7 +399,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          eventColor: calendarColorMap[currentCalendarId]!,
+                          calendarColorMap: calendarColorMap,
                           isSelected: ColorPalette.PRIMARY_COLOR[400]!
                               .withOpacity(0.05),
                           /*
@@ -428,6 +439,36 @@ class _MainCalendarState extends State<MainCalendar> {
           ],
         ),
       ),
+    );
+  }
+
+  void showModalSideSheet({
+    required BuildContext context,
+    required WidgetBuilder builder,
+  }) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      //barrierColor: Colors.black, // turn off the background color
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: Material(
+            child: builder(context),
+          ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(-1, 0),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        );
+      },
     );
   }
 }
@@ -496,7 +537,7 @@ class CustomCalendarBuilder extends StatelessWidget {
   final DateTime day;
   final DateTime focusedDay;
   final Map<String, List<Map<String, dynamic>>>? events;
-  final eventColor;
+  final Map<int, Color> calendarColorMap;
 
   Color? dayColor = Colors.black;
   double isTargetDay = 0.0;
@@ -511,7 +552,7 @@ class CustomCalendarBuilder extends StatelessWidget {
     this.dayColor,
     this.dayFontWeight,
     this.isSelected,
-    required this.eventColor,
+    required this.calendarColorMap,
   }) {
     DateTime today = DateTime.now();
     if (day.year == today.year &&
@@ -587,7 +628,9 @@ class CustomCalendarBuilder extends StatelessWidget {
                       final text = event['summary'];
                       // TODO. lineHeight / fontSize
                       final textStyle = TextStyle(
-                        color: isAllDay ? eventColor : Colors.white,
+                        color: isAllDay
+                            ? calendarColorMap[event['calendarId']]
+                            : Colors.white,
                         fontSize: fontSize,
                         height: 1.4,
                         fontWeight: FontWeight.w400,
@@ -620,8 +663,9 @@ class CustomCalendarBuilder extends StatelessWidget {
                             child: Container(
                               //margin: const EdgeInsets.symmetric(horizontal: 1.0),
                               color: isAllDay
-                                  ? eventColor.withOpacity(0.15)
-                                  : eventColor,
+                                  ? calendarColorMap[event['calendarId']]!
+                                      .withOpacity(0.15)
+                                  : calendarColorMap[event['calendarId']],
                               width: double.infinity,
                               child: Align(
                                 alignment: Alignment.center,
