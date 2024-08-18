@@ -11,10 +11,12 @@ import '../common/const/data.dart';
 
 class CustomBottomSheet extends StatefulWidget {
   final int? currentCalendarId;
+  final Function(dynamic)? onEventAdded;
 
   const CustomBottomSheet({
     super.key,
     required this.currentCalendarId,
+    required this.onEventAdded,
   });
 
   @override
@@ -97,6 +99,10 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
     print('(CustomBottomSheet) resp.statusCode: ${resp.statusCode}');
     print('(CustomBottomSheet) resp: $resp');
+
+    if (resp.statusCode == 201) {
+      widget.onEventAdded!(resp.data);
+    }
 
     Navigator.of(context).pop();
   }

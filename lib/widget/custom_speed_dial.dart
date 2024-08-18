@@ -9,10 +9,12 @@ import '../screens/calendar/schedule_bottom_sheet.dart';
 
 class CustomSpeedDial extends StatelessWidget {
   final int? currentCalendarId;
+  final Function(dynamic) onEventAdded;
 
   const CustomSpeedDial({
     super.key,
     required this.currentCalendarId,
+    required this.onEventAdded,
   });
 
   @override
@@ -40,8 +42,10 @@ class CustomSpeedDial extends StatelessWidget {
               isDismissible: true,
               context: context,
               isScrollControlled: true,
-              builder: (context) =>
-                  CustomBottomSheet(currentCalendarId: currentCalendarId),
+              builder: (context) => CustomBottomSheet(
+                currentCalendarId: currentCalendarId,
+                onEventAdded: onEventAdded,
+              ),
             );
           },
         ),

@@ -78,6 +78,12 @@ class _MainCalendarState extends State<MainCalendar> {
     super.dispose();
   }
 
+  // TODO.
+  Future<void> _refreshCalendar() async {
+    // Implement your refresh logic here
+    await getEventList();
+  }
+
   void _onPageChanged(DateTime focusedDay) {
     setState(() {
       _focusedDay = focusedDay;
@@ -274,6 +280,12 @@ class _MainCalendarState extends State<MainCalendar> {
     }
   }
 
+  void _addEventToList(dynamic event) {
+    setState(() {
+      eventList?.add(event);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     /*
@@ -313,11 +325,14 @@ class _MainCalendarState extends State<MainCalendar> {
     }
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      //resizeToAvoidBottomInset: false,
       floatingActionButton: Align(
         alignment: Alignment(0.96, 0.99),
         // TODO. 따라서 사이드바에서 토스트가 떠야하고, 입력 폼에서 currentCalendarId가 보여져야 한다.
-        child: CustomSpeedDial(currentCalendarId: currentCalendarId),
+        child: CustomSpeedDial(
+          currentCalendarId: currentCalendarId,
+          onEventAdded: _addEventToList,
+        ),
       ),
       body: SafeArea(
         child: Stack(
