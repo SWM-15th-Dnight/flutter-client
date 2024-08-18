@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
@@ -11,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
 import 'package:mobile_client/services/main_request.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import 'package:mobile_client/common/const/color.dart';
@@ -59,10 +61,13 @@ class _MainCalendarState extends State<MainCalendar> {
   List<dynamic>? eventList = [];
   bool isGetEventListDone = false;
 
+  File? image;
+
   @override
   void initState() {
     super.initState();
     user = widget.auth.getCurrentUser();
+    _loadImage();
 
     //fetchCalendarData();
     getCalendarList();
@@ -258,6 +263,17 @@ class _MainCalendarState extends State<MainCalendar> {
   }
   */
 
+  Future<void> _loadImage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final imagePath = prefs.getString('profile_image_path');
+
+    if (imagePath != null) {
+      setState(() {
+        image = File(imagePath);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     /*
@@ -338,7 +354,7 @@ class _MainCalendarState extends State<MainCalendar> {
                       ),
                     );
                   },
-                  photoURL: user?.photoURL,
+                  image: image,
                 ),
                 Expanded(
                   child: TableCalendar(
@@ -492,24 +508,33 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 }
 
-class CustomHeader extends StatelessWidget {
+class CustomHeader extends StatefulWidget {
   final DateTime focusedDay;
   final VoidCallback onSidebarButtonPressed;
   final VoidCallback onProfileButtonPressed;
-  final String? photoURL;
-
   String? headerTile;
+  File? image;
 
   CustomHeader({
     required this.focusedDay,
     required this.onSidebarButtonPressed,
     required this.onProfileButtonPressed,
-    this.photoURL,
+    this.image,
   }) {
     this.headerTile = DateFormat.MMMM('ko_KR').format(focusedDay);
     if (focusedDay.year != DateTime.now().year) {
       headerTile = DateFormat.yMMMM('ko_KR').format(focusedDay);
     }
+  }
+
+  @override
+  State<CustomHeader> createState() => _CustomHeaderState();
+}
+
+class _CustomHeaderState extends State<CustomHeader> {
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -524,17 +549,17 @@ class CustomHeader extends StatelessWidget {
               Icons.menu,
               size: 32,
             ),
-            onPressed: onSidebarButtonPressed,
+            onPressed: widget.onSidebarButtonPressed,
           ),
-          HeaderTextStyle(text: headerTile!),
-          photoURL != null
+          HeaderTextStyle(text: widget.headerTile!),
+          widget.image != null
               ? Padding(
                   // (icon_button.dart) it defaults to 8.0 padding on all sides.
                   padding: const EdgeInsets.all(8.0),
                   child: GestureDetector(
-                    onTap: onProfileButtonPressed,
+                    onTap: widget.onProfileButtonPressed,
                     child: CircleAvatar(
-                      backgroundImage: NetworkImage(photoURL!),
+                      backgroundImage: FileImage(widget.image!),
                       radius: 16,
                     ),
                   ),
@@ -544,7 +569,7 @@ class CustomHeader extends StatelessWidget {
                     Icons.account_circle,
                     size: 32,
                   ),
-                  onPressed: onProfileButtonPressed,
+                  onPressed: widget.onProfileButtonPressed,
                 ),
         ],
       ),

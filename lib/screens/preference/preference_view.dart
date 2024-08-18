@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/services/auth_service.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/component/header_text_style.dart';
 import '../../entities/user.dart';
@@ -9,6 +14,7 @@ import '../root/root_view.dart';
 
 class PreferenceView extends StatefulWidget {
   final FBAuthService auth;
+  String? displayName = '익명';
 
   PreferenceView({
     super.key,
@@ -20,6 +26,83 @@ class PreferenceView extends StatefulWidget {
 }
 
 class _PreferenceViewState extends State<PreferenceView> {
+  File? image;
+  final picker = ImagePicker();
+  final TextEditingController displayNameController = TextEditingController();
+  bool isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+    _loadDisplayName();
+  }
+
+  Future<void> _pickImage() async {
+    print('pick image');
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final directory = await getApplicationDocumentsDirectory();
+      final path = directory.path;
+      final fileName = 'profile_image.png';
+      final File localImage =
+          await File(pickedFile.path).copy('$path/$fileName');
+
+      setState(() {
+        image = localImage;
+      });
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      if (prefs.containsKey('profile_image_path')) {
+        prefs.remove('profile_image_path');
+      }
+      prefs.setString('profile_image_path', localImage.path);
+
+      _loadImage();
+    }
+  }
+
+  Future<void> _loadImage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final imagePath = prefs.getString('profile_image_path');
+
+    if (imagePath != null) {
+      setState(() {
+        image = File(imagePath);
+      });
+    }
+  }
+
+  Future<void> _loadDisplayName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    widget.displayName = prefs.getString('display_name') ?? '익명';
+    setState(() {
+      displayNameController.text = widget.displayName!;
+    });
+  }
+
+  Future<void> _updateDisplayName() async {
+    print('onTap: update display name');
+    if (isEditing) {
+      final newName = displayNameController.text;
+      if (newName.isNotEmpty) {
+        widget.auth.getCurrentUser()?.updateDisplayName(newName);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('display_name', newName);
+        setState(() {
+          widget.displayName = newName;
+          print('수정된 이름: ${widget.displayName}');
+          isEditing = false;
+        });
+      }
+    } else {
+      setState(() {
+        isEditing = true;
+      });
+    }
+  }
+
   void _showAlertDialog(BuildContext context) {
     AlertDialog alert = AlertDialog(
       title: Text('로그아웃'),
@@ -46,8 +129,6 @@ class _PreferenceViewState extends State<PreferenceView> {
   Widget build(BuildContext context) {
     final double photoLength = MediaQuery.of(context).size.width * 0.4;
     // TODO. use shared preference before using local DB
-    final String displayName =
-        widget.auth.getCurrentUser()?.displayName ?? '익명';
 
     return Scaffold(
       appBar: PreferredSize(
@@ -71,56 +152,71 @@ class _PreferenceViewState extends State<PreferenceView> {
       ),
       body: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(161616.0),
-            child: widget.auth.getCurrentUser()?.photoURL != null
-                ? Image.network(
-                    widget.auth.getCurrentUser()!.photoURL!,
-                    width: photoLength,
-                    height: photoLength,
-                    fit: BoxFit.cover,
-                  )
-                : Stack(children: [
-                    Container(
-                      width: photoLength,
-                      height: photoLength,
-                      color: Colors.grey,
-                    ),
-                    Image.asset(
-                      'asset/img/user/default_account_profile.png',
+          GestureDetector(
+            onTap: _pickImage,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(161616.0),
+              child: image != null
+                  ? Image.file(
+                      image!,
                       width: photoLength,
                       height: photoLength,
                       fit: BoxFit.cover,
-                      color: Colors.black,
-                    ),
-                  ]),
+                    )
+                  : widget.auth.getCurrentUser()?.photoURL != null
+                      ? Image.network(
+                          widget.auth.getCurrentUser()!.photoURL!,
+                          width: photoLength,
+                          height: photoLength,
+                          fit: BoxFit.cover,
+                        )
+                      : Stack(
+                          children: [
+                            Container(
+                              width: photoLength,
+                              height: photoLength,
+                              color: Colors.grey,
+                            ),
+                            Image.asset(
+                              'asset/img/user/default_account_profile.png',
+                              width: photoLength,
+                              height: photoLength,
+                              fit: BoxFit.cover,
+                              color: Colors.black,
+                            ),
+                          ],
+                        ),
+            ),
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              GestureDetector(
-                onTap: () {},
-                child: Icon(
-                  Icons.edit_note,
-                  size: 24,
-                  color: Colors.transparent,
-                ),
-              ),
+              isEditing
+                  ? Container(
+                      width: MediaQuery.of(context).size.width * 0.6,
+                      child: TextField(
+                        controller: displayNameController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: '보여질 이름을 알려주세요!',
+                        ),
+                      ),
+                    )
+                  : Text(
+                      widget.displayName!,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
               const SizedBox(width: 4),
-              Text(
-                displayName,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 4),
               GestureDetector(
-                onTap: () {},
+                onTap: _updateDisplayName,
                 child: Icon(
-                  Icons.edit_note,
+                  isEditing ? Icons.check : Icons.edit_note,
                   size: 24,
+                  //color: Colors.transparent,
                 ),
               ),
             ],
