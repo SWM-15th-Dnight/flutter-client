@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/services/auth_service.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../common/const/data.dart';
 
@@ -34,38 +36,138 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       TextEditingController(text: '5');
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  Future<void> _selectDateTime(TextEditingController controller) async {
-    DateTime? selectedDate = await showDatePicker(
+  late DateTime _now;
+  String summary = '';
+  late DateTime startAt;
+  late DateTime endAt;
+
+  @override
+  void initState() {
+    super.initState();
+
+    print('form input: initState');
+    _now = DateTime.now();
+    _now = DateTime(
+      _now.year,
+      _now.month,
+      _now.day,
+      _now.hour,
+      (_now.minute ~/ 5) * 5,
+    );
+    DateTime _end = _now.add(Duration(hours: 1));
+
+    startAt = _now;
+    endAt = _end;
+  }
+
+  Future<void> _selectDate(DateTime whenAt, TextEditingController controller,
+      Function(DateTime) updateWhenAt) async {
+    await showModalBottomSheet(
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.5,
+          child: TableCalendar(
+            locale: 'ko_KR',
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2100, 12, 31),
+            focusedDay: whenAt,
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(
+                () {
+                  controller.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
+                      .format(selectedDay);
+                  whenAt = DateTime(
+                    selectedDay.year,
+                    selectedDay.month,
+                    selectedDay.day,
+                    whenAt.hour,
+                    whenAt.minute,
+                  );
+                  updateWhenAt(whenAt);
+                },
+              );
+              Navigator.of(context).pop();
+            },
+            shouldFillViewport: true,
+            daysOfWeekHeight: 30.0,
+            headerStyle: HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+            ),
+          ),
+        );
+      },
     );
 
-    if (selectedDate != null) {
-      TimeOfDay? selectedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
-        builder: (context, child) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-            child: child!,
-          );
-        },
-      );
+    print('controller.text: ${controller.text}');
+    print('whenAt: ${whenAt}');
+  }
 
-      if (selectedTime != null) {
-        final DateTime finalDateTime = DateTime(
-          selectedDate.year,
-          selectedDate.month,
-          selectedDate.day,
-          selectedTime.hour,
-          (selectedTime.minute ~/ 5) * 5, // Round to nearest 5 minutes
+  Future<void> _selectTime(DateTime whenAt, TextEditingController controller,
+      Function(DateTime) updateWhenAt) async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 200,
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.time,
+            // TODO. Order: AM/PM, hour, minute
+            //dateOrder: DatePickerDateTimeOrder.date_dayPeriod_time,
+            // set initialDateTime adjust to minuteInterval
+            initialDateTime: DateTime(
+              whenAt.year,
+              whenAt.month,
+              whenAt.day,
+              whenAt.hour,
+              (whenAt.minute ~/ 5) * 5,
+            ),
+            minuteInterval: 5,
+            onDateTimeChanged: (DateTime value) {
+              setState(() {
+                controller.text = DateFormat('aa h시 m분', 'ko_KR').format(value);
+                whenAt = DateTime(
+                  whenAt.year,
+                  whenAt.month,
+                  whenAt.day,
+                  value.hour,
+                  value.minute,
+                );
+                updateWhenAt(whenAt);
+              });
+            },
+          ),
         );
-        controller.text =
-            DateFormat('yyyy-MM-ddTHH:mm:ss').format(finalDateTime);
-      }
-    }
+      },
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+    );
+  }
+
+  Future<void> _selectPriority(TextEditingController controller) async {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 200,
+          child: CupertinoPicker(
+            itemExtent: 32.0,
+            onSelectedItemChanged: (int index) {
+              setState(() {
+                controller.text = (index + 1).toString();
+              });
+            },
+            children: List<Widget>.generate(9, (int index) {
+              return Center(
+                child: Text((index + 1).toString()),
+              );
+            }),
+          ),
+        );
+      },
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+    );
   }
 
   Future<void> _submitForm() async {
@@ -74,9 +176,9 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
 
     final data = {
-      'summary': summaryController.text,
-      'startAt': startAtController.text,
-      'endAt': endAtController.text,
+      'summary': summary.length != 0 ? summary : '새 일정',
+      'startAt': DateFormat('yyyy-MM-ddTHH:mm:ss').format(startAt),
+      'endAt': DateFormat('yyyy-MM-ddTHH:mm:ss').format(endAt),
       'priority': int.parse(priorityController.text),
       "status": "TENTATIVE",
       "transp": "OPAQUE",
@@ -86,6 +188,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     };
     final jsonData = jsonEncode(data);
     print('_submitForm $jsonData');
+    return;
 
     var resp = await dio.post(
       dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/form',
@@ -109,110 +212,305 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      color: Colors.white,
-      child: Column(
-        children: [
-          Container(
-            width: 50.0,
-            height: 3.0,
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
-            decoration: BoxDecoration(
-              color: ColorPalette.GRAY_COLOR[100]!,
-              borderRadius: BorderRadius.circular(3.0),
+    var adder = 100;
+    var bottomPadding = 150;
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20.0),
+              topRight: Radius.circular(20.0),
+            ),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.85,
+              color: Colors.white,
+              child: Column(
+                children: [
+                  SizedBox(height: 110), // Space for the fixed TextFormField
+
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                flex: 3,
+                                child: TextFormField(
+                                    scrollPadding: EdgeInsets.only(
+                                        bottom: MediaQuery.of(context)
+                                                .viewInsets
+                                                .bottom +
+                                            adder),
+                                    controller: TextEditingController(
+                                      text: DateFormat(
+                                              'yyyy년 M월 dd일 (EE)', 'ko_KR')
+                                          .format(startAt),
+                                    ),
+                                    decoration: InputDecoration(
+                                      labelText: '시작',
+                                      border: InputBorder.none,
+                                    ),
+                                    readOnly: true,
+                                    onTap: () async {
+                                      await _selectDate(
+                                          startAt, startAtController,
+                                          (newDate) {
+                                        startAt = newDate;
+                                        // update endAt if endAt < startAt
+                                        if (endAt.isBefore(startAt)) {
+                                          endAt =
+                                              startAt.add(Duration(hours: 1));
+                                          endAtController.text = DateFormat(
+                                                  'yyyy년 M월 dd일 (EE)', 'ko_KR')
+                                              .format(endAt);
+                                        }
+                                      });
+                                    }),
+                              ),
+                              Flexible(
+                                flex: 2,
+                                child: TextFormField(
+                                    scrollPadding: EdgeInsets.only(
+                                        bottom: MediaQuery.of(context)
+                                                .viewInsets
+                                                .bottom +
+                                            adder),
+                                    controller: TextEditingController(
+                                      text: DateFormat('aa h시 m분', 'ko_KR')
+                                          .format(startAt),
+                                    ),
+                                    decoration: InputDecoration(
+                                      labelText: '',
+                                      border: InputBorder.none,
+                                    ),
+                                    readOnly: true,
+                                    onTap: () async {
+                                      await _selectTime(
+                                          startAt, startAtController,
+                                          (newTime) {
+                                        startAt = newTime;
+                                        // update endAt if endAt < startAt
+                                        if (endAt.isBefore(startAt)) {
+                                          endAt =
+                                              startAt.add(Duration(hours: 1));
+                                          endAtController.text = DateFormat(
+                                                  'yyyy년 M월 dd일 (EE)', 'ko_KR')
+                                              .format(endAt);
+                                        }
+                                      });
+                                    }),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                flex: 3,
+                                child: TextFormField(
+                                    scrollPadding: EdgeInsets.only(
+                                        bottom: MediaQuery.of(context)
+                                                .viewInsets
+                                                .bottom +
+                                            adder),
+                                    controller: TextEditingController(
+                                      text: DateFormat(
+                                              'yyyy년 M월 dd일 (EE)', 'ko_KR')
+                                          .format(endAt),
+                                    ),
+                                    decoration: InputDecoration(
+                                      labelText: '종료',
+                                      border: InputBorder.none,
+                                    ),
+                                    readOnly: true,
+                                    onTap: () async {
+                                      await _selectDate(endAt, endAtController,
+                                          (newDate) {
+                                        endAt = newDate;
+                                        // update startAt if endAt < startAt
+                                        if (endAt.isBefore(startAt)) {
+                                          startAt = endAt
+                                              .subtract(Duration(hours: 1));
+                                          startAtController.text = DateFormat(
+                                                  'yyyy년 M월 dd일 (EE)', 'ko_KR')
+                                              .format(endAt);
+                                        }
+                                      });
+                                    }),
+                              ),
+                              Flexible(
+                                flex: 2,
+                                child: TextFormField(
+                                    scrollPadding: EdgeInsets.only(
+                                        bottom: MediaQuery.of(context)
+                                                .viewInsets
+                                                .bottom +
+                                            adder),
+                                    controller: TextEditingController(
+                                      text: DateFormat('aa h시 m분', 'ko_KR')
+                                          .format(endAt),
+                                    ),
+                                    decoration: InputDecoration(
+                                      labelText: '',
+                                      border: InputBorder.none,
+                                    ),
+                                    readOnly: true,
+                                    onTap: () async {
+                                      await _selectTime(endAt, endAtController,
+                                          (newTime) {
+                                        endAt = newTime;
+// update startAt if endAt < startAt
+                                        if (endAt.isBefore(startAt)) {
+                                          startAt = endAt
+                                              .subtract(Duration(hours: 1));
+                                          startAtController.text = DateFormat(
+                                                  'yyyy년 M월 dd일 (EE)', 'ko_KR')
+                                              .format(endAt);
+                                        }
+                                      });
+                                    }),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                          child: TextFormField(
+                            scrollPadding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom +
+                                        adder),
+                            textAlign: TextAlign.center,
+                            controller: priorityController,
+                            decoration: InputDecoration(
+                              labelText: '우선 순위',
+                            ),
+                            readOnly: true,
+                            onTap: () async {
+                              await _selectPriority(priorityController);
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                          child: TextFormField(
+                            scrollPadding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom +
+                                        adder),
+                            textAlign: TextAlign.center,
+                            //controller: priorityController,
+                            decoration: InputDecoration(
+                              labelText: '설명',
+                            ),
+                            readOnly: true,
+                            onTap: () async {},
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await _submitForm();
+                            },
+                            child: Text('등록'),
+                          ),
+                        ),
+                        SizedBox(
+                            height: MediaQuery.of(context).viewInsets.bottom +
+                                bottomPadding),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Expanded(
-            child: ListView(
-              children: [
-                ListTile(
-                  title: Center(child: Text('일정 등록')),
-                ),
-                // Add form input fields here
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextFormField(
-                    controller: summaryController,
-                    decoration: InputDecoration(
-                      labelText: '일정 제목',
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Column(
+            children: [
+              Container(
+                height: 38.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      padding: EdgeInsets.only(top: 4.0),
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.keyboard_hide,
+                        size: 24,
+                        color: Colors.transparent,
+                      ),
+                      constraints: BoxConstraints(
+                        maxWidth: 0,
+                        maxHeight: 0,
+                      ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a summary';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextFormField(
-                    controller: startAtController,
-                    decoration: InputDecoration(
-                      labelText: '시작 날짜',
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: Container(
+                        width: 100.0,
+                        height: 3.0,
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        decoration: BoxDecoration(
+                          color: ColorPalette.GRAY_COLOR[100]!,
+                          borderRadius: BorderRadius.circular(3.0),
+                        ),
+                      ),
                     ),
-                    readOnly: true,
-                    onTap: () => _selectDateTime(startAtController),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a start date and time';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextFormField(
-                    controller: endAtController,
-                    decoration: InputDecoration(
-                      labelText: '종료 날짜',
+                    IconButton(
+                      padding: EdgeInsets.only(top: 4.0),
+                      onPressed: () {
+                        FocusScope.of(context).unfocus();
+                      },
+                      icon: Icon(
+                        Icons.keyboard_hide,
+                        size: 24,
+                      ),
+                      // constraints: BoxConstraints(
+                      //   maxWidth: 24,
+                      //   maxHeight: 24,
+                      // ),
                     ),
-                    readOnly: true,
-                    onTap: () => _selectDateTime(endAtController),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter an end date and time';
-                      }
-                      return null;
-                    },
-                  ),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: TextFormField(
-                    controller: priorityController,
-                    decoration: InputDecoration(
-                      labelText: '우선 순위',
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a priority';
-                      }
-                      final int? priority = int.tryParse(value);
-                      if (priority == null || priority < 1 || priority > 9) {
-                        return 'Priority must be an integer between 1 and 9';
-                      }
-                      return null;
-                    },
+              ),
+              Padding(
+                padding: const EdgeInsets.only(
+                    left: 16.0, right: 16.0, bottom: 16.0),
+                child: TextFormField(
+                  autofocus: summary.isEmpty,
+                  // scrollPadding: EdgeInsets.only(
+                  //     bottom: MediaQuery.of(context).viewInsets.bottom + adder),
+                  controller: summaryController,
+                  decoration: InputDecoration(
+                    labelText: '일정 제목',
+                    hintText: '새 일정',
                   ),
+                  onChanged: (value) {
+                    summary = value;
+                  },
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await _submitForm();
-                    },
-                    child: Text('등록'),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

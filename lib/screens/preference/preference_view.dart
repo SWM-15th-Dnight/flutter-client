@@ -8,7 +8,7 @@ import 'package:mobile_client/services/auth_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../common/component/header_text_style.dart';
+import '../../common/component/header_text.dart';
 import '../../common/const/color.dart';
 import '../../entities/user.dart';
 import '../root/root_view.dart';
@@ -138,7 +138,7 @@ class _PreferenceViewState extends State<PreferenceView> {
           margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
           child: AppBar(
             centerTitle: true,
-            title: HeaderTextStyle(text: '프로필 및 설정'),
+            title: HeaderText(text: '프로필 및 설정'),
             leading: IconButton(
               icon: Icon(
                 Icons.arrow_back,

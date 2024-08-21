@@ -39,13 +39,16 @@ class CustomSpeedDial extends StatelessWidget {
               backgroundColor: Colors.transparent,
               barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
               useSafeArea: true,
+              // TODO. 폼에 입력된 정보가 있을 경우, 경고창 띄우기
               isDismissible: true,
               context: context,
               isScrollControlled: true,
-              builder: (context) => CustomBottomSheet(
-                currentCalendarId: currentCalendarId,
-                onEventAdded: onEventAdded,
-              ),
+              builder: (context) {
+                return CustomBottomSheet(
+                  currentCalendarId: currentCalendarId,
+                  onEventAdded: onEventAdded,
+                );
+              },
             );
           },
         ),

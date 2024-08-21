@@ -100,38 +100,43 @@ class FBAuthService {
       return false;
     }
 
-    var resp = await dio.get(
-      dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
-      options: Options(
-        headers: {
-          'authorization': 'Bearer $refreshToken',
-        },
-      ),
-    );
+    var resp;
+    var login;
+    try {
+      resp = await dio.get(
+        dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
+        options: Options(
+          headers: {
+            'authorization': 'Bearer $refreshToken',
+          },
+        ),
+      );
+      print('/colorSet/ resp: $resp');
+    } catch (e) {
+      print('/colorSet/ error: $e');
 
-    print('resp: $resp');
-    print('resp.statusCode: ${resp.statusCode}');
+      try {
+        login = await dio.post(
+          dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/auth/login',
+          data: {
+            'email': await storage.read(key: USER_EMAIL_KEY),
+            'password': await storage.read(key: USER_PASSWORD_KEY),
+          },
+        );
+        print('/auth/login resp: ${login.data}');
 
-    if (resp.statusCode != 200) {
-      var login = await dio
-          .post(dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/auth/login', data: {
-        'email': await storage.read(key: USER_EMAIL_KEY),
-        'password': await storage.read(key: USER_PASSWORD_KEY),
-      });
-
-      if (login.statusCode != 200) {
-        print('fail to update tokens');
+        await storage.write(
+            key: ACCESS_TOKEN_KEY, value: login.data['accessToken']);
+        await storage.write(
+            key: REFRESH_TOKEN_KEY, value: login.data['refreshToken']);
+        print('tokens updated!!!!!!!!!!!!!!!!!!!');
+        return true;
+      } catch (e) {
+        print('/auth/login error: $e');
+        print('checkToken: token update failed!');
         return false;
       }
-
-      await storage.write(
-          key: ACCESS_TOKEN_KEY, value: login.data['accessToken']);
-      await storage.write(
-          key: REFRESH_TOKEN_KEY, value: login.data['refreshToken']);
-
-      return true;
     }
-
     return true;
   }
 

@@ -18,7 +18,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/entities/user.dart';
 import 'package:mobile_client/widget/custom_sidebar_modal.dart';
-import '../../common/component/header_text_style.dart';
+import '../../common/component/header_text.dart';
 import '../../common/const/data.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_speed_dial.dart';
@@ -150,7 +150,8 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 
   Future<void> getCalendarList() async {
-    widget.auth.checkToken();
+    print('getCalendarList()');
+    await widget.auth.checkToken();
     var accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
     var resp = await dio.get(
         dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/calendars/',
@@ -170,11 +171,12 @@ class _MainCalendarState extends State<MainCalendar> {
       }
     });
 
-    makeCalendarColorMap();
+    await makeCalendarColorMap();
   }
 
   Future<void> makeCalendarColorMap() async {
-    widget.auth.checkToken();
+    print('makeCalendarColorMap()');
+    await widget.auth.checkToken();
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     print('refreshToken: $refreshToken');
 
@@ -197,7 +199,7 @@ class _MainCalendarState extends State<MainCalendar> {
       }
     }
 
-    getEventList();
+    await getEventList();
   }
 
   Color hexToColor(String hexString) {
@@ -208,7 +210,8 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 
   Future<void> getEventList() async {
-    widget.auth.checkToken();
+    print('getEventList()');
+    await widget.auth.checkToken();
     var accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
 
     eventList = [];
@@ -325,7 +328,7 @@ class _MainCalendarState extends State<MainCalendar> {
     }
 
     return Scaffold(
-      //resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: false,
       floatingActionButton: Align(
         alignment: Alignment(0.96, 0.99),
         // TODO. 따라서 사이드바에서 토스트가 떠야하고, 입력 폼에서 currentCalendarId가 보여져야 한다.
@@ -409,6 +412,8 @@ class _MainCalendarState extends State<MainCalendar> {
                         _focusedDay = focusedDay;
                       });
                     },
+                    // TODO. onDayLongPressed
+                    //onDayLongPressed: ,
                     calendarBuilders: CalendarBuilders(
                       defaultBuilder: (context, day, focusedDay) {
                         return CustomCalendarBuilder(
@@ -566,7 +571,7 @@ class _CustomHeaderState extends State<CustomHeader> {
             ),
             onPressed: widget.onSidebarButtonPressed,
           ),
-          HeaderTextStyle(text: widget.headerTile!),
+          HeaderText(text: widget.headerTile!),
           widget.image != null
               ? Padding(
                   // (icon_button.dart) it defaults to 8.0 padding on all sides.
