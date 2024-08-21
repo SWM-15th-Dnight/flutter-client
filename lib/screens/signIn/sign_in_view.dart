@@ -180,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ],
                           const SizedBox(
-                            height: 30,
+                            height: 10,
                             width: double.infinity,
                           ),
                           FadeTransition(
@@ -209,6 +209,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   // removed FadeTransitions
   Widget _buildLoginContent() {
+    print('never reached?????????????????????');
     return Stack(
       children: [
         PreferredSize(
@@ -338,7 +339,7 @@ class _StartButtonState extends State<_StartButton> {
     super.initState();
   }
 
-  Map<String, String?> getEmailPassword() {
+  Future<Map<String, String?>> getEmailPassword() async {
     data = {
       'email': widget.email,
       'password': widget.password,
@@ -356,33 +357,44 @@ class _StartButtonState extends State<_StartButton> {
       child: ElevatedButton(
         onPressed: () async {
           if (widget.isEmailSignIn) {
-            getEmailPassword();
-            final resp = await dio.post(
-              dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/auth/login',
-              data: data,
-            );
-            if (resp.statusCode == 200) {
-              print(resp);
+            try {
+              await getEmailPassword();
+              final resp = await dio.post(
+                dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/auth/login',
+                data: data,
+              );
+              if (resp.statusCode == 200) {
+                print(resp);
 
-              // checked.
-              // if (await storage.read(key: ACCESS_TOKEN_KEY) == null) {
-              //   print('null ACCESS_TOKEN_KEY');
-              // }
+                // checked.
+                // if (await storage.read(key: ACCESS_TOKEN_KEY) == null) {
+                //   print('null ACCESS_TOKEN_KEY');
+                // }
 
-              await storage.write(key: USER_EMAIL_KEY, value: widget.email);
-              await storage.write(
-                  key: USER_PASSWORD_KEY, value: widget.password);
-              await storage.write(
-                  key: ACCESS_TOKEN_KEY, value: resp.data['accessToken']);
-              await storage.write(
-                  key: REFRESH_TOKEN_KEY, value: resp.data['refreshToken']);
+                await storage.write(key: USER_EMAIL_KEY, value: widget.email);
+                await storage.write(
+                    key: USER_PASSWORD_KEY, value: widget.password);
+                await storage.write(
+                    key: ACCESS_TOKEN_KEY, value: resp.data['accessToken']);
+                await storage.write(
+                    key: REFRESH_TOKEN_KEY, value: resp.data['refreshToken']);
 
-              if (await widget.auth.checkToken()) {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => MainCalendar(auth: widget.auth)));
-              } else {
-                print('sign_in_view: token update failled');
+                if (await widget.auth.checkToken()) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => MainCalendar(auth: widget.auth)));
+                } else {
+                  print('sign_in_view: token update failled');
+                }
               }
+            } catch (e) {
+              print('sign_in_view: $e');
+              /*
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('서버와의 연결의 원활하지 않습니다.'),
+                ),
+              );
+              */
             }
           } else {
             showModalBottomSheet<void>(

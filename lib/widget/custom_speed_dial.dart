@@ -1,21 +1,32 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:mobile_client/screens/calendar/form_bottom_sheet.dart';
+import 'package:mobile_client/services/auth_service.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
+import 'package:mobile_client/widget/plain_text_input.dart';
+import 'package:mobile_client/widget/speech_to_text_input.dart';
 
 import '../common/const/color.dart';
 import 'package:flutter/material.dart';
 
+import '../common/const/data.dart';
 import '../screens/calendar/schedule_bottom_sheet.dart';
 
 class CustomSpeedDial extends StatelessWidget {
   final int? currentCalendarId;
   final Function(dynamic) onEventAdded;
-  DateTime? startTime;
+  //DateTime? startTime;
+  final FBAuthService auth;
 
   CustomSpeedDial({
     super.key,
     required this.currentCalendarId,
     required this.onEventAdded,
+    required this.auth,
+    //this.startTime,
   });
 
   @override
@@ -36,7 +47,6 @@ class CustomSpeedDial extends StatelessWidget {
           label: '수동으로 등록',
           backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
           onTap: () {
-            startTime = DateTime.now();
             showModalBottomSheet(
               backgroundColor: Colors.transparent,
               barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
@@ -49,7 +59,7 @@ class CustomSpeedDial extends StatelessWidget {
                 return CustomBottomSheet(
                   currentCalendarId: currentCalendarId,
                   onEventAdded: onEventAdded,
-                  startTime: startTime,
+                  startTime: DateTime.now(),
                 );
               },
             );
@@ -64,8 +74,21 @@ class CustomSpeedDial extends StatelessWidget {
           label: '자연어로 등록',
           backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
           onTap: () {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('지원 예정인 기능입니다.')));
+            showModalBottomSheet(
+              context: context,
+              builder: (BuildContext context) {
+                return PlainTextInput(
+                  auth: auth,
+                  currentCalendarId: currentCalendarId,
+                  onEventAdded: onEventAdded,
+                  startTime: DateTime.now(),
+                  parentContext: context,
+                );
+              },
+              isScrollControlled: true,
+              useSafeArea: true,
+              barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+            );
           },
         ),
         SpeedDialChild(
@@ -77,8 +100,21 @@ class CustomSpeedDial extends StatelessWidget {
           label: '음성 입력',
           backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
           onTap: () {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('지원 예정인 기능입니다.')));
+            showModalBottomSheet(
+              context: context,
+              builder: (context) {
+                return SpeechToTextInput(
+                  auth: auth,
+                  currentCalendarId: currentCalendarId,
+                  onEventAdded: onEventAdded,
+                  startTime: DateTime.now(),
+                  parentContext: context,
+                );
+              },
+              isScrollControlled: true,
+              useSafeArea: true,
+              barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+            );
           },
         )
       ],

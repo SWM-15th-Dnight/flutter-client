@@ -15,12 +15,14 @@ class CustomBottomSheet extends StatefulWidget {
   final int? currentCalendarId;
   final Function(dynamic)? onEventAdded;
   final DateTime? startTime;
+  Map<String, dynamic>? responseData;
 
-  const CustomBottomSheet({
+  CustomBottomSheet({
     super.key,
     required this.currentCalendarId,
     required this.onEventAdded,
     required this.startTime,
+    this.responseData,
   });
 
   @override
@@ -49,19 +51,43 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   void initState() {
     super.initState();
 
-    print('form input: initState');
-    _now = DateTime.now();
-    _now = DateTime(
-      _now.year,
-      _now.month,
-      _now.day,
-      _now.hour,
-      (_now.minute ~/ 5) * 5,
-    );
-    DateTime _end = _now.add(Duration(hours: 1));
+    if (widget.responseData != null) {
+      summary = widget.responseData?['summary'];
+      summaryController.text = widget.responseData?['summary'];
 
-    startAt = _now;
-    endAt = _end;
+      if (widget.responseData?['start'] == null) {
+        startAt = DateTime.now();
+      } else {
+        startAt = DateTime.parse(widget.responseData?['start']);
+      }
+      // startAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
+      //     .format(startAt);
+
+      if (widget.responseData?['end'] == null) {
+        endAt = startAt.add(Duration(hours: 1));
+      } else {
+        endAt = DateTime.parse(widget.responseData?['end']);
+      }
+      // endAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
+      //     .format(endAt);
+
+      descriptionController.text = widget.responseData?['description'] ?? '';
+      locationController.text = widget.responseData?['location'] ?? '';
+    } else {
+      print('form input: initState');
+      _now = DateTime.now();
+      _now = DateTime(
+        _now.year,
+        _now.month,
+        _now.day,
+        _now.hour,
+        (_now.minute ~/ 5) * 5,
+      );
+      DateTime _end = _now.add(Duration(hours: 1));
+
+      startAt = _now;
+      endAt = _end;
+    }
   }
 
   Future<void> _selectDate(DateTime whenAt, TextEditingController controller,
@@ -219,8 +245,17 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     Navigator.of(context).pop();
   }
 
+  void printResponseData() {
+    print('${widget.responseData?['summary']}');
+    print('${widget.responseData?['start']}');
+    print('${widget.responseData?['end']}');
+    print('${widget.responseData?['location']}');
+    print('${widget.responseData?['description']}');
+  }
+
   @override
   Widget build(BuildContext context) {
+    printResponseData();
     var adder = 100;
     var bottomPadding = 150;
     return Stack(

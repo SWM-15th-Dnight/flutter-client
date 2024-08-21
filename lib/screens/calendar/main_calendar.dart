@@ -328,13 +328,14 @@ class _MainCalendarState extends State<MainCalendar> {
     }
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      //resizeToAvoidBottomInset: false,
       floatingActionButton: Align(
         alignment: Alignment(0.96, 0.99),
         // TODO. 따라서 사이드바에서 토스트가 떠야하고, 입력 폼에서 currentCalendarId가 보여져야 한다.
         child: CustomSpeedDial(
           currentCalendarId: currentCalendarId,
           onEventAdded: _addEventToList,
+          auth: widget.auth,
         ),
       ),
       body: SafeArea(
@@ -715,7 +716,8 @@ class CustomCalendarBuilder extends StatelessWidget {
                           textPainter.height + (2.0 + 4.0); // Add padding + 2
                       // print(
                       //     '${day}: ${totalHeight} + ${textHeight} > ${constraints.maxHeight}');
-                      if (totalHeight + textHeight > constraints.maxHeight) {
+                      if (totalHeight + textHeight + textHeight >
+                          constraints.maxHeight) {
                         remainingEvents++;
                       } else {
                         totalHeight += textHeight;
