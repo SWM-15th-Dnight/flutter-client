@@ -10,8 +10,9 @@ import '../screens/calendar/schedule_bottom_sheet.dart';
 class CustomSpeedDial extends StatelessWidget {
   final int? currentCalendarId;
   final Function(dynamic) onEventAdded;
+  DateTime? startTime;
 
-  const CustomSpeedDial({
+  CustomSpeedDial({
     super.key,
     required this.currentCalendarId,
     required this.onEventAdded,
@@ -35,6 +36,7 @@ class CustomSpeedDial extends StatelessWidget {
           label: '수동으로 등록',
           backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
           onTap: () {
+            startTime = DateTime.now();
             showModalBottomSheet(
               backgroundColor: Colors.transparent,
               barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
@@ -47,6 +49,7 @@ class CustomSpeedDial extends StatelessWidget {
                 return CustomBottomSheet(
                   currentCalendarId: currentCalendarId,
                   onEventAdded: onEventAdded,
+                  startTime: startTime,
                 );
               },
             );

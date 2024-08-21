@@ -14,11 +14,13 @@ import '../common/const/data.dart';
 class CustomBottomSheet extends StatefulWidget {
   final int? currentCalendarId;
   final Function(dynamic)? onEventAdded;
+  final DateTime? startTime;
 
   const CustomBottomSheet({
     super.key,
     required this.currentCalendarId,
     required this.onEventAdded,
+    required this.startTime,
   });
 
   @override
@@ -34,6 +36,8 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   final TextEditingController endAtController = TextEditingController();
   final TextEditingController priorityController =
       TextEditingController(text: '5');
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   late DateTime _now;
@@ -172,6 +176,10 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
   Future<void> _submitForm() async {
     await auth.checkToken();
+    DateTime endTime = DateTime.now();
+    Duration inputTimeTaken = endTime.difference(widget.startTime!);
+    double itt = inputTimeTaken.inMilliseconds / 1000;
+    print('Time taken for input: ${itt.toString()}');
 
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
 
@@ -179,16 +187,17 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       'summary': summary.length != 0 ? summary : '새 일정',
       'startAt': DateFormat('yyyy-MM-ddTHH:mm:ss').format(startAt),
       'endAt': DateFormat('yyyy-MM-ddTHH:mm:ss').format(endAt),
+      'description': descriptionController.text,
       'priority': int.parse(priorityController.text),
+      'location': locationController.text,
       "status": "TENTATIVE",
       "transp": "OPAQUE",
       "calendarId": widget.currentCalendarId,
       "inputTypeId": 1,
-      "inputTimeTaken": 0
+      "inputTimeTaken": itt,
     };
     final jsonData = jsonEncode(data);
     print('_submitForm $jsonData');
-    return;
 
     var resp = await dio.post(
       dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/form',
@@ -389,6 +398,25 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                     MediaQuery.of(context).viewInsets.bottom +
                                         adder),
                             textAlign: TextAlign.center,
+                            controller: descriptionController,
+                            decoration: InputDecoration(
+                              labelText: '설명',
+                            ),
+                            readOnly: false,
+                            onChanged: (value) async {
+                              descriptionController.text = value;
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                          child: TextFormField(
+                            scrollPadding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom +
+                                        adder),
+                            textAlign: TextAlign.center,
                             controller: priorityController,
                             decoration: InputDecoration(
                               labelText: '우선 순위',
@@ -408,12 +436,14 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                     MediaQuery.of(context).viewInsets.bottom +
                                         adder),
                             textAlign: TextAlign.center,
-                            //controller: priorityController,
+                            controller: locationController,
                             decoration: InputDecoration(
-                              labelText: '설명',
+                              labelText: '장소',
                             ),
-                            readOnly: true,
-                            onTap: () async {},
+                            readOnly: false,
+                            onChanged: (value) async {
+                              locationController.text = value;
+                            },
                           ),
                         ),
                         Padding(
@@ -423,7 +453,21 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                             onPressed: () async {
                               await _submitForm();
                             },
-                            child: Text('등록'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                            ),
+                            child: Text(
+                              '등록',
+                              style: TextStyle(
+                                color: ColorPalette.GRAY_COLOR[50]!,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ),
                         SizedBox(

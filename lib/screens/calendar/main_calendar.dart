@@ -152,10 +152,10 @@ class _MainCalendarState extends State<MainCalendar> {
   Future<void> getCalendarList() async {
     print('getCalendarList()');
     await widget.auth.checkToken();
-    var accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
+    var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     var resp = await dio.get(
         dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/calendars/',
-        options: Options(headers: {'authorization': 'Bearer $accessToken'}));
+        options: Options(headers: {'authorization': 'Bearer $refreshToken'}));
     print('getCalendarList() resp: $resp');
     print('getCalendarList() resp: ${resp.statusCode}');
     print('getCalendarList() resp: ${resp.data.runtimeType}');
@@ -212,7 +212,7 @@ class _MainCalendarState extends State<MainCalendar> {
   Future<void> getEventList() async {
     print('getEventList()');
     await widget.auth.checkToken();
-    var accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
+    var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
 
     eventList = [];
 
@@ -221,7 +221,7 @@ class _MainCalendarState extends State<MainCalendar> {
         var resp = await dio.get(
             dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/${i}',
             options:
-                Options(headers: {'authorization': 'Bearer $accessToken'}));
+                Options(headers: {'authorization': 'Bearer $refreshToken'}));
         if (resp.statusCode == 200) {
           print('getEventList() : ${resp.data}');
           eventList?.add(resp.data);
