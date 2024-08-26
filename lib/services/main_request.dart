@@ -52,4 +52,20 @@ class MainRequest {
 
     return resp;
   }
+
+  Future<Response> getEvent(int eventId) async {
+    await auth.checkToken();
+    final String? refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
+
+    var resp = await dio.get(
+      dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/$eventId',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $refreshToken',
+        },
+      ),
+    );
+
+    return resp;
+  }
 }

@@ -16,13 +16,20 @@ class CustomBottomSheet extends StatefulWidget {
   final Function(dynamic)? onEventAdded;
   final DateTime? startTime;
   Map<String, dynamic>? responseData;
+  // for edit mode
+  bool isEditMode;
+  Map<String, dynamic>? event;
+  final Function(int)? onEventEdited;
 
   CustomBottomSheet({
     super.key,
     required this.currentCalendarId,
-    required this.onEventAdded,
+    this.onEventAdded,
     required this.startTime,
     this.responseData,
+    this.isEditMode = false,
+    this.event,
+    this.onEventEdited,
   });
 
   @override
@@ -73,6 +80,28 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
       descriptionController.text = widget.responseData?['description'] ?? '';
       locationController.text = widget.responseData?['location'] ?? '';
+    } else if (widget.event != null) {
+      summary = widget.event?['summary'];
+      summaryController.text = widget.event?['summary'];
+
+      if (widget.event?['startAt'] == null) {
+        startAt = DateTime.now();
+      } else {
+        startAt = DateTime.parse(widget.event?['startAt']);
+      }
+      // startAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
+      //     .format(startAt);
+
+      if (widget.event?['endAt'] == null) {
+        endAt = startAt.add(Duration(hours: 1));
+      } else {
+        endAt = DateTime.parse(widget.event?['endAt']);
+      }
+      // endAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
+      //     .format(endAt);
+
+      descriptionController.text = widget.event?['description'] ?? '';
+      locationController.text = widget.event?['location'] ?? '';
     } else {
       print('form input: initState');
       _now = DateTime.now();
@@ -219,38 +248,70 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       "status": "TENTATIVE",
       "transp": "OPAQUE",
       "calendarId": widget.currentCalendarId,
-      "inputTypeId": 1,
-      "inputTimeTaken": itt,
     };
-    final jsonData = jsonEncode(data);
-    print('_submitForm $jsonData');
 
-    var resp = await dio.post(
-      dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/form',
-      data: jsonData,
-      options: Options(
-        headers: {
-          'authorization': 'Bearer $refreshToken',
-        },
-      ),
-    );
+    if (!widget.isEditMode) {
+      // create event
+      data['inputTypeId'] = 1;
+      data['inputTimeTaken'] = itt;
 
-    print('(CustomBottomSheet) resp.statusCode: ${resp.statusCode}');
-    print('(CustomBottomSheet) resp: $resp');
+      final jsonData = jsonEncode(data);
+      print('(create) _submitForm $jsonData');
 
-    if (resp.statusCode == 201) {
-      widget.onEventAdded!(resp.data);
+      var resp = await dio.post(
+        dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/form',
+        data: jsonData,
+        options: Options(
+          headers: {
+            'authorization': 'Bearer $refreshToken',
+          },
+        ),
+      );
+
+      print('(create) resp.statusCode: ${resp.statusCode}');
+      print('(create) resp: $resp');
+
+      if (resp.statusCode == 201) {
+        widget.onEventAdded!(resp.data);
+      }
+    } else {
+      // edit event
+      data['eventId'] = widget.event?['eventId'];
+
+      final jsonData = jsonEncode(data);
+      print('(edit) _submitForm $jsonData');
+
+      var resp = await dio.put(
+        dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/',
+        data: jsonData,
+        options: Options(
+          headers: {
+            'authorization': 'Bearer $refreshToken',
+          },
+        ),
+      );
+
+      print('(edit) resp.statusCode: ${resp.statusCode}');
+      print('(edit) resp: $resp');
+
+      if (resp.statusCode == 200) {
+        // TODO.
+        widget.onEventEdited!(resp.data);
+      }
+      Navigator.of(context).pop();
     }
 
     Navigator.of(context).pop();
   }
 
   void printResponseData() {
-    print('${widget.responseData?['summary']}');
-    print('${widget.responseData?['start']}');
-    print('${widget.responseData?['end']}');
-    print('${widget.responseData?['location']}');
-    print('${widget.responseData?['description']}');
+    if (widget.responseData != null) {
+      print('${widget.responseData?['summary']}');
+      print('${widget.responseData?['start']}');
+      print('${widget.responseData?['end']}');
+      print('${widget.responseData?['location']}');
+      print('${widget.responseData?['description']}');
+    }
   }
 
   @override

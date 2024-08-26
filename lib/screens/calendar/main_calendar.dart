@@ -184,6 +184,7 @@ class _MainCalendarState extends State<MainCalendar> {
           showDaysEventsModal: showDaysEventsModal,
           eventList: eventList,
           updateEventList: updateEventList,
+          onEventEdited: _editEventToList,
         );
       },
     );
@@ -395,6 +396,18 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
+  Future<void> _editEventToList(int eventId) async {
+    setState(() {
+      eventList?.removeWhere((element) => element['eventId'] == eventId);
+    });
+
+    var _event = await MainRequest().getEvent(eventId);
+
+    setState(() {
+      eventList?.add(_event.data);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     /*
@@ -424,6 +437,7 @@ class _MainCalendarState extends State<MainCalendar> {
 
     if (eventList?.length != 0) {
       for (var i = 0; i < eventList!.length; i++) {
+        //print('[$i] : ${eventList![i]}');
         String dateKey = DateFormat('yyyy-MM-dd')
             .format(DateTime.parse(eventList![i]['startAt']));
         //print('dateKey: $dateKey');

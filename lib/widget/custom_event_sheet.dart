@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_client/services/main_request.dart';
+import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 
 import '../common/const/color.dart';
 import '../common/const/data.dart';
@@ -12,6 +13,7 @@ class CustomEventSheet extends StatelessWidget {
   final Map<String, dynamic> event;
   final List<dynamic>? eventList;
   final Function(List<dynamic>?) updateEventList;
+  final Function(int) onEventEdited;
   // for back button
   final BuildContext parentContext;
   final Map<String, List<Map<String, dynamic>>> dateEvents;
@@ -29,6 +31,7 @@ class CustomEventSheet extends StatelessWidget {
     required this.showDaysEventsModal,
     required this.eventList,
     required this.updateEventList,
+    required this.onEventEdited,
   });
 
   @override
@@ -126,6 +129,8 @@ class CustomEventSheet extends StatelessWidget {
     ).then((value) {
       if (value == 'edit') {
         // TODO. Handle edit action
+        print(event);
+        _showEditEventSheet(context, event);
       } else if (value == 'delete') {
         // Handle delete action
         _showDeleteConfirmationDialog(context);
@@ -151,7 +156,6 @@ class CustomEventSheet extends StatelessWidget {
             ),
             TextButton(
               onPressed: () async {
-                // TODO. Handle the delete action
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
                 var resp = await MainRequest().deleteEvent(event['eventId']);
@@ -176,6 +180,26 @@ class CustomEventSheet extends StatelessWidget {
             ),
           ],
         );
+      },
+    );
+  }
+
+  void _showEditEventSheet(BuildContext context, Map<String, dynamic> event) {
+    showModalBottomSheet(
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+      useSafeArea: true,
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        return CustomBottomSheet(
+          currentCalendarId: event['calendarId'],
+          //onEventAdded: onEventAdded,
+          startTime: DateTime.now(),
+          isEditMode: true,
+          event: event,
+          onEventEdited: onEventEdited,
+        );
+        return Container();
       },
     );
   }
