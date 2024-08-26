@@ -21,6 +21,7 @@ import 'package:mobile_client/widget/custom_sidebar_modal.dart';
 import '../../common/component/header_text.dart';
 import '../../common/const/data.dart';
 import '../../services/auth_service.dart';
+import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
 import 'form_bottom_sheet.dart';
@@ -67,6 +68,9 @@ class _MainCalendarState extends State<MainCalendar> {
   void initState() {
     super.initState();
     user = widget.auth.getCurrentUser();
+    // set _selectedDay to 00:00:00.000Z
+    _selectedDay = parseUTCDateTime(
+        '${DateTime.now().toIso8601String().split('T')[0]}T00:00:00.000Z');
     _loadImage();
 
     //fetchCalendarData();
@@ -78,15 +82,116 @@ class _MainCalendarState extends State<MainCalendar> {
     super.dispose();
   }
 
+  DateTime parseUTCDateTime(String value) {
+    List<String> parts =
+        value.contains('T') ? value.split('T') : value.split(' ');
+    if (parts.length == 2) {
+      final timePart = parts[1];
+      if (timePart.endsWith('Z') ||
+          timePart.contains('+') ||
+          timePart.contains('-')) {
+        return DateTime.parse(value);
+      } else {
+        return DateTime.parse('${value}Z');
+      }
+    }
+    return DateTime.parse(value);
+  }
+
   // TODO.
   Future<void> _refreshCalendar() async {
     // Implement your refresh logic here
     await getEventList();
   }
 
-  void _onPageChanged(DateTime focusedDay) {
+  void _onPageChanged(DateTime selectedDay, DateTime focusedDay) {
     setState(() {
       _focusedDay = focusedDay;
+      DateTime today = DateTime.now();
+      if (focusedDay.year == today.year && focusedDay.month == today.month) {
+        _selectedDay = today;
+      } else {
+        _selectedDay = DateTime(focusedDay.year, focusedDay.month, 1);
+      }
+    });
+  }
+
+  void showDaysEventsModal(BuildContext parentContext,
+      Map<String, List<Map<String, dynamic>>> dateEvents) {
+    showDialog(
+      context: parentContext,
+      barrierDismissible: true,
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+      builder: (BuildContext context) {
+        var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
+        var numberOfEvents = dateEvents[day]?.length ?? 0;
+        return Dialog(
+          child: SingleChildScrollView(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.8,
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: Column(
+                children: [
+                  // TODO. Text 상단 고정하고, bottom overflow시 스크롤되게
+                  Text(
+                    '${DateFormat('M월 d일').format(_selectedDay)}에는 $numberOfEvents개의 events가 있어요!',
+                    style: TextStyle(
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  Expanded(
+                      child: ListView(
+                    children: [
+                      for (var event in dateEvents[day] ?? [])
+                        ListTile(
+                          title: Text(event['summary']),
+                          subtitle: Text(
+                              '${DateFormat('HH:mm').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('HH:mm').format(DateTime.parse(event['endAt']))}'),
+                          onTap: () {
+                            print(event);
+                            Navigator.pop(context);
+                            _showEventDetailModal(
+                                context, event, parentContext, dateEvents);
+                          },
+                        ),
+                    ],
+                  )),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEventDetailModal(
+      BuildContext context,
+      Map<String, dynamic> event,
+      BuildContext parentContext,
+      Map<String, List<Map<String, dynamic>>> dateEvents) {
+    showModalBottomSheet(
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+      useSafeArea: true,
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        return CustomEventSheet(
+          event: event,
+          parentContext: parentContext,
+          dateEvents: dateEvents,
+          showDaysEventsModal: showDaysEventsModal,
+          eventList: eventList,
+          updateEventList: updateEventList,
+        );
+      },
+    );
+  }
+
+  void updateEventList(List<dynamic>? newEventList) {
+    setState(() {
+      eventList = newEventList;
     });
   }
 
@@ -192,7 +297,7 @@ class _MainCalendarState extends State<MainCalendar> {
 
     for (var cal in calendarList!) {
       for (var r in resp.data) {
-        print(r['hexCode'].substring(1));
+        //print(r['hexCode'].substring(1));
         if (cal['colorSetId'] == r['colorSetId']) {
           calendarColorMap[cal['calendarId']] = hexToColor(r['hexCode']);
           break;
@@ -211,7 +316,7 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 
   Future<void> getEventList() async {
-    print('getEventList()');
+    //print('getEventList()');
     await widget.auth.checkToken();
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
 
@@ -224,7 +329,7 @@ class _MainCalendarState extends State<MainCalendar> {
             options:
                 Options(headers: {'authorization': 'Bearer $refreshToken'}));
         if (resp.statusCode == 200) {
-          print('getEventList() : ${resp.data}');
+          //print('getEventList() : ${resp.data}');
           eventList?.add(resp.data);
         }
       } catch (e) {}
@@ -384,7 +489,9 @@ class _MainCalendarState extends State<MainCalendar> {
                     focusedDay: _focusedDay,
                     firstDay: DateTime.utc(1800, 1, 1),
                     lastDay: DateTime.utc(3000, 1, 1),
-                    onPageChanged: _onPageChanged,
+                    onPageChanged: (focusedDay) {
+                      _onPageChanged(_selectedDay, focusedDay);
+                    },
                     daysOfWeekHeight: 30.0,
                     // TODO. WeekDays' Style
                     daysOfWeekStyle: DaysOfWeekStyle(),
@@ -410,8 +517,14 @@ class _MainCalendarState extends State<MainCalendar> {
                     selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                     onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
+                        print('selectdDay: ${_selectedDay}, ${selectedDay}');
+                        if (_selectedDay == selectedDay) {
+                          print('double tab!');
+                          showDaysEventsModal(context, dateEvents);
+                        }
                         _selectedDay = selectedDay;
                         _focusedDay = focusedDay;
+                        print('selectdDay: ${_selectedDay} ${selectedDay}');
                       });
                     },
                     // TODO. onDayLongPressed
@@ -750,8 +863,8 @@ class CustomCalendarBuilder extends StatelessWidget {
                     }
 
                     if (remainingEvents > 0) {
-                      remainingEvents += 1;
-                      displayEvents -= 1;
+                      //remainingEvents += 1;
+                      //displayEvents -= 1;
                       eventWidgets.add(Padding(
                         padding: const EdgeInsets.symmetric(vertical: 1.0),
                         child: Container(

@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile_client/services/auth_service.dart';
 
+import '../common/const/data.dart';
+
 class MainRequest {
   MainRequest();
 
@@ -33,5 +35,21 @@ class MainRequest {
         },
       ),
     );
+  }
+
+  Future<Response> deleteEvent(int eventId) async {
+    await auth.checkToken();
+    final String? refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
+
+    var resp = await dio.delete(
+      dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/$eventId',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $refreshToken',
+        },
+      ),
+    );
+
+    return resp;
   }
 }

@@ -1,0 +1,182 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/intl.dart';
+import 'package:mobile_client/services/main_request.dart';
+
+import '../common/const/color.dart';
+import '../common/const/data.dart';
+import '../services/auth_service.dart';
+
+class CustomEventSheet extends StatelessWidget {
+  final Map<String, dynamic> event;
+  final List<dynamic>? eventList;
+  final Function(List<dynamic>?) updateEventList;
+  // for back button
+  final BuildContext parentContext;
+  final Map<String, List<Map<String, dynamic>>> dateEvents;
+  final Function(BuildContext, Map<String, List<Map<String, dynamic>>>)
+      showDaysEventsModal;
+  // auth
+  final FBAuthService auth = FBAuthService();
+  final dio = Dio();
+
+  CustomEventSheet({
+    super.key,
+    required this.event,
+    required this.parentContext,
+    required this.dateEvents,
+    required this.showDaysEventsModal,
+    required this.eventList,
+    required this.updateEventList,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            child: Column(
+              children: [
+                SizedBox(height: 110),
+                Expanded(
+                    child: ListView(
+                  children: [
+                    for (var key in event.keys)
+                      ListTile(
+                        title: Text(key),
+                        subtitle: Text(event[key].toString()),
+                        onTap: () {},
+                      ),
+                  ],
+                )),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Column(
+            children: [
+              Container(
+                height: 38.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      padding: EdgeInsets.only(top: 4.0),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showDaysEventsModal(parentContext, dateEvents);
+                      },
+                      icon: Icon(
+                        Icons.arrow_back,
+                        size: 24,
+                      ),
+                    ),
+                    IconButton(
+                      padding: EdgeInsets.only(top: 4.0),
+                      onPressed: () {
+                        print('3 dots');
+                        _showPopupMenu(context);
+                      },
+                      icon: Icon(
+                        Icons.more_horiz,
+                        size: 24,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                'Positioned Widget',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showPopupMenu(BuildContext context) {
+    showMenu(
+      context: context,
+      position:
+          RelativeRect.fromLTRB(100, 100, 0, 0), // Adjust position as needed
+      items: [
+        PopupMenuItem<String>(
+          value: 'edit',
+          child: Text('수정'),
+        ),
+        PopupMenuItem<String>(
+          value: 'delete',
+          child: Text(
+            '삭제',
+            style: TextStyle(
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'edit') {
+        // TODO. Handle edit action
+      } else if (value == 'delete') {
+        // Handle delete action
+        _showDeleteConfirmationDialog(context);
+      }
+    });
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          //title: Text('삭제 확인'),
+          content: Text('정말로 삭제하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // TODO. Handle the delete action
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                var resp = await MainRequest().deleteEvent(event['eventId']);
+
+                if (resp.statusCode == 200) {
+                  // delete event from dataEvents
+                  String dateKey = DateFormat('yyyy-MM-dd')
+                      .format(DateTime.parse(event['startAt']));
+                  dateEvents[dateKey]!.removeWhere(
+                      (element) => element['eventId'] == event['eventId']);
+                  eventList!.removeWhere(
+                      (element) => element['eventId'] == event['eventId']);
+                  updateEventList(eventList);
+                }
+
+                showDaysEventsModal(parentContext, dateEvents);
+              },
+              child: Text(
+                '삭제',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
