@@ -94,7 +94,8 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                       */
                         },
                       ),
-                      title: Text('캘린더 ${i != 0 ? '(${i})' : ''}'),
+                      title: Text(
+                          '캘린더 ${'(${widget.calendarList![i]['calendarId']})'}'),
                       onTap: () {
                         setState(() {
                           if (selectedCalendarIds.contains(

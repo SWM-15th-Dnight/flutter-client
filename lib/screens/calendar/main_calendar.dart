@@ -164,7 +164,8 @@ class _MainCalendarState extends State<MainCalendar> {
       print('현재 캘린더 아이디: ${currentCalendarId}');
       print('비교할 아이디: ${calendarList![0]['calendarId']}');
       currentCalendarId = currentCalendarId ?? calendarList![0]['calendarId'];
-      showSnackbar('현재 ${currentCalendarId! - 1}번 캘린더가 선택되었습니다!');
+      // TODO. 기본 캘린더 번호를 2로 가정해버렸음, 그냥 지웠음
+      // howSnackbar('현재 ${currentCalendarId! - 2}번 캘린더가 선택되었습니다!');
       displayCalendarIdSet?.add(currentCalendarId!);
       for (var cal in calendarList!) {
         calendarIdSet.add(cal['calendarId']);
@@ -359,7 +360,7 @@ class _MainCalendarState extends State<MainCalendar> {
                               currentCalendarId = selectedCalendarId;
                             });
                             showSnackbar(
-                                '현재 ${currentCalendarId! - 1}번 캘린더가 선택되었습니다!');
+                                '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
                           },
                           onCalendarCreated: getCalendarList,
                         );

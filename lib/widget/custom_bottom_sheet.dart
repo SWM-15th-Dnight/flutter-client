@@ -278,7 +278,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(
-                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
                           child: Row(
                             children: [
                               Flexible(
@@ -353,7 +353,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(
-                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
                           child: Row(
                             children: [
                               Flexible(
@@ -426,7 +426,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(
-                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
                           child: TextFormField(
                             scrollPadding: EdgeInsets.only(
                                 bottom:
@@ -445,7 +445,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(
-                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
                           child: TextFormField(
                             scrollPadding: EdgeInsets.only(
                                 bottom:
@@ -464,7 +464,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(
-                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
                           child: TextFormField(
                             scrollPadding: EdgeInsets.only(
                                 bottom:
@@ -483,7 +483,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(
-                              top: 32.0, left: 16.0, bottom: 16.0, right: 16.0),
+                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
                           child: ElevatedButton(
                             onPressed: () async {
                               await _submitForm();
