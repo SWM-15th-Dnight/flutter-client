@@ -471,6 +471,7 @@ class _MainCalendarState extends State<MainCalendar> {
                       builder: (context) {
                         return CustomSidebarModal(
                           calendarList: calendarList,
+                          currentCalendarId: currentCalendarId,
                           displayCalendarIdSet: displayCalendarIdSet,
                           onCalendarSelected: (int selectedCalendarId) {
                             print(
@@ -480,6 +481,11 @@ class _MainCalendarState extends State<MainCalendar> {
                             });
                             showSnackbar(
                                 '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
+                          },
+                          onSelectedCalendarDeleted: (int primaryCalendarId) {
+                            setState(() {
+                              currentCalendarId = primaryCalendarId;
+                            });
                           },
                           onCalendarCreated: getCalendarList,
                         );
