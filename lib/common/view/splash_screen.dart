@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/common/layout/default_layout.dart';
+import 'package:mobile_client/screens/calendar/main_calendar.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
+import '../../screens/signIn/sign_in_view.dart';
+import '../../services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,16 +15,29 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final FBAuthService _auth = FBAuthService();
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        FadePageRoute(
-          builder: (context) => RootView(),
-        ), // Replace with your target screen
-      );
+    Future.delayed(Duration(seconds: 3), () async {
+      if (await _auth.checkToken()) {
+        //print('SplashScreen to MainCalendar');
+        Navigator.pushReplacement(
+          context,
+          FadePageRoute(
+            builder: (context) => MainCalendar(auth: _auth),
+          ), // Replace with your target screen
+        );
+      } else {
+        //print('SplashScreen to LoginScreen');
+        Navigator.pushReplacement(
+          context,
+          FadePageRoute(
+            builder: (context) => LoginScreen(),
+          ), // Replace with your target screen
+        );
+      }
     });
   }
 
@@ -30,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
       child: SizedBox(
         width: MediaQuery.of(context).size.width,
-        child: Column(
+        child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Calinify',
@@ -40,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   fontWeight: FontWeight.bold,
                   fontSize: 32,
                 )),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             CircularProgressIndicator(
               color: Colors.white,
             ),
@@ -55,8 +72,9 @@ class _SplashScreenState extends State<SplashScreen> {
 class FadePageRoute extends PageRouteBuilder {
   final WidgetBuilder builder;
 
-  FadePageRoute({required this.builder})
-      : super(
+  FadePageRoute({
+    required this.builder,
+  }) : super(
           pageBuilder: (context, animation, secondaryAnimation) =>
               builder(context),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {

@@ -18,9 +18,9 @@ class HomeView extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('uid: ${viewModel.userUID()}'),
-                Text('email: ${viewModel.userEmail()}'),
-                Text('displayName: ${viewModel.userDisplayName()}'),
+                // Text('uid: ${viewModel.userUID()}'),
+                // Text('email: ${viewModel.userEmail()}'),
+                // Text('displayName: ${viewModel.userDisplayName()}'),
                 _IdToken(viewModel: viewModel),
                 ElevatedButton(
                   onPressed: () {

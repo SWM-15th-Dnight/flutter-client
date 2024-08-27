@@ -10,7 +10,7 @@ class HomeModel {
     return await userService.signOut();
   }
 
-  FBUser? user() {
-    return userService.getCurrentUser();
-  }
+  // FBUser? user() {
+  //   return userService.getCurrentUser();
+  // }
 }

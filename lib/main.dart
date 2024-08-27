@@ -1,16 +1,17 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:mobile_client/common/view/splash_screen.dart';
-import 'package:mobile_client/screens/home/home_view_model.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
-import 'package:mobile_client/screens/root/root_view_model.dart';
-import 'package:mobile_client/screens/signIn/sign_in_view_model.dart';
 import 'package:provider/provider.dart';
+
 import 'firebase_options.dart';
 
-//late final FirebaseApp app;
+import 'package:mobile_client/common/view/splash_screen.dart';
+import 'package:mobile_client/screens/home/home_view_model.dart';
+import 'package:mobile_client/screens/root/root_view_model.dart';
+import 'package:mobile_client/screens/signIn/sign_in_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +38,6 @@ class _App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // print('< App >');
     return MaterialApp(
       title: 'App',
       theme: ThemeData(
@@ -46,7 +46,15 @@ class _App extends StatelessWidget {
         fontFamily: 'NotoSans',
       ),
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', ''),
+        Locale('ko', ''),
+      ],
+      home: SplashScreen(),
     );
   }
 }

@@ -1,58 +1,149 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:mobile_client/entities/user.dart';
+import 'package:mobile_client/services/main_request.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-User? user;
-String? idToken; // Firebase Auth, idToken;
+import '../common/const/data.dart';
 
 class FBAuthService {
   FBAuthService();
 
-  // TableCalendar
-  // final CalendarFormat calendarFormat = CalendarFormat.month;
-  // DateTime focusedDay = DateTime(DateTime.now().year, DateTime.now().month, 1);
-  // DateTime? selectedDay;
+  final dio = Dio();
 
-  // Future<void> UpdateFocusedDay(DateTime focusedDay) async {
-  //   print('onPageChanged: $focusedDay, $focusedDay');
-  //   //_focusedDay = focusedDay;
+  final _auth = FirebaseAuth.instance;
+  Map<String, String>? _authHeaders;
 
-  //   if (focusedDay == DateTime.now().month) {
-  //     focusedDay = DateTime.now();
-  //   } else {
-  //     focusedDay = DateTime(focusedDay.year, focusedDay.month, 1);
-  //   }
-  //   print('result: $focusedDay');
-  // }
-
-  /// 현재 사용자가 로그인되어 있는지 확인합니다.
-  bool isSignedIn() {
-    return getCurrentUser() != null;
+  Stream<User?> getUserStream() {
+    return _auth.authStateChanges();
   }
 
-  /// 사용자 인증 상태 변화를 스트림으로 반환합니다.
-  Stream<FBUser?> getUserStream() {
-    return FirebaseAuth.instance.authStateChanges().map((User? user) {
-      return user?.toFBUser();
-    });
+  User? getCurrentUser() {
+    return _auth.currentUser;
   }
 
-  /// 현재 인증된 사용자를 가져옵니다. (있다면)
-  FBUser? getCurrentUser() {
-    return FirebaseAuth.instance.currentUser?.toFBUser();
+  Future<String?> getIdToken() async {
+    return await getCurrentUser()?.getIdToken();
   }
 
-  /// 현재 세션의 JWT 액세스 토큰을 가져옵니다.
-  Future<String?>? getJWTToken() {
-    return FirebaseAuth.instance.currentUser?.getIdToken();
+  Future<Map<String, String>?> getAuthHeaders() async {
+    if (_authHeaders != null) {
+      return _authHeaders;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final authHeadersJson = prefs.getString('authHeaders');
+    if (authHeadersJson != null) {
+      _authHeaders = Map<String, String>.from(jsonDecode(authHeadersJson));
+    }
+    return _authHeaders;
   }
 
-  Future<bool> signInWithGoogle() async {
+  Future<void> _saveAuthHeaders(Map<String, String> authHeaders) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('authHeaders', jsonEncode(authHeaders));
+  }
+
+  Future<Map<String, dynamic>?> signUpWithEmailAndPassword(
+      Map<String, dynamic> data) async {
+    try {
+      final Response<dynamic>? resp =
+          await MainRequest().postRequest('/api/v1/auth/signup', data);
+      print('resp: ${resp}');
+      return jsonDecode(resp!.data) as Map<String, dynamic>;
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> signInWithEmailAndPassword(
+      Map<String, dynamic> data) async {
+    final Response<dynamic>? resp;
+    try {
+      resp = await MainRequest().postRequest('/api/v1/auth/login', data);
+      //print('auth_service: ${resp?.statusCode}');
+
+      if (resp?.statusCode == 200) {
+        print(resp?.data.runtimeType);
+        return jsonDecode(resp?.data) as Map<String, dynamic>;
+      } else if (resp?.statusCode == 422) {
+        //print('Invalid data format: ${resp?.data}');
+        return {'error': 'Invalid data format'};
+      } else if (resp?.statusCode == 401) {
+        //print('Invalid credentials: ${resp?.data}');
+        return {'error': 'Invalid credentials'};
+      } else {
+        //print('Error: ${resp?.statusCode} - ${resp?.data}');
+        return {'error': 'An error occurred'};
+      }
+    } catch (e) {
+      //print(resp.data);
+      print('Exception: ${e.toString()}');
+      //print('${resp?.statusCode} - ${resp?.data}');
+      return {'error': 'An exception occurred'};
+    }
+    return null;
+  }
+
+  Future<bool> checkToken() async {
+    var accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
+    var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
+
+    // TODO. 로그아웃 시 둘 다 널인지 확인
+    if (accessToken == null || refreshToken == null) {
+      print('checkToken: null tokens!');
+      return false;
+    }
+
+    var resp;
+    var login;
+    try {
+      resp = await dio.get(
+        dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
+        options: Options(
+          headers: {
+            'authorization': 'Bearer $refreshToken',
+          },
+        ),
+      );
+      print('/colorSet/ resp: $resp');
+    } catch (e) {
+      print('/colorSet/ error: $e');
+
+      try {
+        login = await dio.post(
+          dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/auth/login',
+          data: {
+            'email': await storage.read(key: USER_EMAIL_KEY),
+            'password': await storage.read(key: USER_PASSWORD_KEY),
+          },
+        );
+        print('/auth/login resp: ${login.data}');
+
+        await storage.write(
+            key: ACCESS_TOKEN_KEY, value: login.data['accessToken']);
+        await storage.write(
+            key: REFRESH_TOKEN_KEY, value: login.data['refreshToken']);
+        print('tokens updated!!!!!!!!!!!!!!!!!!!');
+        return true;
+      } catch (e) {
+        print('/auth/login error: $e');
+        print('checkToken: token update failed!');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<void> signInWithGoogle() async {
     try {
       // Sign out from any existing Google account
-      await GoogleSignIn(signInOption: SignInOption.standard).signOut();
+      //await GoogleSignIn(signInOption: SignInOption.standard).signOut();
 
       const List<String> scopes = <String>[
         'email',
@@ -60,14 +151,18 @@ class FBAuthService {
       ];
 
       // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+      GoogleSignInAccount? googleUser = await GoogleSignIn(
         signInOption: SignInOption.standard,
         scopes: scopes,
       ).signIn();
 
+      _saveAuthHeaders(await googleUser!.authHeaders);
+
       // Obtain the auth details from the request
       final GoogleSignInAuthentication? googleAuth =
           await googleUser?.authentication;
+
+      //print(googleAuth!.accessToken);
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -76,17 +171,64 @@ class FBAuthService {
       );
 
       // Once signed in, return the UserCredential
-      return await FirebaseAuth.instance
-          .signInWithCredential(credential)
-          .then((userCredential) {
-        userCredential.user?.toFBUser();
+      await _auth.signInWithCredential(credential);
 
-        return true;
-      });
+      Map<String, dynamic> data = {
+        'email': getCurrentUser()?.email,
+        'name': getCurrentUser()?.displayName,
+        'uid': getCurrentUser()?.uid,
+      };
+
+      // Future<Map<String, dynamic>?> resp =
+      //     MainRequest().postRequest('/api/v1/auth/google', data);
+      // print('resp: ${resp}');
     } catch (e) {
-      print(e);
-      return false;
+      print(e.toString());
     }
+  }
+
+  Future<UserCredential?> signInSilentlyWithGoogle() async {
+    try {
+      // Sign out from any existing Google account
+      //await GoogleSignIn(signInOption: SignInOption.standard).signOut();
+
+      const List<String> scopes = <String>[
+        'email',
+        'https://www.googleapis.com/auth/calendar',
+      ];
+
+      // Trigger the authentication flow
+      GoogleSignInAccount? googleUser = await GoogleSignIn(
+        signInOption: SignInOption.standard,
+        scopes: scopes,
+      ).signInSilently();
+
+      if (googleUser != null) {
+        _saveAuthHeaders(await googleUser!.authHeaders);
+
+        // Obtain the auth details from the request
+        final GoogleSignInAuthentication? googleAuth =
+            await googleUser?.authentication;
+
+        //print(googleAuth!.accessToken);
+
+        // Create a new credential
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth?.accessToken,
+          idToken: googleAuth?.idToken,
+        );
+
+        //print('User silently signed in with Google.');
+        // Once signed in, return the UserCredential
+        return await _auth.signInWithCredential(credential);
+      } else {
+        //print('No user signed in silently.');
+        return null;
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+    return null;
   }
 
   Future<bool?> signInWithMicrosoft() async {
@@ -113,6 +255,16 @@ class FBAuthService {
   }
 
   Future<void> signOut() async {
+    await storage.delete(key: ACCESS_TOKEN_KEY);
+    await storage.delete(key: REFRESH_TOKEN_KEY);
+    await storage.delete(key: USER_EMAIL_KEY);
+    await storage.delete(key: USER_PASSWORD_KEY);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('authHeaders');
+    //await prefs.remove('profile_image_path');
+
+    await GoogleSignIn(signInOption: SignInOption.standard).signOut();
     return await FirebaseAuth.instance.signOut();
   }
 }

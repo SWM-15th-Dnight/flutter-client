@@ -8,9 +8,9 @@ class SignInViewModel extends ChangeNotifier {
 
   SignInViewModel() : _model = SignInModel(FBAuthService());
 
-  FBUser? currentUser() {
-    return _model.currentUser();
-  }
+  // FBUser? currentUser() {
+  //   return _model.currentUser();
+  // }
 
   void signInWithGoogle() {
     _model.signInWithGoogle();

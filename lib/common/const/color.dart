@@ -32,7 +32,7 @@ class ColorPalette {
       50: const Color(0xFFe0e0e0),
       100: const Color(0xFFb3b3b3),
       200: const Color(0xFF808080),
-      300: const Color(0xFF4d4d4d),
+      300: const Color(0xFF2457A5),
       400: const Color(0xFF003C97),
       500: const Color(_blackPrimaryValue),
       600: const Color(0xFF000000),

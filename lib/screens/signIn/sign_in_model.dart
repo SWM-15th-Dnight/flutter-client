@@ -5,9 +5,9 @@ class SignInModel {
   final FBAuthService authService;
   SignInModel(this.authService);
 
-  FBUser? currentUser() {
-    return authService.getCurrentUser();
-  }
+  // FBUser? currentUser() {
+  //   return authService.getCurrentUser();
+  // }
 
   void signInWithGoogle() async {
     await authService.signInWithGoogle();

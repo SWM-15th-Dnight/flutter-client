@@ -10,17 +10,17 @@ class HomeViewModel extends ChangeNotifier {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  String userUID() {
-    return _model.user()?.uid ?? '-';
-  }
-
-  String userEmail() {
-    return _model.user()?.email ?? '-';
-  }
-
-  String userDisplayName() {
-    return _model.user()?.displayName ?? '-';
-  }
+  // String userUID() {
+  //   return _model.user()?.uid ?? '-';
+  // }
+  //
+  // String userEmail() {
+  //   return _model.user()?.email ?? '-';
+  // }
+  //
+  // String userDisplayName() {
+  //   return _model.user()?.displayName ?? '-';
+  // }
 
   // TODO. Integrate it to FBUser class
   Future<String?> getIdToken() async {
