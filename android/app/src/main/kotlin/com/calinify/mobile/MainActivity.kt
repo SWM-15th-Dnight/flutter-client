@@ -1,4 +1,4 @@
-package com.calinify.mobile.mobile_client
+package com.calinify.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
