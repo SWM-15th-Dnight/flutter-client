@@ -161,110 +161,115 @@ class _PreferenceViewState extends State<PreferenceView> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          GestureDetector(
-            onTap: _pickImage,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(161616.0),
-              child: image != null
-                  ? Image.file(
-                      image!,
-                      width: photoLength,
-                      height: photoLength,
-                      fit: BoxFit.cover,
-                    )
-                  : widget.auth.getCurrentUser()?.photoURL != null
-                      ? Image.network(
-                          widget.auth.getCurrentUser()!.photoURL!,
-                          width: photoLength,
-                          height: photoLength,
-                          fit: BoxFit.cover,
-                        )
-                      : Stack(
-                          children: [
-                            Container(
-                              width: photoLength,
-                              height: photoLength,
-                              color: Colors.grey,
-                            ),
-                            Image.asset(
-                              'asset/img/user/default_account_profile.png',
-                              width: photoLength,
-                              height: photoLength,
-                              fit: BoxFit.cover,
-                              color: Colors.black,
-                            ),
-                          ],
-                        ),
+      body: SingleChildScrollView(
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: _pickImage,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(161616.0),
+                child: image != null
+                    ? Image.file(
+                        image!,
+                        width: photoLength,
+                        height: photoLength,
+                        fit: BoxFit.cover,
+                      )
+                    : widget.auth.getCurrentUser()?.photoURL != null
+                        ? Image.network(
+                            widget.auth.getCurrentUser()!.photoURL!,
+                            width: photoLength,
+                            height: photoLength,
+                            fit: BoxFit.cover,
+                          )
+                        : Stack(
+                            children: [
+                              Container(
+                                width: photoLength,
+                                height: photoLength,
+                                color: Colors.grey,
+                              ),
+                              Image.asset(
+                                'asset/img/user/default_account_profile.png',
+                                width: photoLength,
+                                height: photoLength,
+                                fit: BoxFit.cover,
+                                color: Colors.black,
+                              ),
+                            ],
+                          ),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              isEditing
-                  ? Container(
-                      width: MediaQuery.of(context).size.width * 0.6,
-                      child: TextField(
-                        controller: displayNameController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: '보여질 이름을 알려주세요!',
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                isEditing
+                    ? Container(
+                        width: MediaQuery.of(context).size.width * 0.6,
+                        child: TextField(
+                          controller: displayNameController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: '보여질 이름을 알려주세요!',
+                          ),
+                        ),
+                      )
+                    : Text(
+                        widget.displayName!,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
-                  : Text(
-                      widget.displayName!,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: _updateDisplayName,
-                child: Icon(
-                  isEditing ? Icons.check : Icons.edit_note,
-                  size: 24,
-                  //color: Colors.transparent,
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: _updateDisplayName,
+                  child: Icon(
+                    isEditing ? Icons.check : Icons.edit_note,
+                    size: 24,
+                    //color: Colors.transparent,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  _showAlertDialog(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: Text(
+                  '로그아웃',
+                  style: TextStyle(
+                    color: ColorPalette.GRAY_COLOR[50]!,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Center(
-            child: ElevatedButton(
-              onPressed: () {
-                _showAlertDialog(context);
+            ),
+            const SizedBox(height: 24.0),
+            ListTile(
+              title: Center(
+                  child:
+                      Text("현재 선택된 캘린더 - ${widget.currentCalendar['title']}")),
+              onTap: () async {
+                // modify calendar's title
+                _showEditCalendarTitleDialog(context);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              child: Text(
-                '로그아웃',
-                style: TextStyle(
-                  color: ColorPalette.GRAY_COLOR[50]!,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
             ),
-          ),
-          const SizedBox(height: 24.0),
-          ListTile(
-            title: Center(
-                child: Text("현재 선택된 캘린더 - ${widget.currentCalendar['title']}")),
-            onTap: () async {
-              // modify calendar's title
-              _showEditCalendarTitleDialog(context);
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

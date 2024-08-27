@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -133,21 +134,32 @@ class _MainCalendarState extends State<MainCalendar> {
               child: Column(
                 children: [
                   // TODO. Text 상단 고정하고, bottom overflow시 스크롤되게
+                  const SizedBox(height: 20.0),
                   Text(
-                    '${DateFormat('M월 d일').format(_selectedDay)}에는 $numberOfEvents개의 events가 있어요!',
+                    '${DateFormat('M월 d일').format(_selectedDay)}',
                     style: TextStyle(
-                      fontSize: 24.0,
+                      fontSize: 20.0,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
+                  const SizedBox(height: 16.0),
                   Expanded(
                       child: ListView(
                     children: [
                       for (var event in dateEvents[day] ?? [])
                         ListTile(
-                          title: Text(event['summary']),
+                          title: Text(
+                            event['summary'],
+                            style: TextStyle(
+                              fontSize: 14.0,
+                            ),
+                          ),
                           subtitle: Text(
-                              '${DateFormat('HH:mm').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('HH:mm').format(DateTime.parse(event['endAt']))}'),
+                            '${DateFormat('HH:mm').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('HH:mm').format(DateTime.parse(event['endAt']))}',
+                            style: TextStyle(
+                              fontSize: 10.0,
+                            ),
+                          ),
                           onTap: () {
                             print(event);
                             Navigator.pop(context);

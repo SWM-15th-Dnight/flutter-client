@@ -47,12 +47,40 @@ class CustomEventSheet extends StatelessWidget {
                 Expanded(
                     child: ListView(
                   children: [
-                    for (var key in event.keys)
-                      ListTile(
-                        title: Text(key),
-                        subtitle: Text(event[key].toString()),
-                        onTap: () {},
-                      ),
+                    //for (var key in event.keys)
+                    ListTile(
+                      title: Text('시작'),
+                      subtitle: Text(
+                          DateFormat('yyyy년 M월 dd일 (EE) aa h시 m분', 'ko_KR')
+                              .format(DateTime.parse(event['startAt']))),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      title: Text('종료'),
+                      subtitle: Text(
+                          DateFormat('yyyy년 M월 dd일 (EE) aa h시 m분', 'ko_KR')
+                              .format(DateTime.parse(event['endAt']))),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      title: Text('장소'),
+                      subtitle: Text(event['location'].toString() == 'null'
+                          ? ''
+                          : event['location'].toString()),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      title: Text('설명'),
+                      subtitle: Text(event['description'].toString() == 'null'
+                          ? ''
+                          : event['description'].toString()),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      title: Text('우선순위'),
+                      subtitle: Text(event['priority'].toString()),
+                      onTap: () {},
+                    ),
                   ],
                 )),
               ],
@@ -84,7 +112,6 @@ class CustomEventSheet extends StatelessWidget {
                     IconButton(
                       padding: EdgeInsets.only(top: 4.0),
                       onPressed: () {
-                        print('3 dots');
                         _showPopupMenu(context);
                       },
                       icon: Icon(
@@ -96,7 +123,11 @@ class CustomEventSheet extends StatelessWidget {
                 ),
               ),
               Text(
-                'Positioned Widget',
+                event['summary'],
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
