@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/services/auth_service.dart';
@@ -10,16 +12,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/component/header_text.dart';
 import '../../common/const/color.dart';
+import '../../common/const/data.dart';
 import '../../entities/user.dart';
 import '../root/root_view.dart';
 
 class PreferenceView extends StatefulWidget {
   final FBAuthService auth;
   String? displayName = '익명';
+  final Map<String, dynamic> currentCalendar;
+  final Function? onCalendarModified;
 
   PreferenceView({
     super.key,
     required this.auth,
+    required this.currentCalendar,
+    required this.onCalendarModified,
   });
 
   @override
@@ -31,6 +38,9 @@ class _PreferenceViewState extends State<PreferenceView> {
   final picker = ImagePicker();
   final TextEditingController displayNameController = TextEditingController();
   bool isEditing = false;
+
+  // for modify calendar info
+  final dio = Dio();
 
   @override
   void initState() {
@@ -245,9 +255,107 @@ class _PreferenceViewState extends State<PreferenceView> {
               ),
             ),
           ),
+          const SizedBox(height: 24.0),
+          ListTile(
+            title: Center(
+                child: Text("현재 선택된 캘린더 - ${widget.currentCalendar['title']}")),
+            onTap: () async {
+              // modify calendar's title
+              _showEditCalendarTitleDialog(context);
+            },
+          ),
         ],
       ),
     );
+  }
+
+  void showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showEditCalendarTitleDialog(BuildContext context) {
+    TextEditingController _titleController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('캘린더 이름 바꾸기'),
+          content: TextFormField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              hintText: '새 캘린더',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (_titleController.text == '') {
+                  Navigator.of(context).pop();
+                  showSnackbar('변경할 캘린더 이름을 입력하세요.');
+                  return;
+                }
+
+                _updateCalendarTitle(_titleController.text);
+                _modifyCalendarTitle(_titleController.text);
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _updateCalendarTitle(String newTitle) {
+    setState(() {
+      widget.currentCalendar['title'] = newTitle;
+    });
+  }
+
+  Future<void> _modifyCalendarTitle(String title) async {
+    await widget.auth.checkToken();
+    var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
+
+    var data = {
+      "calendarId": widget.currentCalendar['calendarId'],
+      "title": title,
+      "description": widget.currentCalendar['description'],
+      "timezoneId": "Asia/Seoul",
+      "colorSetId": 1,
+      "isDeleted": 0,
+      "deleted": 0,
+    };
+    var resp = await dio.put(
+      dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/calendars/',
+      data: data,
+      options: Options(
+        headers: {
+          'authorization': 'Bearer $refreshToken',
+        },
+      ),
+    );
+
+    print('캘린더 수정 ${resp.statusCode}');
+    print('캘린더 수정 ${resp.data}');
+
+    Navigator.of(context).pop();
+
+    // getCalendarList() at MainCalendar
+    if (widget.onCalendarModified != null) {
+      widget.onCalendarModified!();
+    }
   }
 }
 

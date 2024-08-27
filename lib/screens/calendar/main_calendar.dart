@@ -495,7 +495,13 @@ class _MainCalendarState extends State<MainCalendar> {
                   onProfileButtonPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => PreferenceView(auth: widget.auth),
+                        builder: (_) => PreferenceView(
+                          auth: widget.auth,
+                          currentCalendar: calendarList!.firstWhere(
+                              (calendar) =>
+                                  calendar['calendarId'] == currentCalendarId),
+                          onCalendarModified: getCalendarList,
+                        ),
                       ),
                     );
                   },
