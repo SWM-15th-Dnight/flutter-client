@@ -120,7 +120,8 @@ class _SpeechToTextInputState extends State<SpeechToTextInput> {
                         var refreshToken =
                             await storage.read(key: REFRESH_TOKEN_KEY);
                         final data = {
-                          'plainText': _controller.text,
+                          'inputType': 1,
+                          'originText': _controller.text,
                           'promptId': 1
                         };
                         final jsonData = jsonEncode(data);
@@ -128,7 +129,8 @@ class _SpeechToTextInputState extends State<SpeechToTextInput> {
 
                         try {
                           var resp = await dio.post(
-                            dotenv.env['BACKEND_AI_URL']! + '/api/v1/plainText',
+                            dotenv.env['BACKEND_MAIN_URL']! +
+                                '/api/v1/eventProcessing/plainText',
                             data: jsonData,
                             options: Options(
                               headers: {
