@@ -71,15 +71,17 @@ class _PlainTextInputState extends State<PlainTextInput> {
                       var refreshToken =
                           await storage.read(key: REFRESH_TOKEN_KEY);
                       final data = {
-                        'plainText': plainText,
-                        'promptId': 1,
+                        'inputType': 1,
+                        'originText': plainText,
+                        'promptId': 1
                       };
                       final jsonData = jsonEncode(data);
                       print('plainText data: $jsonData');
 
                       try {
                         var resp = await dio.post(
-                          dotenv.env['BACKEND_AI_URL']! + '/api/v1/plainText',
+                          dotenv.env['BACKEND_MAIN_URL']! +
+                              '/api/v1/eventProcessing/plainText',
                           data: jsonData,
                           options: Options(
                             headers: {

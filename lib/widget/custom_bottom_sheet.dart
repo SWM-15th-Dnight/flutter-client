@@ -62,18 +62,18 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       summary = widget.responseData?['summary'];
       summaryController.text = widget.responseData?['summary'];
 
-      if (widget.responseData?['start'] == null) {
+      if (widget.responseData?['startAt'] == null) {
         startAt = DateTime.now();
       } else {
-        startAt = DateTime.parse(widget.responseData?['start']);
+        startAt = DateTime.parse(widget.responseData?['startAt']);
       }
       // startAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
       //     .format(startAt);
 
-      if (widget.responseData?['end'] == null) {
+      if (widget.responseData?['endAt'] == null) {
         endAt = startAt.add(Duration(hours: 1));
       } else {
-        endAt = DateTime.parse(widget.responseData?['end']);
+        endAt = DateTime.parse(widget.responseData?['endAt']);
       }
       // endAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
       //     .format(endAt);
@@ -307,8 +307,8 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   void printResponseData() {
     if (widget.responseData != null) {
       print('${widget.responseData?['summary']}');
-      print('${widget.responseData?['start']}');
-      print('${widget.responseData?['end']}');
+      print('${widget.responseData?['startAt']}');
+      print('${widget.responseData?['endAt']}');
       print('${widget.responseData?['location']}');
       print('${widget.responseData?['description']}');
     }
