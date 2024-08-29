@@ -852,8 +852,13 @@ class CustomCalendarBuilder extends StatelessWidget {
                         height: 1.4,
                         fontWeight: FontWeight.w400,
                         letterSpacing: -0.05,
+                        // TODO
+                        overflow: TextOverflow.ellipsis,
                       );
-                      final textSpan = TextSpan(text: text, style: textStyle);
+                      final textSpan = TextSpan(
+                        text: text,
+                        style: textStyle,
+                      );
                       final textPainter = TextPainter(
                         text: textSpan,
                         maxLines: 1,

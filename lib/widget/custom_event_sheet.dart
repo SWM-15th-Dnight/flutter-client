@@ -51,14 +51,14 @@ class CustomEventSheet extends StatelessWidget {
                     ListTile(
                       title: Text('시작'),
                       subtitle: Text(
-                          DateFormat('yyyy년 M월 dd일 (EE) aa h시 m분', 'ko_KR')
+                          DateFormat('yyyy년 M월 d일 (EE) aa hh시 mm분', 'ko_KR')
                               .format(DateTime.parse(event['startAt']))),
                       onTap: () {},
                     ),
                     ListTile(
                       title: Text('종료'),
                       subtitle: Text(
-                          DateFormat('yyyy년 M월 dd일 (EE) aa h시 m분', 'ko_KR')
+                          DateFormat('yyyy년 M월 d일 (EE) aa hh시 mm분', 'ko_KR')
                               .format(DateTime.parse(event['endAt']))),
                       onTap: () {},
                     ),

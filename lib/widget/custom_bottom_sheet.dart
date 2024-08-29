@@ -186,7 +186,8 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
             minuteInterval: 5,
             onDateTimeChanged: (DateTime value) {
               setState(() {
-                controller.text = DateFormat('aa h시 m분', 'ko_KR').format(value);
+                controller.text =
+                    DateFormat('aa hh시 mm분', 'ko_KR').format(value);
                 whenAt = DateTime(
                   whenAt.year,
                   whenAt.month,
@@ -249,6 +250,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       "transp": "OPAQUE",
       "calendarId": widget.currentCalendarId,
     };
+    print('data: $data');
 
     if (!widget.isEditMode) {
       // create event
@@ -385,7 +387,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                                 .bottom +
                                             adder),
                                     controller: TextEditingController(
-                                      text: DateFormat('aa h시 m분', 'ko_KR')
+                                      text: DateFormat('aa hh시 mm분', 'ko_KR')
                                           .format(startAt),
                                     ),
                                     decoration: InputDecoration(
@@ -459,7 +461,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                                 .bottom +
                                             adder),
                                     controller: TextEditingController(
-                                      text: DateFormat('aa h시 m분', 'ko_KR')
+                                      text: DateFormat('aa hh시 mm분', 'ko_KR')
                                           .format(endAt),
                                     ),
                                     decoration: InputDecoration(
@@ -497,6 +499,9 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                             controller: descriptionController,
                             decoration: InputDecoration(
                               labelText: '설명',
+                              labelStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             readOnly: false,
                             onChanged: (value) async {
@@ -516,6 +521,9 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                             controller: priorityController,
                             decoration: InputDecoration(
                               labelText: '우선 순위',
+                              labelStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             readOnly: true,
                             onTap: () async {
@@ -535,6 +543,9 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                             controller: locationController,
                             decoration: InputDecoration(
                               labelText: '장소',
+                              labelStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             readOnly: false,
                             onChanged: (value) async {
@@ -640,6 +651,9 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                   controller: summaryController,
                   decoration: InputDecoration(
                     labelText: '일정 제목',
+                    labelStyle: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
                     hintText: '새 일정',
                   ),
                   onChanged: (value) {
