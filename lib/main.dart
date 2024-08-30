@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -23,6 +26,9 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  /* Firebase Cloud Message */
+  initNotification();
+
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (_) => RootViewModel()),
@@ -31,6 +37,24 @@ Future<void> main() async {
     ],
     child: _App(),
   ));
+}
+
+Future<void> getFCMToken() async {
+  final fcmToken = await FirebaseMessaging.instance.getToken();
+  print('fcmToken: ${fcmToken}');
+}
+
+Future<void> _onBackgroundMessage(RemoteMessage message) async {
+  print('title: ${message.notification?.title}');
+  print('body: ${message.notification?.body}');
+  print('payload: ${message.data}');
+}
+
+Future<void> initNotification() async {
+  await FirebaseMessaging.instance.requestPermission();
+  await getFCMToken();
+  // background & terminated
+  FirebaseMessaging.onBackgroundMessage(_onBackgroundMessage);
 }
 
 class _App extends StatelessWidget {
