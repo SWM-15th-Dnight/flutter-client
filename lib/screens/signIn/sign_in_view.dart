@@ -3,7 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mobile_client/common/component/service_name_text.dart';
 import 'package:mobile_client/common/const/color.dart';
+import 'package:mobile_client/common/layout/default_layout.dart';
 import 'package:mobile_client/screens/calendar/main_calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view_model.dart';
 import 'package:mobile_client/services/auth_service.dart';
@@ -11,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/const/data.dart';
-import '../../widget/custom_text_form_field.dart';
+import '../../widget/auth_text_form_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,272 +26,154 @@ class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
   final FBAuthService _auth = FBAuthService();
   bool isEmailSignIn = false;
-
-  late AnimationController _controller;
-  late Animation<double> _logoTitleAnimation;
-  late Animation<double> _buttonAnimation;
-
-  late AnimationController _slideController;
-  late Animation<Offset> _slideAnimation;
-
-  bool _isFirstTime = true;
-
   String email = '';
   String password = '';
+
+  // implicit animation
+  bool _isLogoVisible = false;
+  bool _isStartButtonVisible = false;
 
   @override
   void initState() {
     super.initState();
-    // TODO: implement initState
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1700),
-      vsync: this,
-    );
 
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _logoTitleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Interval(0.0, 0.5, curve: Curves.easeIn),
-    );
-
-    _buttonAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Interval(0.5, 1.0, curve: Curves.easeIn),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, 0.1), // TODO.
-    ).animate(
-        CurvedAnimation(parent: _slideController, curve: Curves.easeInOut));
-
-    _checkFirstTime();
-  }
-
-  Future<void> _checkFirstTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    // Debug. reload app to test first time
-    prefs.remove('isFirstTime');
-    final isFirstTime = prefs.getBool('isFirstTime') ?? true;
-
-    if (isFirstTime) {
-      _controller.forward();
-      await prefs.setBool('isFirstTime', false);
-    } else {
+    // Set _isLogoVisible to true after the first build is completed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
-        _isFirstTime = false;
+        _isLogoVisible = true;
       });
-    }
+
+      Future.delayed(const Duration(milliseconds: 1700), () {
+        setState(() {
+          _isStartButtonVisible = true;
+        });
+      });
+    });
   }
 
   void setEmailSignIn(bool value) {
     setState(() {
       isEmailSignIn = value;
-      // Slide animation
-      if (isEmailSignIn) {
-        _slideController.forward();
-      } else {
-        _slideController.reverse();
-      }
     });
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
-    _controller.dispose();
-    _slideController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: SafeArea(
-          child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.90,
-            alignment: Alignment.center,
-            child: _isFirstTime
-                ? Stack(
+    final bottomInSet = MediaQuery.of(context).viewInsets.bottom;
+
+    return DefaultLayout(
+        child: SafeArea(
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Visibility(
+              visible: isEmailSignIn,
+              child: PreferredSize(
+                preferredSize: Size.fromHeight(kToolbarHeight),
+                child: Container(
+                  color: Colors.transparent,
+                  height: kToolbarHeight,
+                  child: Row(
                     children: [
-                      PreferredSize(
-                        preferredSize: Size.fromHeight(kToolbarHeight),
-                        child: isEmailSignIn
-                            ? AppBar(
-                                leading: BackButton(
-                                  onPressed: () {
-                                    setEmailSignIn(false);
-                                  },
-                                ),
-                                elevation: 0,
-                              )
-                            : Container(),
-                      ),
-                      Positioned(
-                        top: 30,
-                        left: 0,
-                        right: 0,
-                        child: FadeTransition(
-                          opacity: _logoTitleAnimation,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _Logo(),
-                              SizedBox(height: 20),
-                              _Title(),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          if (isEmailSignIn) ...[
-                            const SizedBox(
-                              height: 50,
-                              width: double.infinity,
-                            ),
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.60,
-                              child: CustomTextFormField(
-                                textAlign: TextAlign.center,
-                                hintText: '이메일',
-                                onChanged: (String value) {
-                                  email = value;
-                                },
-                              ),
-                            ),
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.60,
-                              child: CustomTextFormField(
-                                obscureText: true,
-                                textAlign: TextAlign.center,
-                                hintText: '비밀번호',
-                                onChanged: (String value) {
-                                  password = value;
-                                },
-                              ),
-                            ),
-                          ],
-                          const SizedBox(
-                            height: 10,
-                            width: double.infinity,
-                          ),
-                          FadeTransition(
-                            opacity: _buttonAnimation,
-                            child: SlideTransition(
-                              position: _slideAnimation,
-                              child: _StartButton(
-                                isEmailSignIn: isEmailSignIn,
-                                auth: _auth,
-                                setEmailSignIn: setEmailSignIn,
-                                email: email,
-                                password: password,
-                              ),
-                            ),
-                          ),
-                        ],
+                      BackButton(
+                        onPressed: () {
+                          setEmailSignIn(false);
+                        },
                       ),
                     ],
-                  )
-                : _buildLoginContent(),
-          ),
-        ),
-      )),
-    );
-  }
-
-  // removed FadeTransitions
-  Widget _buildLoginContent() {
-    print('never reached?????????????????????');
-    return Stack(
-      children: [
-        PreferredSize(
-          preferredSize: Size.fromHeight(kToolbarHeight),
-          child: isEmailSignIn
-              ? AppBar(
-                  leading: BackButton(
-                    onPressed: () {
-                      setEmailSignIn(false);
-                    },
                   ),
-                  elevation: 0,
-                )
-              : Container(),
-        ),
-        Positioned(
-          top: 30,
-          left: 0,
-          right: 0,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _Logo(),
-              SizedBox(height: 20),
-              _Title(),
-            ],
+                ),
+              ),
+            ),
           ),
-        ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (isEmailSignIn) ...[
-              const SizedBox(
-                height: 50,
-                width: double.infinity,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: '이메일',
+          Positioned.fill(
+            //top: isEmailSignIn ? kToolbarHeight : 0,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      child: AnimatedOpacity(
+                        opacity: _isLogoVisible ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 1500),
+                        curve: Curves.decelerate,
+                        child: _Logo(),
+                      ),
+                    ),
+                    ServiceNameText(serviceName: 'Calinify'),
+                    SizedBox(height: 0),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.decelerate,
+                      child: isEmailSignIn
+                          ? Column(
+                              children: [
+                                Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.60,
+                                  child: AuthTextFormField(
+                                    scrollPadding: bottomInSet / 2,
+                                    textAlign: TextAlign.center,
+                                    hintText: '이메일',
+                                    onChanged: (String value) {
+                                      email = value;
+                                    },
+                                  ),
+                                ),
+                                Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.60,
+                                  child: AuthTextFormField(
+                                    scrollPadding: bottomInSet / 3,
+                                    obscureText: true,
+                                    textAlign: TextAlign.center,
+                                    hintText: '비밀번호',
+                                    onChanged: (String value) {
+                                      password = value;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )
+                          : SizedBox.shrink(),
+                    ),
+                    SizedBox(height: 20),
+                    SizedBox(
+                      height: 40,
+                      child: AnimatedOpacity(
+                        opacity: _isStartButtonVisible ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: _StartButton(
+                          isEmailSignIn: isEmailSignIn,
+                          auth: _auth,
+                          setEmailSignIn: setEmailSignIn,
+                          email: email,
+                          password: password,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                        width: 50,
+                        height: MediaQuery.of(context).size.height * 0.3),
+                    //SizedBox(height: bottomInSet),
+                  ],
                 ),
               ),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: '비밀번호',
-                ),
-              ),
-            ],
-            const SizedBox(
-              height: 10,
-              width: double.infinity,
             ),
-            SlideTransition(
-              position: _slideAnimation,
-              child: _StartButton(
-                isEmailSignIn: isEmailSignIn,
-                auth: _auth,
-                setEmailSignIn: setEmailSignIn,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _Title extends StatelessWidget {
-  const _Title();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'Calinify',
-      style: TextStyle(
-        fontFamily: 'Rockwell',
-        fontWeight: FontWeight.bold,
-        fontSize: 40,
+          ),
+        ],
       ),
-    );
+    ));
   }
 }
 
@@ -353,6 +237,7 @@ class _StartButtonState extends State<_StartButton> {
     final dio = Dio();
 
     return SizedBox(
+      height: 40,
       width: MediaQuery.of(context).size.width * 0.45,
       child: ElevatedButton(
         onPressed: () async {

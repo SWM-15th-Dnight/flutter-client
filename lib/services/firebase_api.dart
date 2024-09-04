@@ -56,6 +56,7 @@ class FirebaseApi {
             importance: Importance.max,
             priority: Priority.high,
             ticker: 'ticker',
+            //category: NotificationCompat.CATEGORY_ALARM,
           ),
         ),
         payload: jsonEncode(message.toMap()),

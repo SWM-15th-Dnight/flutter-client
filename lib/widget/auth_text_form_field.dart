@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
-class CustomTextFormField extends StatelessWidget {
+class AuthTextFormField extends StatelessWidget {
   final String? hintText;
   final bool obscureText;
   final ValueChanged<String>? onChanged;
   final TextAlign textAlign;
+  double? scrollPadding;
 
-  const CustomTextFormField({
+  AuthTextFormField({
     super.key,
     this.hintText,
     this.obscureText = false,
     required this.onChanged,
     this.textAlign = TextAlign.start,
+    this.scrollPadding,
   });
 
   @override
@@ -25,7 +27,12 @@ class CustomTextFormField extends StatelessWidget {
 
       decoration: InputDecoration(
         hintText: hintText,
+        hintStyle: TextStyle(
+          fontSize: 14,
+          //color: Colors.grey,
+        ),
       ),
+      scrollPadding: EdgeInsets.only(bottom: scrollPadding ?? 0),
     );
   }
 }

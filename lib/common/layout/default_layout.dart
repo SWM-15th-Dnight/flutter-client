@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class DefaultLayout extends StatelessWidget {
-  final Color? backgroundColor;
   final Widget child;
+  final Color? backgroundColor;
 
   const DefaultLayout({
-    required this.child,
     super.key,
+    required this.child,
     this.backgroundColor,
   });
 

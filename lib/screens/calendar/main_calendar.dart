@@ -20,7 +20,9 @@ import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/entities/user.dart';
 import 'package:mobile_client/widget/custom_sidebar_modal.dart';
 import '../../common/component/header_text.dart';
+import '../../common/component/service_name_text.dart';
 import '../../common/const/data.dart';
+import '../../common/layout/default_layout.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
@@ -432,13 +434,42 @@ class _MainCalendarState extends State<MainCalendar> {
     */
 
     if (!isGetEventListDone) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-            ],
+      return DefaultLayout(
+        child: SafeArea(
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: Container(
+                    color: Colors.transparent,
+                  ),
+                ),
+                ServiceNameText(
+                  serviceName: 'Calinify',
+                  textColor: Colors.white,
+                ),
+                SizedBox(height: 20),
+                SizedBox(
+                  height: 40,
+                  child: Center(
+                    child: SizedBox(
+                      height: 30,
+                      width: 30,
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: Container(
+                    color: Colors.transparent,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
