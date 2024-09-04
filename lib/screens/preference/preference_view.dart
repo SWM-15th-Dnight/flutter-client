@@ -21,6 +21,8 @@ class PreferenceView extends StatefulWidget {
   String? displayName = '익명';
   final Map<String, dynamic> currentCalendar;
   final Function? onCalendarModified;
+  // TODO. FCM test
+  static const route = '/preference';
 
   PreferenceView({
     super.key,
