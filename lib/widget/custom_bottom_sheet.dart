@@ -53,6 +53,8 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   String summary = '';
   late DateTime startAt;
   late DateTime endAt;
+  String description = '';
+  String location = '';
 
   @override
   void initState() {
@@ -60,7 +62,6 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
     if (widget.responseData != null) {
       summary = widget.responseData?['summary'];
-      summaryController.text = widget.responseData?['summary'];
 
       if (widget.responseData?['startAt'] == null) {
         startAt = DateTime.now();
@@ -78,11 +79,10 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       // endAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
       //     .format(endAt);
 
-      descriptionController.text = widget.responseData?['description'] ?? '';
-      locationController.text = widget.responseData?['location'] ?? '';
+      description = widget.responseData?['description'] ?? '';
+      location = widget.responseData?['location'] ?? '';
     } else if (widget.event != null) {
       summary = widget.event?['summary'];
-      summaryController.text = widget.event?['summary'];
 
       if (widget.event?['startAt'] == null) {
         startAt = DateTime.now();
@@ -100,8 +100,8 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       // endAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
       //     .format(endAt);
 
-      descriptionController.text = widget.event?['description'] ?? '';
-      locationController.text = widget.event?['location'] ?? '';
+      description = widget.event?['description'] ?? '';
+      location = widget.event?['location'] ?? '';
     } else {
       print('form input: initState');
       _now = DateTime.now();
@@ -243,9 +243,9 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       'summary': summary.length != 0 ? summary : '새 일정',
       'startAt': DateFormat('yyyy-MM-ddTHH:mm:ss').format(startAt),
       'endAt': DateFormat('yyyy-MM-ddTHH:mm:ss').format(endAt),
-      'description': descriptionController.text,
+      'description': description,
       'priority': int.parse(priorityController.text),
-      'location': locationController.text,
+      'location': location,
       "status": "TENTATIVE",
       "transp": "OPAQUE",
       "calendarId": widget.currentCalendarId,
@@ -505,7 +505,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                             ),
                             readOnly: false,
                             onChanged: (value) async {
-                              descriptionController.text = value;
+                              description = value;
                             },
                           ),
                         ),
@@ -549,7 +549,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                             ),
                             readOnly: false,
                             onChanged: (value) async {
-                              locationController.text = value;
+                              location = value;
                             },
                           ),
                         ),

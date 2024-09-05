@@ -15,6 +15,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../common/const/data.dart';
 import '../../widget/auth_text_form_field.dart';
 
+String email = '';
+String displayedEmail = '';
+String password = '';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -26,8 +30,12 @@ class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
   final FBAuthService _auth = FBAuthService();
   bool isEmailSignIn = false;
-  String email = '';
-  String password = '';
+
+  // TextFormField
+  final TextEditingController _emailController = TextEditingController();
+  final FocusNode _emailFocusNode = FocusNode();
+  bool _isEmailFocused = true;
+  bool _isPasswordVisible = false;
 
   // implicit animation
   bool _isLogoVisible = false;
@@ -49,6 +57,26 @@ class _LoginScreenState extends State<LoginScreen>
         });
       });
     });
+
+    // TextFormField
+    _emailFocusNode.addListener(() {
+      if (_emailFocusNode.hasFocus) {
+        setState(() {
+          _emailController.text = email;
+        });
+      } else {
+        setState(() {
+          _emailController.text = _getDisplayEmail(email);
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _emailFocusNode.dispose();
+    super.dispose();
   }
 
   void setEmailSignIn(bool value) {
@@ -57,9 +85,11 @@ class _LoginScreenState extends State<LoginScreen>
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  String _getDisplayEmail(String email) {
+    if (email.length > 20) {
+      return email.substring(0, 17) + "...";
+    }
+    return email;
   }
 
   @override
@@ -85,6 +115,10 @@ class _LoginScreenState extends State<LoginScreen>
                     children: [
                       BackButton(
                         onPressed: () {
+                          FocusScope.of(context).unfocus();
+                          _emailController.clear();
+                          email = '';
+                          password = '';
                           setEmailSignIn(false);
                         },
                       ),
@@ -95,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
           Positioned.fill(
-            //top: isEmailSignIn ? kToolbarHeight : 0,
+            top: isEmailSignIn ? kToolbarHeight : 0,
             child: Center(
               child: SingleChildScrollView(
                 child: Column(
@@ -119,27 +153,49 @@ class _LoginScreenState extends State<LoginScreen>
                           ? Column(
                               children: [
                                 Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.60,
-                                  child: AuthTextFormField(
-                                    scrollPadding: bottomInSet / 2,
-                                    textAlign: TextAlign.center,
-                                    hintText: '이메일',
-                                    onChanged: (String value) {
-                                      email = value;
-                                    },
-                                  ),
-                                ),
+                                    width: MediaQuery.of(context).size.width *
+                                        0.60,
+                                    child: AuthTextFormField(
+                                      // autofocus: true,
+                                      scrollPadding: bottomInSet / 2,
+                                      focusNode: _emailFocusNode,
+                                      controller: _emailController,
+                                      textAlign: TextAlign.center,
+                                      hintText: '이메일',
+                                      maxLength: 40,
+                                      onChanged: (String value) async {
+                                        setState(() {
+                                          email = value;
+                                        });
+                                      },
+                                      suffixIcon: Icons.clear,
+                                      onIconPressed: () {
+                                        setState(() {
+                                          _emailController.clear();
+                                          email = '';
+                                        });
+                                      },
+                                    )),
                                 Container(
                                   width:
                                       MediaQuery.of(context).size.width * 0.60,
                                   child: AuthTextFormField(
                                     scrollPadding: bottomInSet / 3,
-                                    obscureText: true,
+                                    obscureText: !_isPasswordVisible,
                                     textAlign: TextAlign.center,
                                     hintText: '비밀번호',
-                                    onChanged: (String value) {
+                                    maxLength: 20,
+                                    onChanged: (String value) async {
                                       password = value;
+                                    },
+                                    suffixIcon: _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    onIconPressed: () {
+                                      setState(() {
+                                        _isPasswordVisible =
+                                            !_isPasswordVisible;
+                                      });
                                     },
                                   ),
                                 ),
@@ -157,8 +213,6 @@ class _LoginScreenState extends State<LoginScreen>
                           isEmailSignIn: isEmailSignIn,
                           auth: _auth,
                           setEmailSignIn: setEmailSignIn,
-                          email: email,
-                          password: password,
                         ),
                       ),
                     ),
@@ -200,15 +254,10 @@ class _StartButton extends StatefulWidget {
   final bool isEmailSignIn;
   final Function(bool) setEmailSignIn;
 
-  final String? email;
-  final String? password;
-
   const _StartButton({
     required this.auth,
     required this.isEmailSignIn,
     required this.setEmailSignIn,
-    this.email,
-    this.password,
   });
 
   @override
@@ -225,8 +274,8 @@ class _StartButtonState extends State<_StartButton> {
 
   Future<Map<String, String?>> getEmailPassword() async {
     data = {
-      'email': widget.email,
-      'password': widget.password,
+      'email': email,
+      'password': password,
     };
     print(data);
     return data;
@@ -242,6 +291,7 @@ class _StartButtonState extends State<_StartButton> {
       child: ElevatedButton(
         onPressed: () async {
           if (widget.isEmailSignIn) {
+            FocusScope.of(context).unfocus();
             try {
               await getEmailPassword();
               final resp = await dio.post(
@@ -256,9 +306,8 @@ class _StartButtonState extends State<_StartButton> {
                 //   print('null ACCESS_TOKEN_KEY');
                 // }
 
-                await storage.write(key: USER_EMAIL_KEY, value: widget.email);
-                await storage.write(
-                    key: USER_PASSWORD_KEY, value: widget.password);
+                await storage.write(key: USER_EMAIL_KEY, value: email);
+                await storage.write(key: USER_PASSWORD_KEY, value: password);
                 await storage.write(
                     key: ACCESS_TOKEN_KEY, value: resp.data['accessToken']);
                 await storage.write(
