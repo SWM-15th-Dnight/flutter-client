@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:mobile_client/common/component/loading_indicators.dart';
 import 'package:mobile_client/common/component/service_name_text.dart';
 
 import 'package:mobile_client/common/const/color.dart';
@@ -65,15 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
               SizedBox(height: 20),
               SizedBox(
                 height: 40,
-                child: Center(
-                  child: SizedBox(
-                    height: 30,
-                    width: 30,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                child: Center(child: LoadingIndicators(color: Colors.white)),
               ),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.3,

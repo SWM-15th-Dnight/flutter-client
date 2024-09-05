@@ -7,9 +7,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:mobile_client/common/component/loading_indicators.dart';
+import 'package:mobile_client/common/component/skeleton_loader.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
 import 'package:mobile_client/services/main_request.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
@@ -455,11 +458,8 @@ class _MainCalendarState extends State<MainCalendar> {
                 SizedBox(
                   height: 40,
                   child: Center(
-                    child: SizedBox(
-                      height: 30,
-                      width: 30,
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: LoadingIndicators(
+                        color: ColorPalette.PRIMARY_COLOR[400]!),
                   ),
                 ),
                 SizedBox(
