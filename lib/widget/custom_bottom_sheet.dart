@@ -63,7 +63,6 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     if (widget.responseData != null) {
       summary = widget.responseData?['summary'];
       summaryController.text = summary;
-      print("????????????????? ${summary}");
 
       if (widget.responseData?['startAt'] == null) {
         startAt = DateTime.now();
@@ -88,6 +87,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       locationController.text = location;
     } else if (widget.event != null) {
       summary = widget.event?['summary'];
+      summaryController.text = summary;
 
       if (widget.event?['startAt'] == null) {
         startAt = DateTime.now();
@@ -106,7 +106,10 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       //     .format(endAt);
 
       description = widget.event?['description'] ?? '';
+      descriptionController.text = description;
+
       location = widget.event?['location'] ?? '';
+      locationController.text = location;
     } else {
       print('form input: initState');
       _now = DateTime.now();
@@ -280,6 +283,10 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
       if (resp.statusCode == 201) {
         widget.onEventAdded!(resp.data);
+      }
+
+      if (widget.responseData != null) {
+        Navigator.of(context).pop();
       }
     } else {
       // edit event
