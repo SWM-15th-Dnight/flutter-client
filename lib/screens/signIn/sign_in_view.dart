@@ -365,15 +365,31 @@ class _StartButtonState extends State<_StartButton> {
                   print('sign_in_view: token update failled');
                 }
               }
+            } on DioError catch (e) {
+              // 401 Unauthorized: 없는 계정 또는 잘못된 비밀번호
+              if (e.response?.statusCode == 401) {
+                showSnackbar(context, '이메일 또는 비밀번호가 일치하지 않습니다.');
+              }
+
+              // 422 Unprocessable Entity: 올바르지 않은 형식의 요청
+              else if (e.response?.statusCode == 422) {
+                showSnackbar(context, '올바른 형식이 아닙니다.');
+              }
+
+              // 서버 응답 없음 또는 타임아웃
+              else if (e.type == DioErrorType.connectTimeout ||
+                  e.type == DioErrorType.receiveTimeout) {
+                showSnackbar(context, '서버와의 응답이 없습니다. 잠시 후 다시 시도해 주세요.');
+              }
+
+              // 기타 에러
+              else {
+                showSnackbar(context, '잠시후 다시 시도해 주세요.');
+              }
             } catch (e) {
-              print('sign_in_view: $e');
-              /*
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('서버와의 연결의 원활하지 않습니다.'),
-                ),
-              );
-              */
+              // 예상하지 못한 예외 처리
+              showSnackbar(
+                  context, 'An unexpected error occurred. Please try again.');
             }
           } else {
             showModalBottomSheet<void>(
@@ -446,6 +462,8 @@ class _StartButtonState extends State<_StartButton> {
                             onPressed: () async {
                               //viewModel.signInWithMicrosoft();
                               widget.setEmailSignIn(true);
+                              email = '';
+                              password = '';
                               Navigator.pop(context);
                             },
                             icon: Icon(
