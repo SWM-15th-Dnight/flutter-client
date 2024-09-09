@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile_client/services/auth_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
+import '../common/component/snackbar_helper.dart';
 import '../common/const/color.dart';
 import '../common/const/data.dart';
 import 'custom_bottom_sheet.dart';
@@ -159,12 +160,21 @@ class _SpeechToTextInputState extends State<SpeechToTextInput> {
                                   responseData: resp.data,
                                 );
                               });
+                        } on DioError catch (e) {
+                          if (e.response?.statusCode == 422) {
+                            Navigator.of(context).pop();
+                            showSnackbar(
+                                context, '내용에서 일정 정보를 찾지 못했어요! 다시 입력해주세요.');
+                          }
+                          // ScaffoldMessenger.of(context).showSnackBar(
+                          //   SnackBar(
+                          //     content: Text('서버와의 연결의 원활하지 않습니다.'),
+                          //   ),
+                          // );
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('서버와의 연결의 원활하지 않습니다.'),
-                            ),
-                          );
+                          Navigator.of(context).pop();
+                          showSnackbar(context,
+                              'An unexpected error occurred. Please try again.');
                         }
 
                         // Navigator.of(context).pop();
