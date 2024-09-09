@@ -55,6 +55,8 @@ class CustomSpeedDial extends ConsumerWidget {
         elevation: 0.0,
         //icon: Icons.add,
         foregroundColor: Colors.white,
+        overlayColor: ColorPalette.PRIMARY_COLOR[400]!,
+        overlayOpacity: 0.2,
         spacing: 5.0,
         children: [
           SpeedDialChild(
@@ -62,7 +64,7 @@ class CustomSpeedDial extends ConsumerWidget {
             //   borderRadius: BorderRadius.circular(161616.0),
             // ),
             shape: CircleBorder(),
-            child: const Icon(Icons.text_decrease, // arrow_circle_down_rounded,
+            child: const Icon(Icons.edit, // arrow_circle_down_rounded,
                 color: Colors.white),
             label: '수동으로 등록',
             backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
@@ -88,7 +90,7 @@ class CustomSpeedDial extends ConsumerWidget {
           SpeedDialChild(
             shape: CircleBorder(),
             child: const Icon(
-              Icons.chat, //email,
+              Icons.text_fields, //email,
               color: Colors.white,
             ),
             label: '자연어로 등록',
@@ -114,7 +116,7 @@ class CustomSpeedDial extends ConsumerWidget {
           SpeedDialChild(
             shape: CircleBorder(),
             child: const Icon(
-              Icons.voice_chat,
+              Icons.mic,
               color: Colors.white,
             ),
             label: '음성 입력',
