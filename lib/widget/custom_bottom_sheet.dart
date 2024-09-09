@@ -62,6 +62,8 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
     if (widget.responseData != null) {
       summary = widget.responseData?['summary'];
+      summaryController.text = summary;
+      print("????????????????? ${summary}");
 
       if (widget.responseData?['startAt'] == null) {
         startAt = DateTime.now();
@@ -80,7 +82,10 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       //     .format(endAt);
 
       description = widget.responseData?['description'] ?? '';
+      descriptionController.text = description;
+
       location = widget.responseData?['location'] ?? '';
+      locationController.text = location;
     } else if (widget.event != null) {
       summary = widget.event?['summary'];
 
