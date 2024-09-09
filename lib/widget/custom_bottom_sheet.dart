@@ -14,7 +14,7 @@ import '../common/const/data.dart';
 class CustomBottomSheet extends StatefulWidget {
   final int? currentCalendarId;
   final Function(dynamic)? onEventAdded;
-  final DateTime? startTime;
+  final DateTime startTime;
   Map<String, dynamic>? responseData;
   // for edit mode
   bool isEditMode;

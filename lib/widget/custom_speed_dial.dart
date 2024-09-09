@@ -103,7 +103,6 @@ class CustomSpeedDial extends ConsumerWidget {
                     auth: auth,
                     currentCalendarId: currentCalendarId,
                     onEventAdded: onEventAdded,
-                    startTime: DateTime.now(),
                     parentContext: context,
                   );
                 },
@@ -129,7 +128,6 @@ class CustomSpeedDial extends ConsumerWidget {
                     auth: auth,
                     currentCalendarId: currentCalendarId,
                     onEventAdded: onEventAdded,
-                    startTime: DateTime.now(),
                     parentContext: context,
                   );
                 },

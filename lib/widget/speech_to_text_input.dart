@@ -15,7 +15,6 @@ import 'custom_bottom_sheet.dart';
 class SpeechToTextInput extends StatefulWidget {
   final int? currentCalendarId;
   final Function(dynamic) onEventAdded;
-  final DateTime startTime;
   final FBAuthService auth;
   final BuildContext? parentContext;
 
@@ -24,7 +23,6 @@ class SpeechToTextInput extends StatefulWidget {
     required this.auth,
     required this.currentCalendarId,
     required this.onEventAdded,
-    required this.startTime,
     required this.parentContext,
   });
 
@@ -156,7 +154,7 @@ class _SpeechToTextInputState extends State<SpeechToTextInput> {
                                 return CustomBottomSheet(
                                   currentCalendarId: widget.currentCalendarId,
                                   onEventAdded: widget.onEventAdded,
-                                  startTime: widget.startTime,
+                                  startTime: DateTime.now(),
                                   responseData: resp.data,
                                 );
                               });

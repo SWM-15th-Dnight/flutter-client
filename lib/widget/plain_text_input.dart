@@ -13,7 +13,6 @@ import '../common/const/data.dart';
 class PlainTextInput extends StatefulWidget {
   final int? currentCalendarId;
   final Function(dynamic) onEventAdded;
-  final DateTime startTime;
   final FBAuthService auth;
   final BuildContext? parentContext;
 
@@ -22,7 +21,6 @@ class PlainTextInput extends StatefulWidget {
     required this.auth,
     required this.currentCalendarId,
     required this.onEventAdded,
-    required this.startTime,
     required this.parentContext,
   });
 
@@ -115,7 +113,7 @@ class _PlainTextInputState extends State<PlainTextInput> {
                             return CustomBottomSheet(
                               currentCalendarId: widget.currentCalendarId,
                               onEventAdded: widget.onEventAdded,
-                              startTime: widget.startTime,
+                              startTime: DateTime.now(),
                               responseData: resp.data,
                               //
                             );
