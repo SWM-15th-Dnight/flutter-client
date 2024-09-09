@@ -24,6 +24,7 @@ import 'package:mobile_client/entities/user.dart';
 import 'package:mobile_client/widget/custom_sidebar_modal.dart';
 import '../../common/component/header_text.dart';
 import '../../common/component/service_name_text.dart';
+import '../../common/component/snackbar_helper.dart';
 import '../../common/const/data.dart';
 import '../../common/layout/default_layout.dart';
 import '../../services/auth_service.dart';
@@ -358,15 +359,6 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  void showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   /*
   Future<Map<String, dynamic>> fetchCalendarData() async {
     http.Client client = http.Client();
@@ -522,7 +514,7 @@ class _MainCalendarState extends State<MainCalendar> {
                             setState(() {
                               currentCalendarId = selectedCalendarId;
                             });
-                            showSnackbar(
+                            showSnackbar(context,
                                 '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
                           },
                           onSelectedCalendarDeleted: (int primaryCalendarId) {

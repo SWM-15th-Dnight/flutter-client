@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/component/header_text.dart';
+import '../../common/component/snackbar_helper.dart';
 import '../../common/const/color.dart';
 import '../../common/const/data.dart';
 import '../../entities/user.dart';
@@ -276,15 +277,6 @@ class _PreferenceViewState extends State<PreferenceView> {
     );
   }
 
-  void showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   void _showEditCalendarTitleDialog(BuildContext context) {
     TextEditingController _titleController = TextEditingController();
 
@@ -310,7 +302,7 @@ class _PreferenceViewState extends State<PreferenceView> {
               onPressed: () {
                 if (_titleController.text == '') {
                   Navigator.of(context).pop();
-                  showSnackbar('변경할 캘린더 이름을 입력하세요.');
+                  showSnackbar(context, '변경할 캘린더 이름을 입력하세요.');
                   return;
                 }
 

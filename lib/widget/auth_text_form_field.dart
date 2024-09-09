@@ -13,6 +13,7 @@ class AuthTextFormField extends StatelessWidget {
   bool autofocus;
   IconData? suffixIcon;
   VoidCallback onIconPressed;
+  String? Function(String?)? validator;
 
   AuthTextFormField({
     super.key,
@@ -27,6 +28,7 @@ class AuthTextFormField extends StatelessWidget {
     this.autofocus = false,
     this.suffixIcon,
     required this.onIconPressed,
+    this.validator,
   });
 
   @override
@@ -61,6 +63,7 @@ class AuthTextFormField extends StatelessWidget {
             },
           )),
       scrollPadding: EdgeInsets.only(bottom: scrollPadding ?? 0),
+      validator: validator,
     );
   }
 }

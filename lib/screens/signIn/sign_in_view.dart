@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mobile_client/common/component/service_name_text.dart';
+import 'package:mobile_client/common/component/snackbar_helper.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/common/layout/default_layout.dart';
 import 'package:mobile_client/screens/calendar/main_calendar.dart';
@@ -36,6 +37,9 @@ class _LoginScreenState extends State<LoginScreen>
   final FocusNode _emailFocusNode = FocusNode();
   bool _isEmailFocused = true;
   bool _isPasswordVisible = false;
+
+  // form validation
+  final _formKey = GlobalKey<FormState>();
 
   // implicit animation
   bool _isLogoVisible = false;
@@ -281,6 +285,44 @@ class _StartButtonState extends State<_StartButton> {
     return data;
   }
 
+  bool _validateForm() {
+    if (_validateEmail() && _validatePassword()) {
+      return true;
+    }
+    return false;
+  }
+
+  bool _validateEmail() {
+    if (email.isEmpty) {
+      showSnackbar(context, '에메일을 입력해주세요.');
+      return false;
+    }
+
+    final RegExp emailRegExp =
+        RegExp(r'^[^@]+@[^@]+\.[^@]+'); // r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+    if (!emailRegExp.hasMatch(email)) {
+      showSnackbar(context, '올바른 이메일 형식이 아닙니다.');
+      return false;
+    }
+    return true;
+  }
+
+  bool _validatePassword() {
+    if (password.isEmpty) {
+      showSnackbar(context, '비밀번호를 입력해주세요.');
+      return false;
+    }
+
+    final RegExp passwordRegExp =
+        RegExp(r'^(?=.*[A-Za-z])(?=.*[\W_])[A-Za-z\d\W_]{8,20}$');
+
+    if (!passwordRegExp.hasMatch(password)) {
+      showSnackbar(context, '비밀번호는 8-20자이며, 특수문자를 포함해야 합니다.');
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final dio = Dio();
@@ -292,6 +334,9 @@ class _StartButtonState extends State<_StartButton> {
         onPressed: () async {
           if (widget.isEmailSignIn) {
             FocusScope.of(context).unfocus();
+
+            if (!_validateForm()) return;
+
             try {
               await getEmailPassword();
               final resp = await dio.post(
