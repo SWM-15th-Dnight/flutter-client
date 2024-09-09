@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile_client/screens/preference/preference_view.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
@@ -35,14 +36,7 @@ Future<void> main() async {
   /* Firebase Cloud Message */
   FirebaseApi().initNotification();
 
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => RootViewModel()),
-      ChangeNotifierProvider(create: (_) => HomeViewModel()),
-      ChangeNotifierProvider(create: (_) => SignInViewModel()),
-    ],
-    child: _App(),
-  ));
+  runApp(ProviderScope(child: _App()));
 }
 
 class _App extends StatelessWidget {
