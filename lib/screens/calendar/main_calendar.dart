@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -7,20 +6,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:mobile_client/common/component/loading_indicators.dart';
-import 'package:mobile_client/common/component/skeleton_loader.dart';
-import 'package:mobile_client/screens/root/root_view.dart';
 import 'package:mobile_client/services/main_request.dart';
-import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import 'package:mobile_client/common/const/color.dart';
-import 'package:mobile_client/entities/user.dart';
 import 'package:mobile_client/widget/custom_sidebar_modal.dart';
 import '../../common/component/header_text.dart';
 import '../../common/component/service_name_text.dart';
@@ -31,7 +23,6 @@ import '../../services/auth_service.dart';
 import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
-import 'form_bottom_sheet.dart';
 
 class MainCalendar extends StatefulWidget {
   final FBAuthService auth;
