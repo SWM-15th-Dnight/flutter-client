@@ -1,7 +1,12 @@
 # Calinify mobile client repository
 
+1. [feature/calendar-crud](#1-featurecalendar-crud)
+2. [feature/fcm-client](#2-feature/fcm-client)
 
-## feature/calendar-crud
+## 1. feature/calendar-crud
+
+<details>
+    <summary>...</summary>
 
 - feat: monthly view with dummy data
 - feat: layout LoginScreen in ratio
@@ -51,3 +56,11 @@
 ## feature/stt-input
 
 - [ ] Stt 찾아보기 및 애뮬에서 테스트
+</details>
+
+## 2. feature/fcm-client
+
+- feat: fcm in background or terminated state only at status bar
+
+    - 백그라운드 및 종료 상태에서 fcm 수신 시 status bar에 알림
+

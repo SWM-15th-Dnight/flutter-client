@@ -3,7 +3,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mobile_client/common/component/service_name_text.dart';
+import 'package:mobile_client/common/component/snackbar_helper.dart';
 import 'package:mobile_client/common/const/color.dart';
+import 'package:mobile_client/common/layout/default_layout.dart';
 import 'package:mobile_client/screens/calendar/main_calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view_model.dart';
 import 'package:mobile_client/services/auth_service.dart';
@@ -11,7 +14,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/const/data.dart';
-import '../../widget/custom_text_form_field.dart';
+import '../../widget/auth_text_form_field.dart';
+
+String email = '';
+String displayedEmail = '';
+String password = '';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,271 +32,206 @@ class _LoginScreenState extends State<LoginScreen>
   final FBAuthService _auth = FBAuthService();
   bool isEmailSignIn = false;
 
-  late AnimationController _controller;
-  late Animation<double> _logoTitleAnimation;
-  late Animation<double> _buttonAnimation;
+  // TextFormField
+  final TextEditingController _emailController = TextEditingController();
+  final FocusNode _emailFocusNode = FocusNode();
+  bool _isEmailFocused = true;
+  bool _isPasswordVisible = false;
 
-  late AnimationController _slideController;
-  late Animation<Offset> _slideAnimation;
+  // form validation
+  final _formKey = GlobalKey<FormState>();
 
-  bool _isFirstTime = true;
-
-  String email = '';
-  String password = '';
+  // implicit animation
+  bool _isLogoVisible = false;
+  bool _isStartButtonVisible = false;
 
   @override
   void initState() {
     super.initState();
-    // TODO: implement initState
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1700),
-      vsync: this,
-    );
 
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _logoTitleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Interval(0.0, 0.5, curve: Curves.easeIn),
-    );
-
-    _buttonAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Interval(0.5, 1.0, curve: Curves.easeIn),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, 0.1), // TODO.
-    ).animate(
-        CurvedAnimation(parent: _slideController, curve: Curves.easeInOut));
-
-    _checkFirstTime();
-  }
-
-  Future<void> _checkFirstTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    // Debug. reload app to test first time
-    prefs.remove('isFirstTime');
-    final isFirstTime = prefs.getBool('isFirstTime') ?? true;
-
-    if (isFirstTime) {
-      _controller.forward();
-      await prefs.setBool('isFirstTime', false);
-    } else {
+    // Set _isLogoVisible to true after the first build is completed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
-        _isFirstTime = false;
+        _isLogoVisible = true;
       });
-    }
-  }
 
-  void setEmailSignIn(bool value) {
-    setState(() {
-      isEmailSignIn = value;
-      // Slide animation
-      if (isEmailSignIn) {
-        _slideController.forward();
+      Future.delayed(const Duration(milliseconds: 1700), () {
+        setState(() {
+          _isStartButtonVisible = true;
+        });
+      });
+    });
+
+    // TextFormField
+    _emailFocusNode.addListener(() {
+      if (_emailFocusNode.hasFocus) {
+        setState(() {
+          _emailController.text = email;
+        });
       } else {
-        _slideController.reverse();
+        setState(() {
+          _emailController.text = _getDisplayEmail(email);
+        });
       }
     });
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
-    _controller.dispose();
-    _slideController.dispose();
+    _emailController.dispose();
+    _emailFocusNode.dispose();
     super.dispose();
   }
 
+  void setEmailSignIn(bool value) {
+    setState(() {
+      isEmailSignIn = value;
+    });
+  }
+
+  String _getDisplayEmail(String email) {
+    if (email.length > 20) {
+      return email.substring(0, 17) + "...";
+    }
+    return email;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: SafeArea(
-          child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.90,
-            alignment: Alignment.center,
-            child: _isFirstTime
-                ? Stack(
+    final bottomInSet = MediaQuery.of(context).viewInsets.bottom;
+
+    return DefaultLayout(
+        child: SafeArea(
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Visibility(
+              visible: isEmailSignIn,
+              child: PreferredSize(
+                preferredSize: Size.fromHeight(kToolbarHeight),
+                child: Container(
+                  color: Colors.transparent,
+                  height: kToolbarHeight,
+                  child: Row(
                     children: [
-                      PreferredSize(
-                        preferredSize: Size.fromHeight(kToolbarHeight),
-                        child: isEmailSignIn
-                            ? AppBar(
-                                leading: BackButton(
-                                  onPressed: () {
-                                    setEmailSignIn(false);
-                                  },
-                                ),
-                                elevation: 0,
-                              )
-                            : Container(),
-                      ),
-                      Positioned(
-                        top: 30,
-                        left: 0,
-                        right: 0,
-                        child: FadeTransition(
-                          opacity: _logoTitleAnimation,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _Logo(),
-                              SizedBox(height: 20),
-                              _Title(),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          if (isEmailSignIn) ...[
-                            const SizedBox(
-                              height: 50,
-                              width: double.infinity,
-                            ),
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.60,
-                              child: CustomTextFormField(
-                                textAlign: TextAlign.center,
-                                hintText: '이메일',
-                                onChanged: (String value) {
-                                  email = value;
-                                },
-                              ),
-                            ),
-                            Container(
-                              width: MediaQuery.of(context).size.width * 0.60,
-                              child: CustomTextFormField(
-                                obscureText: true,
-                                textAlign: TextAlign.center,
-                                hintText: '비밀번호',
-                                onChanged: (String value) {
-                                  password = value;
-                                },
-                              ),
-                            ),
-                          ],
-                          const SizedBox(
-                            height: 10,
-                            width: double.infinity,
-                          ),
-                          FadeTransition(
-                            opacity: _buttonAnimation,
-                            child: SlideTransition(
-                              position: _slideAnimation,
-                              child: _StartButton(
-                                isEmailSignIn: isEmailSignIn,
-                                auth: _auth,
-                                setEmailSignIn: setEmailSignIn,
-                                email: email,
-                                password: password,
-                              ),
-                            ),
-                          ),
-                        ],
+                      BackButton(
+                        onPressed: () {
+                          FocusScope.of(context).unfocus();
+                          _emailController.clear();
+                          email = '';
+                          password = '';
+                          setEmailSignIn(false);
+                        },
                       ),
                     ],
-                  )
-                : _buildLoginContent(),
-          ),
-        ),
-      )),
-    );
-  }
-
-  // removed FadeTransitions
-  Widget _buildLoginContent() {
-    print('never reached?????????????????????');
-    return Stack(
-      children: [
-        PreferredSize(
-          preferredSize: Size.fromHeight(kToolbarHeight),
-          child: isEmailSignIn
-              ? AppBar(
-                  leading: BackButton(
-                    onPressed: () {
-                      setEmailSignIn(false);
-                    },
                   ),
-                  elevation: 0,
-                )
-              : Container(),
-        ),
-        Positioned(
-          top: 30,
-          left: 0,
-          right: 0,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _Logo(),
-              SizedBox(height: 20),
-              _Title(),
-            ],
+                ),
+              ),
+            ),
           ),
-        ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (isEmailSignIn) ...[
-              const SizedBox(
-                height: 50,
-                width: double.infinity,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: '이메일',
+          Positioned.fill(
+            top: isEmailSignIn ? kToolbarHeight : 0,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      child: AnimatedOpacity(
+                        opacity: _isLogoVisible ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 1500),
+                        curve: Curves.decelerate,
+                        child: _Logo(),
+                      ),
+                    ),
+                    ServiceNameText(serviceName: 'Calinify'),
+                    SizedBox(height: 0),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.decelerate,
+                      child: isEmailSignIn
+                          ? Column(
+                              children: [
+                                Container(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.60,
+                                    child: AuthTextFormField(
+                                      // autofocus: true,
+                                      scrollPadding: bottomInSet / 2,
+                                      focusNode: _emailFocusNode,
+                                      controller: _emailController,
+                                      textAlign: TextAlign.center,
+                                      hintText: '이메일',
+                                      maxLength: 40,
+                                      onChanged: (String value) async {
+                                        setState(() {
+                                          email = value;
+                                        });
+                                      },
+                                      suffixIcon: Icons.clear,
+                                      onIconPressed: () {
+                                        setState(() {
+                                          _emailController.clear();
+                                          email = '';
+                                        });
+                                      },
+                                    )),
+                                Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.60,
+                                  child: AuthTextFormField(
+                                    scrollPadding: bottomInSet / 3,
+                                    obscureText: !_isPasswordVisible,
+                                    textAlign: TextAlign.center,
+                                    hintText: '비밀번호',
+                                    maxLength: 20,
+                                    onChanged: (String value) async {
+                                      password = value;
+                                    },
+                                    suffixIcon: _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    onIconPressed: () {
+                                      setState(() {
+                                        _isPasswordVisible =
+                                            !_isPasswordVisible;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )
+                          : SizedBox.shrink(),
+                    ),
+                    SizedBox(height: 20),
+                    SizedBox(
+                      height: 40,
+                      child: AnimatedOpacity(
+                        opacity: _isStartButtonVisible ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: _StartButton(
+                          isEmailSignIn: isEmailSignIn,
+                          auth: _auth,
+                          setEmailSignIn: setEmailSignIn,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                        width: 50,
+                        height: MediaQuery.of(context).size.height * 0.3),
+                    //SizedBox(height: bottomInSet),
+                  ],
                 ),
               ),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: '비밀번호',
-                ),
-              ),
-            ],
-            const SizedBox(
-              height: 10,
-              width: double.infinity,
             ),
-            SlideTransition(
-              position: _slideAnimation,
-              child: _StartButton(
-                isEmailSignIn: isEmailSignIn,
-                auth: _auth,
-                setEmailSignIn: setEmailSignIn,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _Title extends StatelessWidget {
-  const _Title();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'Calinify',
-      style: TextStyle(
-        fontFamily: 'Rockwell',
-        fontWeight: FontWeight.bold,
-        fontSize: 40,
+          ),
+        ],
       ),
-    );
+    ));
   }
 }
 
@@ -316,15 +258,10 @@ class _StartButton extends StatefulWidget {
   final bool isEmailSignIn;
   final Function(bool) setEmailSignIn;
 
-  final String? email;
-  final String? password;
-
   const _StartButton({
     required this.auth,
     required this.isEmailSignIn,
     required this.setEmailSignIn,
-    this.email,
-    this.password,
   });
 
   @override
@@ -341,11 +278,49 @@ class _StartButtonState extends State<_StartButton> {
 
   Future<Map<String, String?>> getEmailPassword() async {
     data = {
-      'email': widget.email,
-      'password': widget.password,
+      'email': email,
+      'password': password,
     };
     print(data);
     return data;
+  }
+
+  bool _validateForm() {
+    if (_validateEmail() && _validatePassword()) {
+      return true;
+    }
+    return false;
+  }
+
+  bool _validateEmail() {
+    if (email.isEmpty) {
+      showSnackbar(context, '에메일을 입력해주세요.');
+      return false;
+    }
+
+    final RegExp emailRegExp =
+        RegExp(r'^[^@]+@[^@]+\.[^@]+'); // r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+    if (!emailRegExp.hasMatch(email)) {
+      showSnackbar(context, '올바른 이메일 형식이 아닙니다.');
+      return false;
+    }
+    return true;
+  }
+
+  bool _validatePassword() {
+    if (password.isEmpty) {
+      showSnackbar(context, '비밀번호를 입력해주세요.');
+      return false;
+    }
+
+    final RegExp passwordRegExp =
+        RegExp(r'^(?=.*[A-Za-z])(?=.*[\W_])[A-Za-z\d\W_]{8,20}$');
+
+    if (!passwordRegExp.hasMatch(password)) {
+      showSnackbar(context, '비밀번호는 8-20자이며, 특수문자를 포함해야 합니다.');
+      return false;
+    }
+    return true;
   }
 
   @override
@@ -353,10 +328,15 @@ class _StartButtonState extends State<_StartButton> {
     final dio = Dio();
 
     return SizedBox(
+      height: 40,
       width: MediaQuery.of(context).size.width * 0.45,
       child: ElevatedButton(
         onPressed: () async {
           if (widget.isEmailSignIn) {
+            FocusScope.of(context).unfocus();
+
+            if (!_validateForm()) return;
+
             try {
               await getEmailPassword();
               final resp = await dio.post(
@@ -371,9 +351,8 @@ class _StartButtonState extends State<_StartButton> {
                 //   print('null ACCESS_TOKEN_KEY');
                 // }
 
-                await storage.write(key: USER_EMAIL_KEY, value: widget.email);
-                await storage.write(
-                    key: USER_PASSWORD_KEY, value: widget.password);
+                await storage.write(key: USER_EMAIL_KEY, value: email);
+                await storage.write(key: USER_PASSWORD_KEY, value: password);
                 await storage.write(
                     key: ACCESS_TOKEN_KEY, value: resp.data['accessToken']);
                 await storage.write(
@@ -386,15 +365,31 @@ class _StartButtonState extends State<_StartButton> {
                   print('sign_in_view: token update failled');
                 }
               }
+            } on DioError catch (e) {
+              // 401 Unauthorized: 없는 계정 또는 잘못된 비밀번호
+              if (e.response?.statusCode == 401) {
+                showSnackbar(context, '이메일 또는 비밀번호가 일치하지 않습니다.');
+              }
+
+              // 422 Unprocessable Entity: 올바르지 않은 형식의 요청
+              else if (e.response?.statusCode == 422) {
+                showSnackbar(context, '올바른 형식이 아닙니다.');
+              }
+
+              // 서버 응답 없음 또는 타임아웃
+              else if (e.type == DioErrorType.connectTimeout ||
+                  e.type == DioErrorType.receiveTimeout) {
+                showSnackbar(context, '서버와의 응답이 없습니다. 잠시 후 다시 시도해 주세요.');
+              }
+
+              // 기타 에러
+              else {
+                showSnackbar(context, '잠시후 다시 시도해 주세요.');
+              }
             } catch (e) {
-              print('sign_in_view: $e');
-              /*
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('서버와의 연결의 원활하지 않습니다.'),
-                ),
-              );
-              */
+              // 예상하지 못한 예외 처리
+              showSnackbar(
+                  context, 'An unexpected error occurred. Please try again.');
             }
           } else {
             showModalBottomSheet<void>(
@@ -467,6 +462,8 @@ class _StartButtonState extends State<_StartButton> {
                             onPressed: () async {
                               //viewModel.signInWithMicrosoft();
                               widget.setEmailSignIn(true);
+                              email = '';
+                              password = '';
                               Navigator.pop(context);
                             },
                             icon: Icon(

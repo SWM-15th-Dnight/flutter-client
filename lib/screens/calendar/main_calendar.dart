@@ -7,9 +7,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:mobile_client/common/component/loading_indicators.dart';
+import 'package:mobile_client/common/component/skeleton_loader.dart';
 import 'package:mobile_client/screens/root/root_view.dart';
 import 'package:mobile_client/services/main_request.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
@@ -20,7 +23,10 @@ import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/entities/user.dart';
 import 'package:mobile_client/widget/custom_sidebar_modal.dart';
 import '../../common/component/header_text.dart';
+import '../../common/component/service_name_text.dart';
+import '../../common/component/snackbar_helper.dart';
 import '../../common/const/data.dart';
+import '../../common/layout/default_layout.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
@@ -353,15 +359,6 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  void showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   /*
   Future<Map<String, dynamic>> fetchCalendarData() async {
     http.Client client = http.Client();
@@ -432,13 +429,39 @@ class _MainCalendarState extends State<MainCalendar> {
     */
 
     if (!isGetEventListDone) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-            ],
+      return DefaultLayout(
+        child: SafeArea(
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: Container(
+                    color: Colors.transparent,
+                  ),
+                ),
+                ServiceNameText(
+                  serviceName: 'Calinify',
+                  textColor: Colors.white,
+                ),
+                SizedBox(height: 20),
+                SizedBox(
+                  height: 40,
+                  child: Center(
+                    child: LoadingIndicators(
+                        color: ColorPalette.PRIMARY_COLOR[400]!),
+                  ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: Container(
+                    color: Colors.transparent,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -491,7 +514,7 @@ class _MainCalendarState extends State<MainCalendar> {
                             setState(() {
                               currentCalendarId = selectedCalendarId;
                             });
-                            showSnackbar(
+                            showSnackbar(context,
                                 '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
                           },
                           onSelectedCalendarDeleted: (int primaryCalendarId) {

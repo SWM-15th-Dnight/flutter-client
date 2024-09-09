@@ -1,4 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:mobile_client/common/component/loading_indicators.dart';
+import 'package:mobile_client/common/component/service_name_text.dart';
 
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/common/layout/default_layout.dart';
@@ -44,26 +48,38 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultLayout(
-      backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-      child: SizedBox(
-        width: MediaQuery.of(context).size.width,
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Calinify',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Rockwell',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 32,
-                )),
-            const SizedBox(height: 30),
-            CircularProgressIndicator(
-              color: Colors.white,
-            ),
-          ],
+      child: SafeArea(
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.3,
+                child: Container(
+                  color: Colors.transparent,
+                ),
+              ),
+              ServiceNameText(
+                serviceName: 'Calinify',
+                textColor: Colors.white,
+              ),
+              SizedBox(height: 20),
+              SizedBox(
+                height: 40,
+                child: Center(child: LoadingIndicators(color: Colors.white)),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.3,
+                child: Container(
+                  color: Colors.transparent,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+      backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
     );
   }
 }

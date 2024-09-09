@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile_client/services/auth_service.dart';
 
+import '../common/component/snackbar_helper.dart';
 import '../common/const/color.dart';
 import '../common/const/data.dart';
 
@@ -151,13 +152,13 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                       if (isDeleteMode) {
                         if (selectedDeletingCalendarIds.isEmpty) {
                           Navigator.of(context).pop();
-                          showSnackbar('삭제할 캘린더를 선택하세요.');
+                          showSnackbar(context, '삭제할 캘린더를 선택하세요.');
                           return;
                         }
                         if (selectedDeletingCalendarIds.length ==
                             widget.calendarList!.length) {
                           Navigator.of(context).pop();
-                          showSnackbar('모든 캘린더를 삭제할 수 없습니다.');
+                          showSnackbar(context, '모든 캘린더를 삭제할 수 없습니다.');
                           return;
                         }
                         _deleteSelectedCalendars(
@@ -211,7 +212,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
 
     if (calendarIds.contains(primaryCalendarId)) {
       Navigator.of(context).pop();
-      showSnackbar('기본 캘린더는 삭제할 수 없습니다.');
+      showSnackbar(context, '기본 캘린더는 삭제할 수 없습니다.');
       return;
     }
 
@@ -272,15 +273,6 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
             ],
           );
         });
-  }
-
-  void showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: Duration(seconds: 2),
-      ),
-    );
   }
 
   void _showCreateCalendarDialog(BuildContext context) {
