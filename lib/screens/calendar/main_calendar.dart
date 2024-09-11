@@ -133,7 +133,7 @@ class _MainCalendarState extends State<MainCalendar> {
                   // TODO. Text 상단 고정하고, bottom overflow시 스크롤되게
                   const SizedBox(height: 20.0),
                   Text(
-                    '${DateFormat('M월 d일').format(_selectedDay)}',
+                    '${DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay)}',
                     style: TextStyle(
                       fontSize: 20.0,
                       fontWeight: FontWeight.w400,
@@ -152,7 +152,7 @@ class _MainCalendarState extends State<MainCalendar> {
                             ),
                           ),
                           subtitle: Text(
-                            '${DateFormat('HH:mm').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('HH:mm').format(DateTime.parse(event['endAt']))}',
+                            '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
                             style: TextStyle(
                               fontSize: 10.0,
                             ),
