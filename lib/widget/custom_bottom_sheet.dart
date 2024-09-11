@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/services/auth_service.dart';
@@ -55,6 +56,9 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   late DateTime endAt;
   String description = '';
   String location = '';
+  DateFormat dateFormat = DateFormat('M월 d일 (EE)', 'ko_KR');
+  DateFormat startTimeFormat = DateFormat('aa h:mm', 'ko_KR');
+  DateFormat endTimeFormat = DateFormat('aa h:mm', 'ko_KR');
 
   @override
   void initState() {
@@ -69,16 +73,12 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       } else {
         startAt = DateTime.parse(widget.responseData?['startAt']);
       }
-      // startAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
-      //     .format(startAt);
 
       if (widget.responseData?['endAt'] == null) {
         endAt = startAt.add(Duration(hours: 1));
       } else {
         endAt = DateTime.parse(widget.responseData?['endAt']);
       }
-      // endAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
-      //     .format(endAt);
 
       description = widget.responseData?['description'] ?? '';
       descriptionController.text = description;
@@ -94,16 +94,12 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       } else {
         startAt = DateTime.parse(widget.event?['startAt']);
       }
-      // startAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
-      //     .format(startAt);
 
       if (widget.event?['endAt'] == null) {
         endAt = startAt.add(Duration(hours: 1));
       } else {
         endAt = DateTime.parse(widget.event?['endAt']);
       }
-      // endAtController.text = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR')
-      //     .format(endAt);
 
       description = widget.event?['description'] ?? '';
       descriptionController.text = description;
@@ -124,6 +120,35 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
       startAt = _now;
       endAt = _end;
+    }
+
+    _checkDateFormat();
+    _checkStartTimeFormat();
+    _checkEndTimeFormat();
+  }
+
+  void _checkDateFormat() {
+    if (startAt.year != DateTime.now().year ||
+        endAt.year != DateTime.now().year) {
+      dateFormat = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR');
+    } else {
+      dateFormat = DateFormat('M월 d일 (EE)', 'ko_KR');
+    }
+  }
+
+  void _checkStartTimeFormat() {
+    if (startAt.minute == 0) {
+      startTimeFormat = DateFormat('aa h시', 'ko_KR');
+    } else {
+      startTimeFormat = DateFormat('aa h:mm', 'ko_KR');
+    }
+  }
+
+  void _checkEndTimeFormat() {
+    if (endAt.minute == 0) {
+      endTimeFormat = DateFormat('aa h시', 'ko_KR');
+    } else {
+      endTimeFormat = DateFormat('aa h:mm', 'ko_KR');
     }
   }
 
@@ -365,9 +390,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                                 .bottom +
                                             adder),
                                     controller: TextEditingController(
-                                      text: DateFormat(
-                                              'yyyy년 M월 dd일 (EE)', 'ko_KR')
-                                          .format(startAt),
+                                      text: dateFormat.format(startAt),
                                     ),
                                     decoration: InputDecoration(
                                       labelText: '시작',
@@ -379,13 +402,13 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                           startAt, startAtController,
                                           (newDate) {
                                         startAt = newDate;
+                                        _checkDateFormat();
                                         // update endAt if endAt < startAt
                                         if (endAt.isBefore(startAt)) {
                                           endAt =
                                               startAt.add(Duration(hours: 1));
-                                          endAtController.text = DateFormat(
-                                                  'yyyy년 M월 dd일 (EE)', 'ko_KR')
-                                              .format(endAt);
+                                          endAtController.text =
+                                              dateFormat.format(endAt);
                                         }
                                       });
                                     }),
@@ -399,8 +422,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                                 .bottom +
                                             adder),
                                     controller: TextEditingController(
-                                      text: DateFormat('aa hh시 mm분', 'ko_KR')
-                                          .format(startAt),
+                                      text: startTimeFormat.format(startAt),
                                     ),
                                     decoration: InputDecoration(
                                       labelText: '',
@@ -412,13 +434,13 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                           startAt, startAtController,
                                           (newTime) {
                                         startAt = newTime;
+                                        _checkStartTimeFormat();
                                         // update endAt if endAt < startAt
                                         if (endAt.isBefore(startAt)) {
                                           endAt =
                                               startAt.add(Duration(hours: 1));
-                                          endAtController.text = DateFormat(
-                                                  'yyyy년 M월 dd일 (EE)', 'ko_KR')
-                                              .format(endAt);
+                                          endAtController.text =
+                                              dateFormat.format(endAt);
                                         }
                                       });
                                     }),
@@ -440,9 +462,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                                 .bottom +
                                             adder),
                                     controller: TextEditingController(
-                                      text: DateFormat(
-                                              'yyyy년 M월 dd일 (EE)', 'ko_KR')
-                                          .format(endAt),
+                                      text: dateFormat.format(endAt),
                                     ),
                                     decoration: InputDecoration(
                                       labelText: '종료',
@@ -453,13 +473,13 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                       await _selectDate(endAt, endAtController,
                                           (newDate) {
                                         endAt = newDate;
+                                        _checkDateFormat();
                                         // update startAt if endAt < startAt
                                         if (endAt.isBefore(startAt)) {
                                           startAt = endAt
                                               .subtract(Duration(hours: 1));
-                                          startAtController.text = DateFormat(
-                                                  'yyyy년 M월 dd일 (EE)', 'ko_KR')
-                                              .format(endAt);
+                                          startAtController.text =
+                                              dateFormat.format(endAt);
                                         }
                                       });
                                     }),
@@ -473,8 +493,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                                 .bottom +
                                             adder),
                                     controller: TextEditingController(
-                                      text: DateFormat('aa hh시 mm분', 'ko_KR')
-                                          .format(endAt),
+                                      text: endTimeFormat.format(endAt),
                                     ),
                                     decoration: InputDecoration(
                                       labelText: '',
@@ -485,13 +504,13 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                                       await _selectTime(endAt, endAtController,
                                           (newTime) {
                                         endAt = newTime;
-// update startAt if endAt < startAt
+                                        _checkEndTimeFormat();
+                                        // update startAt if endAt < startAt
                                         if (endAt.isBefore(startAt)) {
                                           startAt = endAt
                                               .subtract(Duration(hours: 1));
-                                          startAtController.text = DateFormat(
-                                                  'yyyy년 M월 dd일 (EE)', 'ko_KR')
-                                              .format(endAt);
+                                          startAtController.text =
+                                              dateFormat.format(endAt);
                                         }
                                       });
                                     }),
