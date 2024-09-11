@@ -132,7 +132,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                       },
                     ),
                   ),
-                Spacer(),
+                // Spacer(),
                 Container(
                   child: ListTile(
                     title: Row(
