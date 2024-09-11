@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mobile_client/common/component/snackbar_helper.dart';
 import 'package:mobile_client/services/auth_service.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 
@@ -12,7 +13,6 @@ import '../common/const/data.dart';
 class PlainTextInput extends StatefulWidget {
   final int? currentCalendarId;
   final Function(dynamic) onEventAdded;
-  final DateTime startTime;
   final FBAuthService auth;
   final BuildContext? parentContext;
 
@@ -21,7 +21,6 @@ class PlainTextInput extends StatefulWidget {
     required this.auth,
     required this.currentCalendarId,
     required this.onEventAdded,
-    required this.startTime,
     required this.parentContext,
   });
 
@@ -114,19 +113,27 @@ class _PlainTextInputState extends State<PlainTextInput> {
                             return CustomBottomSheet(
                               currentCalendarId: widget.currentCalendarId,
                               onEventAdded: widget.onEventAdded,
-                              startTime: widget.startTime,
+                              startTime: DateTime.now(),
                               responseData: resp.data,
                               //
                             );
                           },
                         );
-                      } catch (e) {
-                        print('just e: ${e}');
+                      } on DioError catch (e) {
+                        if (e.response?.statusCode == 422) {
+                          Navigator.of(context).pop();
+                          showSnackbar(
+                              context, '내용에서 일정 정보를 찾지 못했어요! 다시 입력해주세요.');
+                        }
                         // ScaffoldMessenger.of(context).showSnackBar(
                         //   SnackBar(
                         //     content: Text('서버와의 연결의 원활하지 않습니다.'),
                         //   ),
                         // );
+                      } catch (e) {
+                        Navigator.of(context).pop();
+                        showSnackbar(context,
+                            'An unexpected error occurred. Please try again.');
                       }
 
                       // Navigator.of(context).pop();

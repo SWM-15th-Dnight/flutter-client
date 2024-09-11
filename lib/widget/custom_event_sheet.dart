@@ -9,7 +9,7 @@ import '../common/const/color.dart';
 import '../common/const/data.dart';
 import '../services/auth_service.dart';
 
-class CustomEventSheet extends StatelessWidget {
+class CustomEventSheet extends StatefulWidget {
   final Map<String, dynamic> event;
   final List<dynamic>? eventList;
   final Function(List<dynamic>?) updateEventList;
@@ -19,9 +19,6 @@ class CustomEventSheet extends StatelessWidget {
   final Map<String, List<Map<String, dynamic>>> dateEvents;
   final Function(BuildContext, Map<String, List<Map<String, dynamic>>>)
       showDaysEventsModal;
-  // auth
-  final FBAuthService auth = FBAuthService();
-  final dio = Dio();
 
   CustomEventSheet({
     super.key,
@@ -35,6 +32,94 @@ class CustomEventSheet extends StatelessWidget {
   });
 
   @override
+  State<CustomEventSheet> createState() => _CustomEventSheetState();
+}
+
+class _CustomEventSheetState extends State<CustomEventSheet> {
+  // auth
+  final FBAuthService auth = FBAuthService();
+
+  final dio = Dio();
+
+  late DateTime startAt;
+  late DateTime endAt;
+  DateFormat dateFormat = DateFormat('yyyy년 M월 d일 (EE)', 'ko_KR');
+  DateFormat startTimeFormat = DateFormat('aa h시 mm분', 'ko_KR');
+  DateFormat endTimeFormat = DateFormat('aa h시 mm분', 'ko_KR');
+
+  bool isMultiDayEvent = false;
+  bool isBothAMOrPM = false;
+  String displayedDateTime = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    startAt = DateTime.parse(widget.event['startAt']);
+    endAt = DateTime.parse(widget.event['endAt']);
+    _checkMultiDayEvent();
+
+    _checkDateFormat();
+    _checkStartTimeFormat();
+    _checkEndTimeFormat();
+
+    _setDisplayedDateTime();
+  }
+
+  void _checkMultiDayEvent() {
+    if (startAt.day != endAt.day) {
+      isMultiDayEvent = true;
+    } else if (startAt.hour < 12 && endAt.hour < 12) {
+      isBothAMOrPM = true;
+    } else if (startAt.hour >= 12 && endAt.hour >= 12) {
+      isBothAMOrPM = true;
+    }
+  }
+
+  void _checkDateFormat() {
+    if (startAt.year != DateTime.now().year ||
+        endAt.year != DateTime.now().year) {
+      dateFormat = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR');
+    } else {
+      dateFormat = DateFormat('M월 d일 (EE)', 'ko_KR');
+    }
+  }
+
+  void _checkStartTimeFormat() {
+    if (startAt.minute == 0 && !isMultiDayEvent) {
+      startTimeFormat = DateFormat('aa h시', 'ko_KR');
+    } else {
+      startTimeFormat = DateFormat('aa h:mm', 'ko_KR');
+    }
+  }
+
+  void _checkEndTimeFormat() {
+    if (endAt.minute == 0 && !isMultiDayEvent) {
+      endTimeFormat = DateFormat('aa h시', 'ko_KR');
+      if (isBothAMOrPM) {
+        endTimeFormat = DateFormat('h시', 'ko_KR');
+      }
+    } else {
+      endTimeFormat = DateFormat('aa h:mm', 'ko_KR');
+      if (isBothAMOrPM) {
+        endTimeFormat = DateFormat('h:mm', 'ko_KR');
+      }
+    }
+  }
+
+  void _setDisplayedDateTime() {
+    displayedDateTime =
+        dateFormat.format(startAt) + ' ' + startTimeFormat.format(startAt);
+
+    if (isMultiDayEvent) {
+      displayedDateTime +=
+          ' ~\n' + dateFormat.format(endAt) + ' ' + endTimeFormat.format(endAt);
+    } else {
+      displayedDateTime += ' - ' + endTimeFormat.format(endAt);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
@@ -43,42 +128,33 @@ class CustomEventSheet extends StatelessWidget {
             height: MediaQuery.of(context).size.height * 0.85,
             child: Column(
               children: [
-                SizedBox(height: 110),
+                SizedBox(height: 125),
                 Expanded(
                     child: ListView(
                   children: [
-                    //for (var key in event.keys)
                     ListTile(
-                      title: Text('시작'),
-                      subtitle: Text(
-                          DateFormat('yyyy년 M월 d일 (EE) aa hh시 mm분', 'ko_KR')
-                              .format(DateTime.parse(event['startAt']))),
-                      onTap: () {},
-                    ),
-                    ListTile(
-                      title: Text('종료'),
-                      subtitle: Text(
-                          DateFormat('yyyy년 M월 d일 (EE) aa hh시 mm분', 'ko_KR')
-                              .format(DateTime.parse(event['endAt']))),
-                      onTap: () {},
-                    ),
-                    ListTile(
-                      title: Text('장소'),
-                      subtitle: Text(event['location'].toString() == 'null'
+                      leading: Icon(Icons.location_on_outlined),
+                      title: Text(widget.event['location'].toString() == 'null'
                           ? ''
-                          : event['location'].toString()),
+                          : widget.event['location'].toString()),
+                      // subtitle: Text('장소'),
                       onTap: () {},
                     ),
                     ListTile(
-                      title: Text('설명'),
-                      subtitle: Text(event['description'].toString() == 'null'
-                          ? ''
-                          : event['description'].toString()),
+                      // icon for description
+                      leading: Icon(Icons.comment_outlined),
+                      title: Text(
+                          widget.event['description'].toString() == 'null'
+                              ? ''
+                              : widget.event['description'].toString()),
+                      // subtitle: Text('설명'),
                       onTap: () {},
                     ),
                     ListTile(
-                      title: Text('우선순위'),
-                      subtitle: Text(event['priority'].toString()),
+                      leading: Icon(Icons.flag),
+                      title: Text(
+                          '우선순위' + ' ' + widget.event['priority'].toString()),
+                      // subtitle: 'subtitle',
                       onTap: () {},
                     ),
                   ],
@@ -102,7 +178,8 @@ class CustomEventSheet extends StatelessWidget {
                       padding: EdgeInsets.only(top: 4.0),
                       onPressed: () {
                         Navigator.pop(context);
-                        showDaysEventsModal(parentContext, dateEvents);
+                        widget.showDaysEventsModal(
+                            widget.parentContext, widget.dateEvents);
                       },
                       icon: Icon(
                         Icons.arrow_back,
@@ -123,10 +200,18 @@ class CustomEventSheet extends StatelessWidget {
                 ),
               ),
               Text(
-                event['summary'],
+                widget.event['summary'],
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Text(
+                displayedDateTime,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ],
@@ -160,8 +245,8 @@ class CustomEventSheet extends StatelessWidget {
     ).then((value) {
       if (value == 'edit') {
         // TODO. Handle edit action
-        print(event);
-        _showEditEventSheet(context, event);
+        print(widget.event);
+        _showEditEventSheet(context, widget.event);
       } else if (value == 'delete') {
         // Handle delete action
         _showDeleteConfirmationDialog(context);
@@ -189,20 +274,22 @@ class CustomEventSheet extends StatelessWidget {
               onPressed: () async {
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
-                var resp = await MainRequest().deleteEvent(event['eventId']);
+                var resp =
+                    await MainRequest().deleteEvent(widget.event['eventId']);
 
                 if (resp.statusCode == 200) {
                   // delete event from dataEvents
                   String dateKey = DateFormat('yyyy-MM-dd')
-                      .format(DateTime.parse(event['startAt']));
-                  dateEvents[dateKey]!.removeWhere(
-                      (element) => element['eventId'] == event['eventId']);
-                  eventList!.removeWhere(
-                      (element) => element['eventId'] == event['eventId']);
-                  updateEventList(eventList);
+                      .format(DateTime.parse(widget.event['startAt']));
+                  widget.dateEvents[dateKey]!.removeWhere((element) =>
+                      element['eventId'] == widget.event['eventId']);
+                  widget.eventList!.removeWhere((element) =>
+                      element['eventId'] == widget.event['eventId']);
+                  widget.updateEventList(widget.eventList);
                 }
 
-                showDaysEventsModal(parentContext, dateEvents);
+                widget.showDaysEventsModal(
+                    widget.parentContext, widget.dateEvents);
               },
               child: Text(
                 '삭제',
@@ -228,7 +315,7 @@ class CustomEventSheet extends StatelessWidget {
           startTime: DateTime.now(),
           isEditMode: true,
           event: event,
-          onEventEdited: onEventEdited,
+          onEventEdited: widget.onEventEdited,
         );
         return Container();
       },
