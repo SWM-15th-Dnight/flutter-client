@@ -246,6 +246,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
       if (value == 'edit') {
         // TODO. Handle edit action
         print(widget.event);
+        Navigator.of(context).pop();
         _showEditEventSheet(context, widget.event);
       } else if (value == 'delete') {
         // Handle delete action

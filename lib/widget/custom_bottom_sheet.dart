@@ -50,6 +50,10 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   final TextEditingController locationController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  final DraggableScrollableController _scrollableController =
+      DraggableScrollableController();
+  double _currentSize = 0.88;
+
   late DateTime _now;
   String summary = '';
   late DateTime startAt;
@@ -125,6 +129,30 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     _checkDateFormat();
     _checkStartTimeFormat();
     _checkEndTimeFormat();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollableController.isAttached) {
+        _scrollableController.addListener(_handleSizeChange);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollableController.removeListener(_handleSizeChange);
+    super.dispose();
+  }
+
+  void _handleSizeChange() {
+    double newSize = _scrollableController.size;
+
+    // 0.25 또는 0.88 스냅 포인트에 도달할 때만 상태 변경
+    if ((newSize <= 0.26 && _currentSize > 0.25) ||
+        (newSize >= 0.87 && _currentSize < 0.88)) {
+      setState(() {
+        _currentSize = newSize;
+      });
+    }
   }
 
   void _checkDateFormat() {
@@ -355,347 +383,529 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    printResponseData();
+    return DraggableScrollableSheet(
+      controller: _scrollableController,
+      initialChildSize: widget.isEditMode ? 1.0 : 0.88,
+      minChildSize: 0.15,
+      maxChildSize: widget.isEditMode ? 1.0 : 0.88,
+      snapSizes: [0.25, 0.88],
+      snap: !widget.isEditMode,
+      builder: (context, scrollController) {
+        return AnimatedBuilder(
+            animation: _scrollableController,
+            builder: (context, child) {
+              if (_currentSize > 0.25) {
+                return _buildExpandedView(context, scrollController);
+              } else {
+                return _buildCompactView(context, scrollController);
+              }
+            });
+      },
+    );
+  }
+
+  Widget _buildExpandedView(
+      BuildContext context, ScrollController scrollController) {
     var adder = 100;
     var bottomPadding = 150;
-    return Stack(
-      children: [
-        SingleChildScrollView(
-          child: ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20.0),
-              topRight: Radius.circular(20.0),
-            ),
+    return Container(
+      // color: Colors.blue.withOpacity(0.5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        children: [
+          GestureDetector(
+            onVerticalDragUpdate: (details) {
+              print("????????????????????");
+            },
             child: Container(
-              height: MediaQuery.of(context).size.height * 0.85,
-              color: Colors.white,
               child: Column(
                 children: [
-                  SizedBox(height: 110), // Space for the fixed TextFormField
-
-                  Expanded(
-                    child: ListView(
+                  Container(
+                    height: 38.0,
+                    // color for GestureDetector
+                    color: Colors.transparent,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
-                          child: Row(
-                            children: [
-                              Flexible(
-                                flex: 3,
-                                child: TextFormField(
-                                    scrollPadding: EdgeInsets.only(
-                                        bottom: MediaQuery.of(context)
-                                                .viewInsets
-                                                .bottom +
-                                            adder),
-                                    controller: TextEditingController(
-                                      text: dateFormat.format(startAt),
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: '시작',
-                                      border: InputBorder.none,
-                                    ),
-                                    readOnly: true,
-                                    onTap: () async {
-                                      await _selectDate(
-                                          startAt, startAtController,
-                                          (newDate) {
-                                        startAt = newDate;
-                                        _checkDateFormat();
-                                        // update endAt if endAt < startAt
-                                        if (endAt.isBefore(startAt)) {
-                                          endAt =
-                                              startAt.add(Duration(hours: 1));
-                                          endAtController.text =
-                                              dateFormat.format(endAt);
-                                        }
-                                      });
-                                    }),
-                              ),
-                              Flexible(
-                                flex: 2,
-                                child: TextFormField(
-                                    scrollPadding: EdgeInsets.only(
-                                        bottom: MediaQuery.of(context)
-                                                .viewInsets
-                                                .bottom +
-                                            adder),
-                                    controller: TextEditingController(
-                                      text: startTimeFormat.format(startAt),
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: '',
-                                      border: InputBorder.none,
-                                    ),
-                                    readOnly: true,
-                                    onTap: () async {
-                                      await _selectTime(
-                                          startAt, startAtController,
-                                          (newTime) {
-                                        startAt = newTime;
-                                        _checkStartTimeFormat();
-                                        // update endAt if endAt < startAt
-                                        if (endAt.isBefore(startAt)) {
-                                          endAt =
-                                              startAt.add(Duration(hours: 1));
-                                          endAtController.text =
-                                              dateFormat.format(endAt);
-                                        }
-                                      });
-                                    }),
-                              ),
-                            ],
+                        IconButton(
+                          padding: EdgeInsets.only(top: 4.0),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: Icon(
+                            Icons.close,
+                            size: 24,
+                            //color: Colors.transparent,
                           ),
+                          // constraints: BoxConstraints(
+                          //   maxWidth: 0,
+                          //   maxHeight: 0,
+                          // ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
-                          child: Row(
-                            children: [
-                              Flexible(
-                                flex: 3,
-                                child: TextFormField(
-                                    scrollPadding: EdgeInsets.only(
-                                        bottom: MediaQuery.of(context)
-                                                .viewInsets
-                                                .bottom +
-                                            adder),
-                                    controller: TextEditingController(
-                                      text: dateFormat.format(endAt),
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: '종료',
-                                      border: InputBorder.none,
-                                    ),
-                                    readOnly: true,
-                                    onTap: () async {
-                                      await _selectDate(endAt, endAtController,
-                                          (newDate) {
-                                        endAt = newDate;
-                                        _checkDateFormat();
-                                        // update startAt if endAt < startAt
-                                        if (endAt.isBefore(startAt)) {
-                                          startAt = endAt
-                                              .subtract(Duration(hours: 1));
-                                          startAtController.text =
-                                              dateFormat.format(endAt);
-                                        }
-                                      });
-                                    }),
-                              ),
-                              Flexible(
-                                flex: 2,
-                                child: TextFormField(
-                                    scrollPadding: EdgeInsets.only(
-                                        bottom: MediaQuery.of(context)
-                                                .viewInsets
-                                                .bottom +
-                                            adder),
-                                    controller: TextEditingController(
-                                      text: endTimeFormat.format(endAt),
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: '',
-                                      border: InputBorder.none,
-                                    ),
-                                    readOnly: true,
-                                    onTap: () async {
-                                      await _selectTime(endAt, endAtController,
-                                          (newTime) {
-                                        endAt = newTime;
-                                        _checkEndTimeFormat();
-                                        // update startAt if endAt < startAt
-                                        if (endAt.isBefore(startAt)) {
-                                          startAt = endAt
-                                              .subtract(Duration(hours: 1));
-                                          startAtController.text =
-                                              dateFormat.format(endAt);
-                                        }
-                                      });
-                                    }),
-                              ),
-                            ],
+                        // Align(
+                        //   alignment: Alignment.topCenter,
+                        //   child: Container(
+                        //     width: 100.0,
+                        //     height: 3.0,
+                        //     margin:
+                        //         const EdgeInsets.symmetric(vertical: 8.0),
+                        //     decoration: BoxDecoration(
+                        //       color: ColorPalette.GRAY_COLOR[100]!,
+                        //       borderRadius: BorderRadius.circular(3.0),
+                        //     ),
+                        //   ),
+                        // ),
+                        IconButton(
+                          padding: EdgeInsets.only(top: 4.0),
+                          onPressed: () async {
+                            //FocusScope.of(context).unfocus();
+                            await _submitForm();
+                          },
+                          icon: Icon(
+                            Icons.check,
+                            size: 24,
                           ),
+                          // constraints: BoxConstraints(
+                          //   maxWidth: 24,
+                          //   maxHeight: 24,
+                          // ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
-                          child: TextFormField(
-                            scrollPadding: EdgeInsets.only(
-                                bottom:
-                                    MediaQuery.of(context).viewInsets.bottom +
-                                        adder),
-                            textAlign: TextAlign.center,
-                            controller: descriptionController,
-                            decoration: InputDecoration(
-                              labelText: '설명',
-                              labelStyle: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            readOnly: false,
-                            onChanged: (value) async {
-                              description = value;
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
-                          child: TextFormField(
-                            scrollPadding: EdgeInsets.only(
-                                bottom:
-                                    MediaQuery.of(context).viewInsets.bottom +
-                                        adder),
-                            textAlign: TextAlign.center,
-                            controller: priorityController,
-                            decoration: InputDecoration(
-                              labelText: '우선 순위',
-                              labelStyle: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            readOnly: true,
-                            onTap: () async {
-                              await _selectPriority(priorityController);
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
-                          child: TextFormField(
-                            scrollPadding: EdgeInsets.only(
-                                bottom:
-                                    MediaQuery.of(context).viewInsets.bottom +
-                                        adder),
-                            textAlign: TextAlign.center,
-                            controller: locationController,
-                            decoration: InputDecoration(
-                              labelText: '장소',
-                              labelStyle: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            readOnly: false,
-                            onChanged: (value) async {
-                              location = value;
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              await _submitForm();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                            ),
-                            child: Text(
-                              '등록',
-                              style: TextStyle(
-                                color: ColorPalette.GRAY_COLOR[50]!,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).viewInsets.bottom +
-                                bottomPadding),
                       ],
+                    ),
+                  ),
+                  Container(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 16.0, right: 16.0, bottom: 2.0),
+                      child: TextFormField(
+                        autofocus: summary.isEmpty,
+                        // scrollPadding: EdgeInsets.only(
+                        //     bottom: MediaQuery.of(context).viewInsets.bottom + adder),
+                        controller: summaryController,
+                        decoration: InputDecoration(
+                          labelText: '일정 제목',
+                          labelStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          hintText: '새 일정',
+                        ),
+                        onChanged: (value) {
+                          summary = value;
+                        },
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-        ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Column(
-            children: [
-              Container(
-                height: 38.0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      padding: EdgeInsets.only(top: 4.0),
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.keyboard_hide,
-                        size: 24,
-                        color: Colors.transparent,
-                      ),
-                      constraints: BoxConstraints(
-                        maxWidth: 0,
-                        maxHeight: 0,
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: Container(
-                        width: 100.0,
-                        height: 3.0,
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        decoration: BoxDecoration(
-                          color: ColorPalette.GRAY_COLOR[100]!,
-                          borderRadius: BorderRadius.circular(3.0),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20.0),
+                  topRight: Radius.circular(20.0),
+                ),
+                child: Container(
+                  //height: MediaQuery.of(context).size.height * 0.85,
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              flex: 3,
+                              child: TextFormField(
+                                  scrollPadding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context)
+                                              .viewInsets
+                                              .bottom +
+                                          adder),
+                                  controller: TextEditingController(
+                                    text: dateFormat.format(startAt),
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: '시작',
+                                    border: InputBorder.none,
+                                  ),
+                                  readOnly: true,
+                                  onTap: () async {
+                                    await _selectDate(
+                                        startAt, startAtController, (newDate) {
+                                      startAt = newDate;
+                                      _checkDateFormat();
+                                      // update endAt if endAt < startAt
+                                      if (endAt.isBefore(startAt)) {
+                                        endAt = startAt.add(Duration(hours: 1));
+                                        endAtController.text =
+                                            dateFormat.format(endAt);
+                                      }
+                                    });
+                                  }),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: TextFormField(
+                                  scrollPadding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context)
+                                              .viewInsets
+                                              .bottom +
+                                          adder),
+                                  controller: TextEditingController(
+                                    text: startTimeFormat.format(startAt),
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: '',
+                                    border: InputBorder.none,
+                                  ),
+                                  readOnly: true,
+                                  onTap: () async {
+                                    await _selectTime(
+                                        startAt, startAtController, (newTime) {
+                                      startAt = newTime;
+                                      _checkStartTimeFormat();
+                                      // update endAt if endAt < startAt
+                                      if (endAt.isBefore(startAt)) {
+                                        endAt = startAt.add(Duration(hours: 1));
+                                        endAtController.text =
+                                            dateFormat.format(endAt);
+                                      }
+                                    });
+                                  }),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    IconButton(
-                      padding: EdgeInsets.only(top: 4.0),
-                      onPressed: () {
-                        FocusScope.of(context).unfocus();
-                      },
-                      icon: Icon(
-                        Icons.keyboard_hide,
-                        size: 24,
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              flex: 3,
+                              child: TextFormField(
+                                  scrollPadding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context)
+                                              .viewInsets
+                                              .bottom +
+                                          adder),
+                                  controller: TextEditingController(
+                                    text: dateFormat.format(endAt),
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: '종료',
+                                    border: InputBorder.none,
+                                  ),
+                                  readOnly: true,
+                                  onTap: () async {
+                                    await _selectDate(endAt, endAtController,
+                                        (newDate) {
+                                      endAt = newDate;
+                                      _checkDateFormat();
+                                      // update startAt if endAt < startAt
+                                      if (endAt.isBefore(startAt)) {
+                                        startAt =
+                                            endAt.subtract(Duration(hours: 1));
+                                        startAtController.text =
+                                            dateFormat.format(endAt);
+                                      }
+                                    });
+                                  }),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: TextFormField(
+                                  scrollPadding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context)
+                                              .viewInsets
+                                              .bottom +
+                                          adder),
+                                  controller: TextEditingController(
+                                    text: endTimeFormat.format(endAt),
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: '',
+                                    border: InputBorder.none,
+                                  ),
+                                  readOnly: true,
+                                  onTap: () async {
+                                    await _selectTime(endAt, endAtController,
+                                        (newTime) {
+                                      endAt = newTime;
+                                      _checkEndTimeFormat();
+                                      // update startAt if endAt < startAt
+                                      if (endAt.isBefore(startAt)) {
+                                        startAt =
+                                            endAt.subtract(Duration(hours: 1));
+                                        startAtController.text =
+                                            dateFormat.format(endAt);
+                                      }
+                                    });
+                                  }),
+                            ),
+                          ],
+                        ),
                       ),
-                      // constraints: BoxConstraints(
-                      //   maxWidth: 24,
-                      //   maxHeight: 24,
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
+                        child: TextFormField(
+                          scrollPadding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom +
+                                  adder),
+                          textAlign: TextAlign.center,
+                          controller: descriptionController,
+                          decoration: InputDecoration(
+                            labelText: '설명',
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          readOnly: false,
+                          onChanged: (value) async {
+                            description = value;
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
+                        child: TextFormField(
+                          scrollPadding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom +
+                                  adder),
+                          textAlign: TextAlign.center,
+                          controller: priorityController,
+                          decoration: InputDecoration(
+                            labelText: '우선 순위',
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          readOnly: true,
+                          onTap: () async {
+                            await _selectPriority(priorityController);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
+                        child: TextFormField(
+                          scrollPadding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom +
+                                  adder),
+                          textAlign: TextAlign.center,
+                          controller: locationController,
+                          decoration: InputDecoration(
+                            labelText: '장소',
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          readOnly: false,
+                          onChanged: (value) async {
+                            location = value;
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
+                        child: TextFormField(
+                          scrollPadding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom +
+                                  adder),
+                          textAlign: TextAlign.center,
+                          controller: locationController,
+                          decoration: InputDecoration(
+                            labelText: '알람',
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          readOnly: false,
+                          onChanged: (value) async {
+                            location = value;
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
+                        child: TextFormField(
+                          scrollPadding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom +
+                                  adder),
+                          textAlign: TextAlign.center,
+                          controller: locationController,
+                          decoration: InputDecoration(
+                            labelText: '색상',
+                            labelStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          readOnly: false,
+                          onChanged: (value) async {
+                            location = value;
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).viewInsets.bottom +
+                              bottomPadding),
+
+                      // Expanded(
+                      //   child: ListView(
+                      //     children: [
+                      //
+                      //     ],
+                      //   ),
                       // ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 16.0, right: 16.0, bottom: 16.0),
-                child: TextFormField(
-                  autofocus: summary.isEmpty,
-                  // scrollPadding: EdgeInsets.only(
-                  //     bottom: MediaQuery.of(context).viewInsets.bottom + adder),
-                  controller: summaryController,
-                  decoration: InputDecoration(
-                    labelText: '일정 제목',
-                    labelStyle: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    hintText: '새 일정',
+                    ],
                   ),
-                  onChanged: (value) {
-                    summary = value;
-                  },
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactView(
+      BuildContext context, ScrollController scrollController) {
+    var adder = 100;
+    var bottomPadding = 150;
+    return Container(
+      // color: Colors.blue.withOpacity(0.5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        children: [
+          GestureDetector(
+            onVerticalDragUpdate: (details) {
+              print("????????????????????");
+            },
+            child: Container(
+              child: Column(
+                children: [
+                  Container(
+                    height: 38.0,
+                    // color for GestureDetector
+                    color: Colors.transparent,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          padding: EdgeInsets.only(top: 4.0),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: Icon(
+                            Icons.close,
+                            size: 24,
+                            //color: Colors.transparent,
+                          ),
+                          // constraints: BoxConstraints(
+                          //   maxWidth: 0,
+                          //   maxHeight: 0,
+                          // ),
+                        ),
+                        // Align(
+                        //   alignment: Alignment.topCenter,
+                        //   child: Container(
+                        //     width: 100.0,
+                        //     height: 3.0,
+                        //     margin:
+                        //         const EdgeInsets.symmetric(vertical: 8.0),
+                        //     decoration: BoxDecoration(
+                        //       color: ColorPalette.GRAY_COLOR[100]!,
+                        //       borderRadius: BorderRadius.circular(3.0),
+                        //     ),
+                        //   ),
+                        // ),
+                        IconButton(
+                          padding: EdgeInsets.only(top: 4.0),
+                          onPressed: () async {
+                            //FocusScope.of(context).unfocus();
+                            await _submitForm();
+                          },
+                          icon: Icon(
+                            Icons.check,
+                            size: 24,
+                          ),
+                          // constraints: BoxConstraints(
+                          //   maxWidth: 24,
+                          //   maxHeight: 24,
+                          // ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 16.0, right: 16.0, bottom: 2.0),
+                      child: TextFormField(
+                        // scrollPadding: EdgeInsets.only(
+                        //     bottom: MediaQuery.of(context).viewInsets.bottom + adder),
+                        controller: summaryController,
+                        decoration: InputDecoration(
+                          labelText: '일정 제목',
+                          labelStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          hintText: '새 일정',
+                        ),
+                        onChanged: (value) {
+                          summary = value;
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20.0),
+                  topRight: Radius.circular(20.0),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      top: 16.0, left: 16.0, bottom: 16.0, right: 16.0),
+                  child: ListTile(
+                    title: Center(
+                      child: Text(dateFormat.format(startAt) +
+                          ' ' +
+                          startTimeFormat.format(startAt) +
+                          ' ~\n' +
+                          dateFormat.format(endAt) +
+                          ' ' +
+                          endTimeFormat.format(endAt)),
+                    ),
+                    onTap: () {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
