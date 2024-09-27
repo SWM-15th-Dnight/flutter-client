@@ -332,18 +332,18 @@ class _MainCalendarState extends State<MainCalendar> {
 
     eventList = [];
 
-    for (var i = 1; i < 100; i++) {
+    for (var i = 1; i < 256; i++) { // 이거 시급히 수정해야함...
       try {
         var resp = await dio.get(
             dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/${i}',
             options:
                 Options(headers: {'authorization': 'Bearer $refreshToken'}));
         if (resp.statusCode == 200) {
-          //print('getEventList() : ${resp.data}');
           eventList?.add(resp.data);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
+
     print('eventList.length: ${eventList?.length}');
     setState(() {
       isGetEventListDone = true;
@@ -462,6 +462,26 @@ class _MainCalendarState extends State<MainCalendar> {
     Map<String, List<Map<String, dynamic>>> dateEvents = {};
 
     if (eventList?.length != 0) {
+      eventList?.sort((a,b) {
+        final aStart = DateTime.parse(a["startAt"]);
+        final aEnd = DateTime.parse(a["endAt"]);
+        final bStart = DateTime.parse(b["startAt"]);
+        final bEnd = DateTime.parse(b["endAt"]);
+
+        if(aStart.compareTo(bStart) != 0){
+          return aStart.compareTo(bStart);
+        }
+        else{
+          if(bEnd.compareTo(aEnd) != 0){
+            return bEnd.compareTo(aEnd);
+          }
+          else{
+            if(a["summary"] < b["summary"]) return -1;
+            if(a["summary"] > b["summary"]) return 1;
+            return 0;
+          }
+        }
+      });
       for (var i = 0; i < eventList!.length; i++) {
         //print('[$i] : ${eventList![i]}');
         String dateKey = DateFormat('yyyy-MM-dd')
