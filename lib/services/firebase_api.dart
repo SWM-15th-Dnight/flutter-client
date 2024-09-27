@@ -23,9 +23,9 @@ class FirebaseApi {
 
   Future initPushNotifications() async {
     print(
-        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ${_androidNotificationChannel.id}');
+        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ${_calendarNotificationChannel.id}');
     print(
-        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ${_androidNotificationChannel.name}');
+        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ${_calendarNotificationChannel.name}');
 
     await _firebaseMessaging.setForegroundNotificationPresentationOptions(
       alert: true,
@@ -46,15 +46,16 @@ class FirebaseApi {
         notification.body,
         NotificationDetails(
           android: AndroidNotificationDetails(
-            _androidNotificationChannel.id,
-            _androidNotificationChannel.name,
-            channelDescription: _androidNotificationChannel.description,
+            _calendarNotificationChannel.id,
+            _calendarNotificationChannel.name,
+            channelDescription: _calendarNotificationChannel.description,
+            importance: _calendarNotificationChannel.importance,
+            priority: Priority.high,
+            fullScreenIntent: true,
             // TODO. icon
             icon: '@mipmap/ic_launcher',
             playSound: true,
             //sound: RawResourceAndroidNotificationSound('notification'),
-            importance: Importance.max,
-            priority: Priority.high,
             ticker: 'ticker',
             //category: NotificationCompat.CATEGORY_ALARM,
           ),
@@ -69,29 +70,23 @@ class FirebaseApi {
   }
 
   Future initLocalNotifications() async {
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ${_calendarNotificationChannel.id}');
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ${_calendarNotificationChannel.name}');
+
     await _localNotifications
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(_androidNotificationChannel);
+        ?.createNotificationChannel(_calendarNotificationChannel);
     final androidInitialize = AndroidInitializationSettings('ic_launcher');
     await _localNotifications.initialize(
       InitializationSettings(android: androidInitialize),
-      /*
-      onSelectNotification: (String? payload) async {
-        if (payload == null) return;
-
-        final message = RemoteMessage.fromMap(jsonDecode(payload));
-        navigatorKey.currentState
-            ?.pushNamed(NotificationTest.route, arguments: message);
-      },
-      */
     );
   }
 
-  final _androidNotificationChannel = AndroidNotificationChannel(
-    'high_importance_channel', // id
-    'High Importance Notifications', // title
-    description: 'This channel is used for important notifications.',
+  final _calendarNotificationChannel = const AndroidNotificationChannel(
+    'notify_calendar', // id
+    '일정 알림', // title
+    description: '예정된 일정에 대한 알림 입니다.',
     importance: Importance.max,
     playSound: true,
   );
