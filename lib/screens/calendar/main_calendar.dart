@@ -23,6 +23,7 @@ import '../../services/auth_service.dart';
 import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
+import '../../entities/color_map.dart';
 
 class MainCalendar extends StatefulWidget {
   final FBAuthService auth;
@@ -55,7 +56,7 @@ class _MainCalendarState extends State<MainCalendar> {
   Set<int>? displayCalendarIdSet = {}; // assign at getCalendarList()
 
   //calendarList![currentCalendarId!]['colorSetId']
-  Map<int, Color> calendarColorMap = {};
+  ColorMap colorMap = ColorMap();
 
   List<dynamic>? eventList = [];
   bool isGetEventListDone = false;
@@ -287,47 +288,7 @@ class _MainCalendarState extends State<MainCalendar> {
       }
     });
 
-    await makeCalendarColorMap();
-  }
-
-  Future<void> makeCalendarColorMap() async {
-    print('makeCalendarColorMap()');
-    await widget.auth.checkToken();
-    var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
-    print('refreshToken: $refreshToken');
-
-    var resp = await dio.get(
-      dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
-      options: Options(
-        headers: {
-          'authorization': 'Bearer $refreshToken',
-        },
-      ),
-    );
-
-    // for (var cal in calendarList!) {
-    //   for (var r in resp.data) {
-    //     //print(r['hexCode'].substring(1));
-    //     if (cal['colorSetId'] == r['colorSetId']) {
-    //       calendarColorMap[cal['calendarId']] = hexToColor(r['hexCode']);
-    //       break;
-    //     }
-    //   }
-    // }
-
-    for (var r in resp.data) {
-      calendarColorMap[r['colorSetId']] = hexToColor(r['hexCode']);
-    }
-    print("calendarColorMap == ");
-    print(calendarColorMap);
     await getEventList();
-  }
-
-  Color hexToColor(String hexString) {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
   }
 
   Future<void> getEventList() async {
@@ -347,18 +308,6 @@ class _MainCalendarState extends State<MainCalendar> {
         eventList?.addAll(resp.data);
       }
     } catch (e) { print("ERROR OCCURED ${e}"); }
-
-    // for (var i = 1; i < 256; i++) { // 이거 시급히 수정해야함...
-    //   try {
-    //     var resp = await dio.get(
-    //         dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/${i}',
-    //         options:
-    //             Options(headers: {'authorization': 'Bearer $refreshToken'}));
-    //     if (resp.statusCode == 200) {
-    //       eventList?.add(resp.data);
-    //     }
-    //   } catch (e) { }
-    // }
 
     print('eventList.length: ${eventList?.length}');
     setState(() {
@@ -624,7 +573,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          calendarColorMap: calendarColorMap,
+                          colorMap: colorMap,
                         );
                       },
                       outsideBuilder: (context, day, focusedDay) {
@@ -633,7 +582,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           focusedDay: focusedDay,
                           dayColor: Color(0XFFAAAAAA),
                           events: dateEvents,
-                          calendarColorMap: calendarColorMap,
+                          colorMap: colorMap,
                         );
                       },
                       todayBuilder: (context, day, focusedDay) {
@@ -641,7 +590,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          calendarColorMap: calendarColorMap,
+                          colorMap: colorMap,
                           /* debug - border
                                       decoration: BoxDecoration(
                                         border: Border.all(
@@ -657,7 +606,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          calendarColorMap: calendarColorMap,
+                          colorMap: colorMap,
                           isSelected: ColorPalette.PRIMARY_COLOR[400]!
                               .withOpacity(0.05),
                           /*
@@ -805,7 +754,7 @@ class CustomCalendarBuilder extends StatelessWidget {
   final DateTime day;
   final DateTime focusedDay;
   final Map<String, List<Map<String, dynamic>>>? events;
-  final Map<int, Color> calendarColorMap;
+  final colorMap;
 
   Color? dayColor = Colors.black;
   double isTargetDay = 0.0;
@@ -820,7 +769,7 @@ class CustomCalendarBuilder extends StatelessWidget {
     this.dayColor,
     this.dayFontWeight,
     this.isSelected,
-    required this.calendarColorMap,
+    required this.colorMap,
   }) {
     DateTime today = DateTime.now();
     if (day.year == today.year &&
@@ -884,6 +833,7 @@ class CustomCalendarBuilder extends StatelessWidget {
                   if (events?[DateFormat('yyyy-MM-dd').format(day)] != null) {
                     for (var event
                         in events![DateFormat('yyyy-MM-dd').format(day)]!) {
+                      // todo - 이부분 외부 파일로 분리할게요
                       var startAtTime = DateFormat('HH:mm:ss')
                           .format(DateTime.parse(event['startAt']));
                       var endAtTime = DateFormat('HH:mm:ss')
@@ -897,7 +847,7 @@ class CustomCalendarBuilder extends StatelessWidget {
                       // TODO. lineHeight / fontSize
                       final textStyle = TextStyle(
                         color: isAllDay
-                            ? calendarColorMap[event['colorSetId']]
+                            ? colorMap.get(event['colorSetId'])
                             : Colors.white,
                         fontSize: fontSize,
                         height: 1.4,
@@ -937,9 +887,9 @@ class CustomCalendarBuilder extends StatelessWidget {
                             child: Container(
                               // margin: const EdgeInsets.symmetric(horizontal: 1.0),
                               color: isAllDay
-                                  ? calendarColorMap[event['colorSetId']]!
+                                  ? colorMap.get(event['colorSetId'])
                                       .withOpacity(0.15)
-                                  : calendarColorMap[event['colorSetId']],
+                                  : colorMap.get(event['colorSetId']),
                               width: double.infinity,
                               child: Align(
                                 alignment: Alignment.center,
