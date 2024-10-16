@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_client/common/component/loading_indicators.dart';
+import 'package:mobile_client/screens/event/event_month_view.dart';
 import 'package:mobile_client/services/main_request.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -783,8 +784,6 @@ class CustomCalendarBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double fontSize = calculateFontSize(context);
-
     return Container(
       child: Container(
         padding: const EdgeInsets.all(1.5),
@@ -824,112 +823,7 @@ class CustomCalendarBuilder extends StatelessWidget {
               child: Container(
                 //color: Colors.yellow.withOpacity(0.3),
                 child: LayoutBuilder(builder: (context, constraints) {
-                  double totalHeight = 0;
-                  int displayEvents = 0;
-                  int remainingEvents = 0;
-
-                  List<Widget> eventWidgets = [];
-
-                  if (events?[DateFormat('yyyy-MM-dd').format(day)] != null) {
-                    for (var event
-                        in events![DateFormat('yyyy-MM-dd').format(day)]!) {
-                      // todo - 이부분 외부 파일로 분리할게요
-                      var startAtTime = DateFormat('HH:mm:ss')
-                          .format(DateTime.parse(event['startAt']));
-                      var endAtTime = DateFormat('HH:mm:ss')
-                          .format(DateTime.parse(event['endAt']));
-
-                      final bool isAllDay = (startAtTime == '00:00:00') &&
-                              (endAtTime == '00:00:00')
-                          ? false
-                          : true;
-                      final text = event['summary'];
-                      // TODO. lineHeight / fontSize
-                      final textStyle = TextStyle(
-                        color: isAllDay
-                            ? colorMap.get(event['colorSetId'])
-                            : Colors.white,
-                        fontSize: fontSize,
-                        height: 1.4,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.05,
-                        // TODO
-                        overflow: TextOverflow.ellipsis,
-                      );
-                      final textSpan = TextSpan(
-                        text: text,
-                        style: textStyle,
-                      );
-                      final textPainter = TextPainter(
-                        text: textSpan,
-                        maxLines: 1,
-                        textDirection: ui.TextDirection.ltr,
-                      );
-                      textPainter.layout(maxWidth: constraints.maxWidth);
-
-                      // final isOverflow = textPainter.didExceedMaxLines ||
-                      //     textPainter.width > constraints.maxWidth;
-
-                      final textHeight =
-                          textPainter.height + (2.0 + 4.0); // Add padding + 2
-                      // print(
-                      //     '${day}: ${totalHeight} + ${textHeight} > ${constraints.maxHeight}');
-                      if (totalHeight + textHeight + textHeight >
-                          constraints.maxHeight) {
-                        remainingEvents++;
-                      } else {
-                        totalHeight += textHeight;
-                        displayEvents++;
-                        eventWidgets.add(ClipRRect(
-                          borderRadius: BorderRadius.circular(4.0),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 1.0),
-                            child: Container(
-                              // margin: const EdgeInsets.symmetric(horizontal: 1.0),
-                              color: isAllDay
-                                  ? colorMap.get(event['colorSetId'])
-                                      .withOpacity(0.15)
-                                  : colorMap.get(event['colorSetId']),
-                              width: double.infinity,
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  text,
-                                  style: textStyle,
-                                  overflow: TextOverflow.clip,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ));
-                      }
-                    }
-
-                    if (remainingEvents > 0) {
-                      //remainingEvents += 1;
-                      //displayEvents -= 1;
-                      eventWidgets.add(Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 1.0),
-                        child: Container(
-                          color: Color(0xFFAAAAAA).withOpacity(0.3),
-                          width: double.infinity,
-                          child: Center(
-                            child: Text(
-                              '+${remainingEvents}',
-                              style: TextStyle(fontSize: fontSize),
-                              overflow: TextOverflow.clip,
-                              maxLines: 1,
-                            ),
-                          ),
-                        ),
-                      ));
-                    }
-                  }
-
-                  return Column(
-                    children: eventWidgets,
-                  );
+                  return EventMonthViewCell(context, constraints, events, day, colorMap);
                 }),
               ),
             ),
@@ -939,14 +833,4 @@ class CustomCalendarBuilder extends StatelessWidget {
     );
   }
 
-  double calculateFontSize(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    if (screenWidth < 360) {
-      return 8.0;
-    } else if (screenWidth < 720) {
-      return 10.0;
-    } else {
-      return 12.0;
-    }
-  }
 }
