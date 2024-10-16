@@ -305,16 +305,21 @@ class _MainCalendarState extends State<MainCalendar> {
       ),
     );
 
-    for (var cal in calendarList!) {
-      for (var r in resp.data) {
-        //print(r['hexCode'].substring(1));
-        if (cal['colorSetId'] == r['colorSetId']) {
-          calendarColorMap[cal['calendarId']] = hexToColor(r['hexCode']);
-          break;
-        }
-      }
-    }
+    // for (var cal in calendarList!) {
+    //   for (var r in resp.data) {
+    //     //print(r['hexCode'].substring(1));
+    //     if (cal['colorSetId'] == r['colorSetId']) {
+    //       calendarColorMap[cal['calendarId']] = hexToColor(r['hexCode']);
+    //       break;
+    //     }
+    //   }
+    // }
 
+    for (var r in resp.data) {
+      calendarColorMap[r['colorSetId']] = hexToColor(r['hexCode']);
+    }
+    print("calendarColorMap == ");
+    print(calendarColorMap);
     await getEventList();
   }
 
@@ -332,17 +337,28 @@ class _MainCalendarState extends State<MainCalendar> {
 
     eventList = [];
 
-    for (var i = 1; i < 256; i++) { // 이거 시급히 수정해야함...
-      try {
-        var resp = await dio.get(
-            dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/${i}',
-            options:
-                Options(headers: {'authorization': 'Bearer $refreshToken'}));
-        if (resp.statusCode == 200) {
-          eventList?.add(resp.data);
-        }
-      } catch (e) { }
-    }
+    try {
+      var resp = await dio.get(
+          dotenv.env['BACKEND_MAIN_URL']! + '/eventList/all',
+          options:
+          Options(headers: {'authorization': 'Bearer $refreshToken'}));
+      if (resp.statusCode == 200) {
+        print(resp.data);
+        eventList?.addAll(resp.data);
+      }
+    } catch (e) { print("ERROR OCCURED ${e}"); }
+
+    // for (var i = 1; i < 256; i++) { // 이거 시급히 수정해야함...
+    //   try {
+    //     var resp = await dio.get(
+    //         dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/${i}',
+    //         options:
+    //             Options(headers: {'authorization': 'Bearer $refreshToken'}));
+    //     if (resp.statusCode == 200) {
+    //       eventList?.add(resp.data);
+    //     }
+    //   } catch (e) { }
+    // }
 
     print('eventList.length: ${eventList?.length}');
     setState(() {
@@ -487,9 +503,10 @@ class _MainCalendarState extends State<MainCalendar> {
         String dateKey = DateFormat('yyyy-MM-dd')
             .format(DateTime.parse(eventList![i]['startAt']));
         //print('dateKey: $dateKey');
-        if (displayCalendarIdSet!.contains(eventList![i]['calendarId'])) {
-          addEventToMap(dateEvents, dateKey, eventList![i]);
-        }
+        addEventToMap(dateEvents, dateKey, eventList![i]);
+        // if (displayCalendarIdSet!.contains(eventList![i]['calendarId'])) {
+        //   addEventToMap(dateEvents, dateKey, eventList![i]);
+        // }
       }
     }
 
@@ -880,7 +897,7 @@ class CustomCalendarBuilder extends StatelessWidget {
                       // TODO. lineHeight / fontSize
                       final textStyle = TextStyle(
                         color: isAllDay
-                            ? calendarColorMap[event['calendarId']]
+                            ? calendarColorMap[event['colorSetId']]
                             : Colors.white,
                         fontSize: fontSize,
                         height: 1.4,
@@ -918,11 +935,11 @@ class CustomCalendarBuilder extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 1.0),
                             child: Container(
-                              //margin: const EdgeInsets.symmetric(horizontal: 1.0),
+                              // margin: const EdgeInsets.symmetric(horizontal: 1.0),
                               color: isAllDay
-                                  ? calendarColorMap[event['calendarId']]!
+                                  ? calendarColorMap[event['colorSetId']]!
                                       .withOpacity(0.15)
-                                  : calendarColorMap[event['calendarId']],
+                                  : calendarColorMap[event['colorSetId']],
                               width: double.infinity,
                               child: Align(
                                 alignment: Alignment.center,
