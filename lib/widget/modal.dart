@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../common/const/color.dart';
 
-void modal(context, title, children){
+void modal(context, title, child){
   showDialog(
     context: context,
     barrierDismissible: true,
@@ -26,10 +26,7 @@ void modal(context, title, children){
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                Expanded(
-                    child: ListView(
-                      children: children,
-                    )),
+                Expanded(child: child)
               ],
             ),
           ),

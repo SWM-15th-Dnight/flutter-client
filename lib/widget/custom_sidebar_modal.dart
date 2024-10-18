@@ -10,6 +10,7 @@ import '../common/component/snackbar_helper.dart';
 import '../common/const/color.dart';
 import '../common/const/data.dart';
 import '../entities/calendar.dart';
+import '../entities/color_map.dart';
 
 class CustomSidebarModal extends StatefulWidget {
   final Map<int, Calendar> calendarMap;
@@ -17,6 +18,7 @@ class CustomSidebarModal extends StatefulWidget {
   final Function(int)? onCalendarSelected;
   final Function(int)? onSelectedCalendarDeleted;
   final Function? onCalendarCreated;
+  final ColorMap colorMap;
 
   CustomSidebarModal({
     required this.calendarMap,
@@ -24,6 +26,7 @@ class CustomSidebarModal extends StatefulWidget {
     this.onCalendarCreated,
     this.onSelectedCalendarDeleted,
     required this.currentCalendarId,
+    required this.colorMap,
   });
 
   @override
@@ -85,7 +88,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
             Expanded(
                 child: Column(
               children: [
-                for (var cal in widget.calendarMap.values) containerList(cal),
+                for (var cal in widget.calendarMap.values) containerList(cal, widget.colorMap),
                 // Spacer(),
                 Container(
                   decoration: BoxDecoration(
@@ -140,19 +143,31 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
   }
 
   void editModal(context, calendar){
-    modal(context, calendar.title, [Text('test')]);
+    modal(context, calendar.title,
+      Column(children: [
+        Text("색상 변경"),
+        Spacer(),
+        FilledButton.icon(
+          onPressed: () {},
+          icon: const Icon(Icons.delete),
+          label: const Text("캘린더 삭제"),
+          iconAlignment: IconAlignment.start,
+          style: TextButton.styleFrom(backgroundColor: Colors.red),
+        ),
+      ])
+    );
   }
 
-  Widget containerList(calendar){
+  Widget containerList(calendar, colorMap) {
     return ListTile(
       leading: !isDeleteMode
           ? Checkbox(
             value: calendar.isSelected,
             onChanged: (bool? value) {},
-            activeColor: calendar.color,
+            activeColor: colorMap.get(calendar.colorSetId),
           )
           : Checkbox(
-          value: calendar.isSelected,
+          value: selectedDeletingCalendarIds.contains(calendar.id),
           onChanged: (bool? value) {}),
       title: Text(calendar.title),
       trailing: IconButton(icon: const Icon(Icons.more_vert), onPressed: () {

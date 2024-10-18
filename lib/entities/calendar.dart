@@ -12,7 +12,7 @@ class Calendar {
   late final int colorSetId;
   late final String? description;
 
-  late Color color;
+  late Color color = hexToColor("#2457A5");
   late bool isSelected;
 
   Calendar(input){
@@ -24,14 +24,12 @@ class Calendar {
     colorSetId = input['colorSetId'];
     description = input['description'];
 
-    setColor();
+    () { // color setting anonymous function
+      ColorMap colormap = ColorMap();
+      color = ColorMap().get(colorSetId);
+    };
+
     isSelected = true; // 기본으로 Displayed 됨
   }
-
-  void setColor() async {
-    ColorMap colormap = ColorMap();
-    color = await colormap.get(colorSetId);
-  }
-
 }
 

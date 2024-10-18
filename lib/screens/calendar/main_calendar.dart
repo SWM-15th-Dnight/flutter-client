@@ -117,29 +117,32 @@ class _MainCalendarState extends State<MainCalendar> {
   void showDaysEventsModal(BuildContext parentContext, Map<String, List<Map<String, dynamic>>> dateEvents) {
         var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
         var numberOfEvents = dateEvents[day]?.length ?? 0;
-        modal(parentContext, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), [
-          for (var event in dateEvents[day] ?? [])
-            ListTile(
-              title: Text(
-                event['summary'],
-                style: TextStyle(
-                  fontSize: 14.0,
+        modal(parentContext, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), ListView(
+            children: [
+              for (var event in dateEvents[day] ?? [])
+                ListTile(
+                  title: Text(
+                    event['summary'],
+                    style: TextStyle(
+                      fontSize: 14.0,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
+                    style: TextStyle(
+                      fontSize: 10.0,
+                    ),
+                  ),
+                  onTap: () {
+                    print(event);
+                    Navigator.pop(context);
+                    _showEventDetailModal(
+                        context, event, parentContext, dateEvents);
+                  },
                 ),
-              ),
-              subtitle: Text(
-                '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
-                style: TextStyle(
-                  fontSize: 10.0,
-                ),
-              ),
-              onTap: () {
-                print(event);
-                Navigator.pop(context);
-                _showEventDetailModal(
-                    context, event, parentContext, dateEvents);
-              },
-            ),
-        ]);
+            ],
+          ),
+        );
   }
 
   void _showEventDetailModal(
@@ -449,6 +452,7 @@ class _MainCalendarState extends State<MainCalendar> {
                       context: context,
                       builder: (context) {
                         return CustomSidebarModal(
+                          colorMap: colorMap,
                           calendarMap: calendarMap,
                           currentCalendarId: currentCalendarId,
                           onCalendarSelected: (int selectedCalendarId) {

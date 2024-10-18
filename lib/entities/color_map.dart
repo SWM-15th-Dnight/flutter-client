@@ -12,8 +12,8 @@ class ColorMap{
 
   ColorMap();
 
-  Future<Color> get (int key) async {
-    if(!ColorDict.containsKey(key)) await update();
+  Color get (int key) {
+    if(!ColorDict.containsKey(key)) update();
     return ColorDict[key] ?? hexToColor("#ffffff"); // fallback 나중에 수정해야할듯
   }
 
