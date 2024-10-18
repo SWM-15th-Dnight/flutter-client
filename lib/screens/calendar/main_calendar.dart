@@ -25,7 +25,7 @@ import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
 import '../../entities/color_map.dart';
-import 'modal.dart';
+import '../../widget/modal.dart';
 
 class MainCalendar extends StatefulWidget {
   final FBAuthService auth;
@@ -119,14 +119,9 @@ class _MainCalendarState extends State<MainCalendar> {
 
   void showDaysEventsModal(BuildContext parentContext,
       Map<String, List<Map<String, dynamic>>> dateEvents) {
-    showDialog(
-      context: parentContext,
-      barrierDismissible: true,
-      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
-      builder: (BuildContext context) {
         var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
         var numberOfEvents = dateEvents[day]?.length ?? 0;
-        return modal(context, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), [
+        modal(parentContext, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), [
           for (var event in dateEvents[day] ?? [])
             ListTile(
               title: Text(
@@ -149,8 +144,38 @@ class _MainCalendarState extends State<MainCalendar> {
               },
             ),
         ]);
-      },
-    );
+    // showDialog(
+    //   context: parentContext,
+    //   barrierDismissible: true,
+    //   barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+    //   builder: (BuildContext context) {
+    //     var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
+    //     var numberOfEvents = dateEvents[day]?.length ?? 0;
+    //     return modal(context, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), [
+    //       for (var event in dateEvents[day] ?? [])
+    //         ListTile(
+    //           title: Text(
+    //             event['summary'],
+    //             style: TextStyle(
+    //               fontSize: 14.0,
+    //             ),
+    //           ),
+    //           subtitle: Text(
+    //             '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
+    //             style: TextStyle(
+    //               fontSize: 10.0,
+    //             ),
+    //           ),
+    //           onTap: () {
+    //             print(event);
+    //             Navigator.pop(context);
+    //             _showEventDetailModal(
+    //                 context, event, parentContext, dateEvents);
+    //           },
+    //         ),
+    //     ]);
+    //   },
+    // );
   }
 
   void _showEventDetailModal(

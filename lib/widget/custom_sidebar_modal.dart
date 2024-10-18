@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile_client/services/auth_service.dart';
+import 'package:mobile_client/widget/modal.dart';
 
 import '../common/component/snackbar_helper.dart';
 import '../common/const/color.dart';
@@ -99,6 +100,9 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                                   widget.calendarList![i]['calendarId']),
                               onChanged: (bool? value) {}),
                       title: Text('${widget.calendarList![i]['title']}'),
+                      trailing: IconButton(icon: const Icon(Icons.more_vert), onPressed: () {
+                        editModal(context);
+                      },),
                       onTap: () {
                         setState(() {
                           if (!isDeleteMode) {
@@ -197,6 +201,11 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
         ),
       ),
     );
+  }
+
+  void editModal(context){
+    bool isEditMode = false;
+    modal(context, "hello world", [Text('test')]);
   }
 
   void _toggleDeleteMode() {
