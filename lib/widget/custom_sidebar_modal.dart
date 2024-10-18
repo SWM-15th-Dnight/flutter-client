@@ -7,6 +7,7 @@ import 'package:mobile_client/widget/modal.dart';
 import '../common/component/snackbar_helper.dart';
 import '../common/const/color.dart';
 import '../common/const/data.dart';
+import '../entities/calendar.dart';
 
 class CustomSidebarModal extends StatefulWidget {
   final List<dynamic>? calendarList;
@@ -87,55 +88,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                 child: Column(
               children: [
                 // TODO. sort by calendarId (convert calendarList type, map to something iterable)
-                for (var i = 0; i < widget.calendarList!.length; i++)
-                  Container(
-                    child: ListTile(
-                      leading: !isDeleteMode
-                          ? Checkbox(
-                              value: selectedCalendarIds.contains(
-                                  widget.calendarList![i]['calendarId']),
-                              onChanged: (bool? value) {})
-                          : Checkbox(
-                              value: selectedDeletingCalendarIds.contains(
-                                  widget.calendarList![i]['calendarId']),
-                              onChanged: (bool? value) {}),
-                      title: Text('${widget.calendarList![i]['title']}'),
-                      trailing: IconButton(icon: const Icon(Icons.more_vert), onPressed: () {
-                        editModal(context);
-                      },),
-                      onTap: () {
-                        setState(() {
-                          if (!isDeleteMode) {
-                            if (selectedCalendarIds.contains(
-                                widget.calendarList![i]['calendarId'])) {
-                              selectedCalendarIds.remove(
-                                  widget.calendarList![i]['calendarId']);
-                            } else {
-                              selectedCalendarIds
-                                  .add(widget.calendarList![i]['calendarId']);
-                            }
-                          } else {
-                            if (selectedDeletingCalendarIds.contains(
-                                widget.calendarList![i]['calendarId'])) {
-                              selectedDeletingCalendarIds.remove(
-                                  widget.calendarList![i]['calendarId']);
-                            } else {
-                              selectedDeletingCalendarIds
-                                  .add(widget.calendarList![i]['calendarId']);
-                            }
-                          }
-                        });
-
-                        // set calendarId to the selected calendar
-                        if (widget.onCalendarSelected != null) {
-                          widget.onCalendarSelected!(
-                              widget.calendarList![i]['calendarId']);
-                        }
-                        print(
-                            '(custom_sidebar_modal.dart) selectedCalendarIds: $selectedCalendarIds');
-                      },
-                    ),
-                  ),
+                for (var cal in widget.calendarList!) containerList(cal),
                 // Spacer(),
                 Container(
                   child: ListTile(
@@ -203,9 +156,51 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
     );
   }
 
-  void editModal(context){
-    bool isEditMode = false;
-    modal(context, "hello world", [Text('test')]);
+  void editModal(context, calendar){
+    modal(context, calendar.title, [Text('test')]);
+  }
+
+  Widget containerList(calendar){
+    return ListTile(
+      leading: !isDeleteMode
+          ? Checkbox(
+          value: selectedCalendarIds.contains(
+              calendar.id),
+          onChanged: (bool? value) {})
+          : Checkbox(
+          value: selectedDeletingCalendarIds.contains(
+              calendar.id),
+          onChanged: (bool? value) {}),
+      title: Text(calendar.title),
+      trailing: IconButton(icon: const Icon(Icons.more_vert), onPressed: () {
+        editModal(context, calendar);
+      },),
+      onTap: () {
+        setState(() {
+          if (!isDeleteMode) {
+            if (selectedCalendarIds.contains(calendar.id)) {
+              selectedCalendarIds.remove(calendar.id);
+            } else {
+              selectedCalendarIds.add(calendar.id);
+            }
+          } else {
+            if (selectedDeletingCalendarIds.contains(calendar.id)) {
+              selectedDeletingCalendarIds.remove(calendar.id);
+            } else {
+              selectedDeletingCalendarIds.add(calendar.id);
+            }
+          }
+        });
+
+        // set calendarId to the selected calendar
+        if (widget.onCalendarSelected != null) {
+          widget.onCalendarSelected!(
+              calendar.id);
+        }
+        print(
+            '(custom_sidebar_modal.dart) selectedCalendarIds: $selectedCalendarIds');
+      },
+    );
   }
 
   void _toggleDeleteMode() {

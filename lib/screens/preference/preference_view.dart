@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile_client/entities/calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/services/auth_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,7 +21,7 @@ import '../root/root_view.dart';
 class PreferenceView extends StatefulWidget {
   final FBAuthService auth;
   String? displayName = '익명';
-  final Map<String, dynamic> currentCalendar;
+  final Calendar currentCalendar;
   final Function? onCalendarModified;
   // TODO. FCM test
   static const route = '/preference';
@@ -265,7 +266,7 @@ class _PreferenceViewState extends State<PreferenceView> {
             ListTile(
               title: Center(
                   child:
-                      Text("현재 선택된 캘린더 - ${widget.currentCalendar['title']}")),
+                      Text("현재 선택된 캘린더 - ${widget.currentCalendar.title}")),
               onTap: () async {
                 // modify calendar's title
                 _showEditCalendarTitleDialog(context);
@@ -319,7 +320,7 @@ class _PreferenceViewState extends State<PreferenceView> {
 
   void _updateCalendarTitle(String newTitle) {
     setState(() {
-      widget.currentCalendar['title'] = newTitle;
+      widget.currentCalendar.title = newTitle;
     });
   }
 
@@ -328,9 +329,9 @@ class _PreferenceViewState extends State<PreferenceView> {
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
 
     var data = {
-      "calendarId": widget.currentCalendar['calendarId'],
+      "calendarId": widget.currentCalendar.id,
       "title": title,
-      "description": widget.currentCalendar['description'],
+      "description": widget.currentCalendar.id,
       "timezoneId": "Asia/Seoul",
       "colorSetId": 1,
       "isDeleted": 0,

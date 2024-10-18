@@ -20,6 +20,7 @@ import '../../common/component/service_name_text.dart';
 import '../../common/component/snackbar_helper.dart';
 import '../../common/const/data.dart';
 import '../../common/layout/default_layout.dart';
+import '../../entities/calendar.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
@@ -277,16 +278,24 @@ class _MainCalendarState extends State<MainCalendar> {
     print('getCalendarList() resp: $resp');
     print('getCalendarList() resp: ${resp.statusCode}');
     print('getCalendarList() resp: ${resp.data.runtimeType}');
+
+    var calList = [];
+    for(var cal in resp.data){
+      calList.add(Calendar(cal));
+    }
+
     setState(() {
-      calendarList = resp.data;
+      calendarList = calList; // invoking screen reload
+
       print('현재 캘린더 아이디: ${currentCalendarId}');
-      print('비교할 아이디: ${calendarList![0]['calendarId']}');
-      currentCalendarId = currentCalendarId ?? calendarList![0]['calendarId'];
+      print('비교할 아이디: ${calendarList![0].id}');
+      currentCalendarId = currentCalendarId ?? calendarList![0].id;
+
       // TODO. 기본 캘린더 번호를 2로 가정해버렸음, 그냥 지웠음
       // howSnackbar('현재 ${currentCalendarId! - 2}번 캘린더가 선택되었습니다!');
       displayCalendarIdSet?.add(currentCalendarId!);
       for (var cal in calendarList!) {
-        calendarIdSet.add(cal['calendarId']);
+        calendarIdSet.add(cal.id);
       }
     });
 
@@ -513,7 +522,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           auth: widget.auth,
                           currentCalendar: calendarList!.firstWhere(
                               (calendar) =>
-                                  calendar['calendarId'] == currentCalendarId),
+                                  calendar.id == currentCalendarId),
                           onCalendarModified: getCalendarList,
                         ),
                       ),
