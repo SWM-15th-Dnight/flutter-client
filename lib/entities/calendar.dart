@@ -12,7 +12,8 @@ class Calendar {
   late final int colorSetId;
   late final String? description;
 
-  late final Color displayColor;
+  late Color color;
+  late bool isSelected;
 
   Calendar(input){
     id = input['calendarId'];
@@ -23,7 +24,14 @@ class Calendar {
     colorSetId = input['colorSetId'];
     description = input['description'];
 
-    ColorMap colormap = ColorMap();
-    displayColor = colormap.get(colorSetId);
+    setColor();
+    isSelected = true; // 기본으로 Displayed 됨
   }
+
+  void setColor() async {
+    ColorMap colormap = ColorMap();
+    color = await colormap.get(colorSetId);
+  }
+
 }
+

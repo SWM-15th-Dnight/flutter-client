@@ -53,10 +53,7 @@ class _MainCalendarState extends State<MainCalendar> {
   final String timeMax = '2024-12-31T23:59:59Z';
 
   Map<int, Calendar> calendarMap = {};
-  Set<int> calendarIdSet = {};
-
   int? currentCalendarId; // assign at getCalendarMap()
-  Set<int>? displayCalendarIdSet = {}; // assign at getCalendarMap()
 
   ColorMap colorMap = ColorMap();
 
@@ -259,12 +256,6 @@ class _MainCalendarState extends State<MainCalendar> {
       print('현재 캘린더 아이디: ${currentCalendarId}');
       print('비교할 아이디: ${firstId}');
       currentCalendarId = currentCalendarId ?? firstId;
-
-      displayCalendarIdSet?.add(currentCalendarId!);
-
-      for (var cal in calendarMap.values) {
-        calendarIdSet.add(cal.id);
-      }
     });
 
     await getEventList();
@@ -432,9 +423,6 @@ class _MainCalendarState extends State<MainCalendar> {
             .format(DateTime.parse(eventList![i]['startAt']));
         //print('dateKey: $dateKey');
         addEventToMap(dateEvents, dateKey, eventList![i]);
-        // if (displayCalendarIdSet!.contains(eventList![i]['calendarId'])) {
-        //   addEventToMap(dateEvents, dateKey, eventList![i]);
-        // }
       }
     }
 
@@ -463,7 +451,6 @@ class _MainCalendarState extends State<MainCalendar> {
                         return CustomSidebarModal(
                           calendarMap: calendarMap,
                           currentCalendarId: currentCalendarId,
-                          displayCalendarIdSet: displayCalendarIdSet,
                           onCalendarSelected: (int selectedCalendarId) {
                             print(
                                 '(MainCalendar) Selected calendarId: ${selectedCalendarId}');

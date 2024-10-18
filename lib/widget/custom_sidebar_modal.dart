@@ -16,13 +16,11 @@ class CustomSidebarModal extends StatefulWidget {
   final int? currentCalendarId;
   final Function(int)? onCalendarSelected;
   final Function(int)? onSelectedCalendarDeleted;
-  final Set<int>? displayCalendarIdSet;
   final Function? onCalendarCreated;
 
   CustomSidebarModal({
     required this.calendarMap,
     required this.onCalendarSelected,
-    required this.displayCalendarIdSet,
     this.onCalendarCreated,
     this.onSelectedCalendarDeleted,
     required this.currentCalendarId,
@@ -36,7 +34,6 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
   final FBAuthService auth = FBAuthService();
   final dio = Dio();
 
-  Set<int> selectedCalendarIds = {};
   Set<int> selectedDeletingCalendarIds = {};
 
   // for deleting calendar
@@ -45,7 +42,6 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
   @override
   void initState() {
     super.initState();
-    selectedCalendarIds = widget.displayCalendarIdSet!;
   }
 
   @override
@@ -151,12 +147,12 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
     return ListTile(
       leading: !isDeleteMode
           ? Checkbox(
-          value: selectedCalendarIds.contains(
-              calendar.id),
-          onChanged: (bool? value) {})
+            value: calendar.isSelected,
+            onChanged: (bool? value) {},
+            activeColor: calendar.color,
+          )
           : Checkbox(
-          value: selectedDeletingCalendarIds.contains(
-              calendar.id),
+          value: calendar.isSelected,
           onChanged: (bool? value) {}),
       title: Text(calendar.title),
       trailing: IconButton(icon: const Icon(Icons.more_vert), onPressed: () {
@@ -165,11 +161,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
       onTap: () {
         setState(() {
           if (!isDeleteMode) {
-            if (selectedCalendarIds.contains(calendar.id)) {
-              selectedCalendarIds.remove(calendar.id);
-            } else {
-              selectedCalendarIds.add(calendar.id);
-            }
+            calendar.isSelected = !calendar.isSelected;
           } else {
             if (selectedDeletingCalendarIds.contains(calendar.id)) {
               selectedDeletingCalendarIds.remove(calendar.id);
@@ -184,8 +176,6 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
           widget.onCalendarSelected!(
               calendar.id);
         }
-        print(
-            '(custom_sidebar_modal.dart) selectedCalendarIds: $selectedCalendarIds');
       },
     );
   }

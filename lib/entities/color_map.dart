@@ -8,20 +8,25 @@ import '../services/auth_service.dart';
 class ColorMap{
   FBAuthService auth = FBAuthService();
   final dio = Dio();
-  Map<int, Color> ColorDict = {};
+  static Map<int, Color> ColorDict = {};
 
-  ColorMap(){
-    update();
-  }
+  ColorMap();
 
-  Color get(int key){
-    if(ColorDict[key] == null) update();
+  Future<Color> get (int key) async {
+    if(!ColorDict.containsKey(key)) await update();
     return ColorDict[key] ?? hexToColor("#ffffff"); // fallback 나중에 수정해야할듯
   }
 
-  Future<void> update() async{
-    print('updating CalendarColorMap()');
+  List<Color> getTotal(){
+    if(ColorDict.isEmpty) update();
+    List<Color> ret = [];
+    for(var elem in ColorDict.values){
+      ret.add(elem);
+    }
+    return ret;
+  }
 
+  Future<void> update() async{
     await auth.checkToken();
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     print('refreshToken: $refreshToken');
@@ -38,8 +43,6 @@ class ColorMap{
     for (var r in resp.data) {
       ColorDict[r['colorSetId']] = hexToColor(r['hexCode']);
     }
-    print("ColorDict");
-    print(ColorDict);
     return;
   }
 }
