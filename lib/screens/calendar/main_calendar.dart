@@ -52,13 +52,12 @@ class _MainCalendarState extends State<MainCalendar> {
   final String timeMin = '2023-01-01T00:00:00Z';
   final String timeMax = '2024-12-31T23:59:59Z';
 
-  List<dynamic>? calendarList;
+  Map<int, Calendar> calendarMap = {};
   Set<int> calendarIdSet = {};
 
-  int? currentCalendarId; // assign at getCalendarList()
-  Set<int>? displayCalendarIdSet = {}; // assign at getCalendarList()
+  int? currentCalendarId; // assign at getCalendarMap()
+  Set<int>? displayCalendarIdSet = {}; // assign at getCalendarMap()
 
-  //calendarList![currentCalendarId!]['colorSetId']
   ColorMap colorMap = ColorMap();
 
   List<dynamic>? eventList = [];
@@ -76,7 +75,7 @@ class _MainCalendarState extends State<MainCalendar> {
     _loadImage();
 
     //fetchCalendarData();
-    getCalendarList();
+    getCalendarMap();
   }
 
   @override
@@ -118,8 +117,7 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  void showDaysEventsModal(BuildContext parentContext,
-      Map<String, List<Map<String, dynamic>>> dateEvents) {
+  void showDaysEventsModal(BuildContext parentContext, Map<String, List<Map<String, dynamic>>> dateEvents) {
         var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
         var numberOfEvents = dateEvents[day]?.length ?? 0;
         modal(parentContext, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), [
@@ -145,38 +143,6 @@ class _MainCalendarState extends State<MainCalendar> {
               },
             ),
         ]);
-    // showDialog(
-    //   context: parentContext,
-    //   barrierDismissible: true,
-    //   barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
-    //   builder: (BuildContext context) {
-    //     var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
-    //     var numberOfEvents = dateEvents[day]?.length ?? 0;
-    //     return modal(context, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), [
-    //       for (var event in dateEvents[day] ?? [])
-    //         ListTile(
-    //           title: Text(
-    //             event['summary'],
-    //             style: TextStyle(
-    //               fontSize: 14.0,
-    //             ),
-    //           ),
-    //           subtitle: Text(
-    //             '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
-    //             style: TextStyle(
-    //               fontSize: 10.0,
-    //             ),
-    //           ),
-    //           onTap: () {
-    //             print(event);
-    //             Navigator.pop(context);
-    //             _showEventDetailModal(
-    //                 context, event, parentContext, dateEvents);
-    //           },
-    //         ),
-    //     ]);
-    //   },
-    // );
   }
 
   void _showEventDetailModal(
@@ -268,33 +234,35 @@ class _MainCalendarState extends State<MainCalendar> {
     }
   }
 
-  Future<void> getCalendarList() async {
-    print('getCalendarList()');
+  Future<void> getCalendarMap() async {
+    print('getCalendarMap()');
     await widget.auth.checkToken();
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     var resp = await dio.get(
         dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/calendars/',
         options: Options(headers: {'authorization': 'Bearer $refreshToken'}));
-    print('getCalendarList() resp: $resp');
-    print('getCalendarList() resp: ${resp.statusCode}');
-    print('getCalendarList() resp: ${resp.data.runtimeType}');
+    print('getCalendarMap() resp: $resp');
+    print('getCalendarMap() resp: ${resp.statusCode}');
+    print('getCalendarMap() resp: ${resp.data.runtimeType}');
 
-    var calList = [];
+    var firstId;
+    Map<int,Calendar> calMap = {};
     for(var cal in resp.data){
-      calList.add(Calendar(cal));
+      var elem = Calendar(cal);
+      firstId = firstId ?? elem.id;
+      calMap[elem.id] = elem;
     }
 
     setState(() {
-      calendarList = calList; // invoking screen reload
+      calendarMap = calMap;
 
       print('현재 캘린더 아이디: ${currentCalendarId}');
-      print('비교할 아이디: ${calendarList![0].id}');
-      currentCalendarId = currentCalendarId ?? calendarList![0].id;
+      print('비교할 아이디: ${firstId}');
+      currentCalendarId = currentCalendarId ?? firstId;
 
-      // TODO. 기본 캘린더 번호를 2로 가정해버렸음, 그냥 지웠음
-      // howSnackbar('현재 ${currentCalendarId! - 2}번 캘린더가 선택되었습니다!');
       displayCalendarIdSet?.add(currentCalendarId!);
-      for (var cal in calendarList!) {
+
+      for (var cal in calendarMap.values) {
         calendarIdSet.add(cal.id);
       }
     });
@@ -493,7 +461,7 @@ class _MainCalendarState extends State<MainCalendar> {
                       context: context,
                       builder: (context) {
                         return CustomSidebarModal(
-                          calendarList: calendarList,
+                          calendarMap: calendarMap,
                           currentCalendarId: currentCalendarId,
                           displayCalendarIdSet: displayCalendarIdSet,
                           onCalendarSelected: (int selectedCalendarId) {
@@ -510,7 +478,7 @@ class _MainCalendarState extends State<MainCalendar> {
                               currentCalendarId = primaryCalendarId;
                             });
                           },
-                          onCalendarCreated: getCalendarList,
+                          onCalendarCreated: getCalendarMap,
                         );
                       },
                     );
@@ -520,10 +488,8 @@ class _MainCalendarState extends State<MainCalendar> {
                       MaterialPageRoute(
                         builder: (_) => PreferenceView(
                           auth: widget.auth,
-                          currentCalendar: calendarList!.firstWhere(
-                              (calendar) =>
-                                  calendar.id == currentCalendarId),
-                          onCalendarModified: getCalendarList,
+                          currentCalendar: calendarMap[currentCalendarId]!,
+                          onCalendarModified: getCalendarMap,
                         ),
                       ),
                     );

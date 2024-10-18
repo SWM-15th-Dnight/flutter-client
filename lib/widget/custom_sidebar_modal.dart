@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,7 +12,7 @@ import '../common/const/data.dart';
 import '../entities/calendar.dart';
 
 class CustomSidebarModal extends StatefulWidget {
-  final List<dynamic>? calendarList;
+  final Map<int, Calendar> calendarMap;
   final int? currentCalendarId;
   final Function(int)? onCalendarSelected;
   final Function(int)? onSelectedCalendarDeleted;
@@ -18,7 +20,7 @@ class CustomSidebarModal extends StatefulWidget {
   final Function? onCalendarCreated;
 
   CustomSidebarModal({
-    required this.calendarList,
+    required this.calendarMap,
     required this.onCalendarSelected,
     required this.displayCalendarIdSet,
     this.onCalendarCreated,
@@ -87,10 +89,17 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
             Expanded(
                 child: Column(
               children: [
-                // TODO. sort by calendarId (convert calendarList type, map to something iterable)
-                for (var cal in widget.calendarList!) containerList(cal),
+                for (var cal in widget.calendarMap.values) containerList(cal),
                 // Spacer(),
                 Container(
+                  decoration: BoxDecoration(
+                    color: isDeleteMode ? Colors.red : null,
+                    border: Border(
+                        top: BorderSide(
+                      color: ColorPalette.GRAY_COLOR[100]!.withOpacity(0.5),
+                      width: 1.0,
+                    )),
+                  ),
                   child: ListTile(
                     title: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -113,7 +122,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                           return;
                         }
                         if (selectedDeletingCalendarIds.length ==
-                            widget.calendarList!.length) {
+                            widget.calendarMap!.length) {
                           Navigator.of(context).pop();
                           showSnackbar(context, '모든 캘린더를 삭제할 수 없습니다.');
                           return;
@@ -125,31 +134,9 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                       }
                     },
                   ),
-                  decoration: BoxDecoration(
-                    color: isDeleteMode ? Colors.red : null,
-                    border: Border(
-                        top: BorderSide(
-                      color: ColorPalette.GRAY_COLOR[100]!.withOpacity(0.5),
-                      width: 1.0,
-                    )),
-                  ),
                 ),
               ],
             )),
-
-            /*
-                ...calendarList!.map((calendar) {
-                  return ListTile(
-                    title: Text('캘린더 ${calendar['calendarId']}번'),
-                    onTap: () {
-                      // set calendarId to the selected calendar
-                      if (onCalendarSelected != null) {
-                        onCalendarSelected!(calendar['calendarId']);
-                      }
-                    },
-                  );
-                }).toList(),
-                */
           ],
         ),
       ),
@@ -210,9 +197,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
   }
 
   void _deleteSelectedCalendars(BuildContext context, Set<int> calendarIds) {
-    int primaryCalendarId = widget.calendarList!
-        .map((calendar) => calendar['calendarId'])
-        .reduce((a, b) => a < b ? a : b);
+    int primaryCalendarId = widget.calendarMap.keys.reduce(min);
 
     if (calendarIds.contains(primaryCalendarId)) {
       Navigator.of(context).pop();
@@ -220,8 +205,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
       return;
     }
 
-    String title = widget.calendarList!.firstWhere(
-        (calendar) => calendar['calendarId'] == calendarIds.first)['title'];
+    String title = widget.calendarMap[calendarIds.first]!.title;
 
     showDialog(
         context: context,
@@ -265,7 +249,6 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
 
-                  // getCalendarList() at MainCalendar
                   if (widget.onCalendarCreated != null) {
                     widget.onCalendarCreated!();
                   }
@@ -328,7 +311,6 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
 
-                // getCalendarList() at MainCalendar
                 if (widget.onCalendarCreated != null) {
                   widget.onCalendarCreated!();
                 }
