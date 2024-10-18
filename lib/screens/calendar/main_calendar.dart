@@ -25,6 +25,7 @@ import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
 import '../../entities/color_map.dart';
+import 'modal.dart';
 
 class MainCalendar extends StatefulWidget {
   final FBAuthService auth;
@@ -125,54 +126,29 @@ class _MainCalendarState extends State<MainCalendar> {
       builder: (BuildContext context) {
         var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
         var numberOfEvents = dateEvents[day]?.length ?? 0;
-        return Dialog(
-          child: SingleChildScrollView(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.8,
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: Column(
-                children: [
-                  // TODO. Text 상단 고정하고, bottom overflow시 스크롤되게
-                  const SizedBox(height: 20.0),
-                  Text(
-                    '${DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay)}',
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  Expanded(
-                      child: ListView(
-                    children: [
-                      for (var event in dateEvents[day] ?? [])
-                        ListTile(
-                          title: Text(
-                            event['summary'],
-                            style: TextStyle(
-                              fontSize: 14.0,
-                            ),
-                          ),
-                          subtitle: Text(
-                            '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
-                            style: TextStyle(
-                              fontSize: 10.0,
-                            ),
-                          ),
-                          onTap: () {
-                            print(event);
-                            Navigator.pop(context);
-                            _showEventDetailModal(
-                                context, event, parentContext, dateEvents);
-                          },
-                        ),
-                    ],
-                  )),
-                ],
+        return modal(context, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), [
+          for (var event in dateEvents[day] ?? [])
+            ListTile(
+              title: Text(
+                event['summary'],
+                style: TextStyle(
+                  fontSize: 14.0,
+                ),
               ),
+              subtitle: Text(
+                '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
+                style: TextStyle(
+                  fontSize: 10.0,
+                ),
+              ),
+              onTap: () {
+                print(event);
+                Navigator.pop(context);
+                _showEventDetailModal(
+                    context, event, parentContext, dateEvents);
+              },
             ),
-          ),
-        );
+        ]);
       },
     );
   }
