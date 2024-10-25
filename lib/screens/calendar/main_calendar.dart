@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_client/common/component/loading_indicators.dart';
+import 'package:mobile_client/screens/event/event_month_view.dart';
 import 'package:mobile_client/services/main_request.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -19,10 +20,13 @@ import '../../common/component/service_name_text.dart';
 import '../../common/component/snackbar_helper.dart';
 import '../../common/const/data.dart';
 import '../../common/layout/default_layout.dart';
+import '../../entities/calendar.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
+import '../../entities/color_map.dart';
+import '../../widget/modal.dart';
 
 class MainCalendar extends StatefulWidget {
   final FBAuthService auth;
@@ -48,14 +52,10 @@ class _MainCalendarState extends State<MainCalendar> {
   final String timeMin = '2023-01-01T00:00:00Z';
   final String timeMax = '2024-12-31T23:59:59Z';
 
-  List<dynamic>? calendarList;
-  Set<int> calendarIdSet = {};
+  Map<int, Calendar> calendarMap = {};
+  int? currentCalendarId; // assign at getCalendarMap()
 
-  int? currentCalendarId; // assign at getCalendarList()
-  Set<int>? displayCalendarIdSet = {}; // assign at getCalendarList()
-
-  //calendarList![currentCalendarId!]['colorSetId']
-  Map<int, Color> calendarColorMap = {};
+  ColorMap colorMap = ColorMap();
 
   List<dynamic>? eventList = [];
   bool isGetEventListDone = false;
@@ -72,7 +72,7 @@ class _MainCalendarState extends State<MainCalendar> {
     _loadImage();
 
     //fetchCalendarData();
-    getCalendarList();
+    getCalendarMap();
   }
 
   @override
@@ -114,65 +114,35 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  void showDaysEventsModal(BuildContext parentContext,
-      Map<String, List<Map<String, dynamic>>> dateEvents) {
-    showDialog(
-      context: parentContext,
-      barrierDismissible: true,
-      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
-      builder: (BuildContext context) {
+  void showDaysEventsModal(BuildContext parentContext, Map<String, List<Map<String, dynamic>>> dateEvents) {
         var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
         var numberOfEvents = dateEvents[day]?.length ?? 0;
-        return Dialog(
-          child: SingleChildScrollView(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.8,
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: Column(
-                children: [
-                  // TODO. Text 상단 고정하고, bottom overflow시 스크롤되게
-                  const SizedBox(height: 20.0),
-                  Text(
-                    '${DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay)}',
+        modal(parentContext, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), ListView(
+            children: [
+              for (var event in dateEvents[day] ?? [])
+                ListTile(
+                  title: Text(
+                    event['summary'],
                     style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.w400,
+                      fontSize: 14.0,
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  Expanded(
-                      child: ListView(
-                    children: [
-                      for (var event in dateEvents[day] ?? [])
-                        ListTile(
-                          title: Text(
-                            event['summary'],
-                            style: TextStyle(
-                              fontSize: 14.0,
-                            ),
-                          ),
-                          subtitle: Text(
-                            '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
-                            style: TextStyle(
-                              fontSize: 10.0,
-                            ),
-                          ),
-                          onTap: () {
-                            print(event);
-                            Navigator.pop(context);
-                            _showEventDetailModal(
-                                context, event, parentContext, dateEvents);
-                          },
-                        ),
-                    ],
-                  )),
-                ],
-              ),
-            ),
+                  subtitle: Text(
+                    '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
+                    style: TextStyle(
+                      fontSize: 10.0,
+                    ),
+                  ),
+                  onTap: () {
+                    print(event);
+                    Navigator.pop(context);
+                    _showEventDetailModal(
+                        context, event, parentContext, dateEvents);
+                  },
+                ),
+            ],
           ),
         );
-      },
-    );
   }
 
   void _showEventDetailModal(
@@ -264,65 +234,34 @@ class _MainCalendarState extends State<MainCalendar> {
     }
   }
 
-  Future<void> getCalendarList() async {
-    print('getCalendarList()');
+  Future<void> getCalendarMap() async {
+    print('getCalendarMap()');
     await widget.auth.checkToken();
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     var resp = await dio.get(
         dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/calendars/',
         options: Options(headers: {'authorization': 'Bearer $refreshToken'}));
-    print('getCalendarList() resp: $resp');
-    print('getCalendarList() resp: ${resp.statusCode}');
-    print('getCalendarList() resp: ${resp.data.runtimeType}');
-    setState(() {
-      calendarList = resp.data;
-      print('현재 캘린더 아이디: ${currentCalendarId}');
-      print('비교할 아이디: ${calendarList![0]['calendarId']}');
-      currentCalendarId = currentCalendarId ?? calendarList![0]['calendarId'];
-      // TODO. 기본 캘린더 번호를 2로 가정해버렸음, 그냥 지웠음
-      // howSnackbar('현재 ${currentCalendarId! - 2}번 캘린더가 선택되었습니다!');
-      displayCalendarIdSet?.add(currentCalendarId!);
-      for (var cal in calendarList!) {
-        calendarIdSet.add(cal['calendarId']);
-      }
-    });
+    print('getCalendarMap() resp: $resp');
+    print('getCalendarMap() resp: ${resp.statusCode}');
+    print('getCalendarMap() resp: ${resp.data.runtimeType}');
 
-    await makeCalendarColorMap();
-  }
-
-  Future<void> makeCalendarColorMap() async {
-    print('makeCalendarColorMap()');
-    await widget.auth.checkToken();
-    var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
-    print('refreshToken: $refreshToken');
-
-    var resp = await dio.get(
-      dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
-      options: Options(
-        headers: {
-          'authorization': 'Bearer $refreshToken',
-        },
-      ),
-    );
-
-    for (var cal in calendarList!) {
-      for (var r in resp.data) {
-        //print(r['hexCode'].substring(1));
-        if (cal['colorSetId'] == r['colorSetId']) {
-          calendarColorMap[cal['calendarId']] = hexToColor(r['hexCode']);
-          break;
-        }
-      }
+    var firstId;
+    Map<int,Calendar> calMap = {};
+    for(var cal in resp.data){
+      var elem = Calendar(cal);
+      firstId = firstId ?? elem.id;
+      calMap[elem.id] = elem;
     }
 
-    await getEventList();
-  }
+    setState(() {
+      calendarMap = calMap;
 
-  Color hexToColor(String hexString) {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
+      print('현재 캘린더 아이디: ${currentCalendarId}');
+      print('비교할 아이디: ${firstId}');
+      currentCalendarId = currentCalendarId ?? firstId;
+    });
+
+    await getEventList();
   }
 
   Future<void> getEventList() async {
@@ -332,18 +271,17 @@ class _MainCalendarState extends State<MainCalendar> {
 
     eventList = [];
 
-    for (var i = 1; i < 100; i++) {
-      try {
-        var resp = await dio.get(
-            dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/event/${i}',
-            options:
-                Options(headers: {'authorization': 'Bearer $refreshToken'}));
-        if (resp.statusCode == 200) {
-          //print('getEventList() : ${resp.data}');
-          eventList?.add(resp.data);
-        }
-      } catch (e) {}
-    }
+    try {
+      var resp = await dio.get(
+          dotenv.env['BACKEND_MAIN_URL']! + '/eventList/all',
+          options:
+          Options(headers: {'authorization': 'Bearer $refreshToken'}));
+      if (resp.statusCode == 200) {
+        print(resp.data);
+        eventList?.addAll(resp.data);
+      }
+    } catch (e) { print("ERROR OCCURED ${e}"); }
+
     print('eventList.length: ${eventList?.length}');
     setState(() {
       isGetEventListDone = true;
@@ -462,14 +400,32 @@ class _MainCalendarState extends State<MainCalendar> {
     Map<String, List<Map<String, dynamic>>> dateEvents = {};
 
     if (eventList?.length != 0) {
+      eventList?.sort((a,b) {
+        final aStart = DateTime.parse(a["startAt"]);
+        final aEnd = DateTime.parse(a["endAt"]);
+        final bStart = DateTime.parse(b["startAt"]);
+        final bEnd = DateTime.parse(b["endAt"]);
+
+        if(aStart.compareTo(bStart) != 0){
+          return aStart.compareTo(bStart);
+        }
+        else{
+          if(bEnd.compareTo(aEnd) != 0){
+            return bEnd.compareTo(aEnd);
+          }
+          else{
+            if(a["summary"] < b["summary"]) return -1;
+            if(a["summary"] > b["summary"]) return 1;
+            return 0;
+          }
+        }
+      });
       for (var i = 0; i < eventList!.length; i++) {
         //print('[$i] : ${eventList![i]}');
         String dateKey = DateFormat('yyyy-MM-dd')
             .format(DateTime.parse(eventList![i]['startAt']));
         //print('dateKey: $dateKey');
-        if (displayCalendarIdSet!.contains(eventList![i]['calendarId'])) {
-          addEventToMap(dateEvents, dateKey, eventList![i]);
-        }
+        addEventToMap(dateEvents, dateKey, eventList![i]);
       }
     }
 
@@ -496,9 +452,9 @@ class _MainCalendarState extends State<MainCalendar> {
                       context: context,
                       builder: (context) {
                         return CustomSidebarModal(
-                          calendarList: calendarList,
+                          colorMap: colorMap,
+                          calendarMap: calendarMap,
                           currentCalendarId: currentCalendarId,
-                          displayCalendarIdSet: displayCalendarIdSet,
                           onCalendarSelected: (int selectedCalendarId) {
                             print(
                                 '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
@@ -513,7 +469,7 @@ class _MainCalendarState extends State<MainCalendar> {
                               currentCalendarId = primaryCalendarId;
                             });
                           },
-                          onCalendarCreated: getCalendarList,
+                          onCalendarCreated: getCalendarMap,
                         );
                       },
                     );
@@ -523,10 +479,8 @@ class _MainCalendarState extends State<MainCalendar> {
                       MaterialPageRoute(
                         builder: (_) => PreferenceView(
                           auth: widget.auth,
-                          currentCalendar: calendarList!.firstWhere(
-                              (calendar) =>
-                                  calendar['calendarId'] == currentCalendarId),
-                          onCalendarModified: getCalendarList,
+                          currentCalendar: calendarMap[currentCalendarId]!,
+                          onCalendarModified: getCalendarMap,
                         ),
                       ),
                     );
@@ -587,7 +541,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          calendarColorMap: calendarColorMap,
+                          colorMap: colorMap,
                         );
                       },
                       outsideBuilder: (context, day, focusedDay) {
@@ -596,7 +550,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           focusedDay: focusedDay,
                           dayColor: Color(0XFFAAAAAA),
                           events: dateEvents,
-                          calendarColorMap: calendarColorMap,
+                          colorMap: colorMap,
                         );
                       },
                       todayBuilder: (context, day, focusedDay) {
@@ -604,7 +558,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          calendarColorMap: calendarColorMap,
+                          colorMap: colorMap,
                           /* debug - border
                                       decoration: BoxDecoration(
                                         border: Border.all(
@@ -620,7 +574,7 @@ class _MainCalendarState extends State<MainCalendar> {
                           day: day,
                           focusedDay: focusedDay,
                           events: dateEvents,
-                          calendarColorMap: calendarColorMap,
+                          colorMap: colorMap,
                           isSelected: ColorPalette.PRIMARY_COLOR[400]!
                               .withOpacity(0.05),
                           /*
@@ -768,7 +722,7 @@ class CustomCalendarBuilder extends StatelessWidget {
   final DateTime day;
   final DateTime focusedDay;
   final Map<String, List<Map<String, dynamic>>>? events;
-  final Map<int, Color> calendarColorMap;
+  final colorMap;
 
   Color? dayColor = Colors.black;
   double isTargetDay = 0.0;
@@ -783,7 +737,7 @@ class CustomCalendarBuilder extends StatelessWidget {
     this.dayColor,
     this.dayFontWeight,
     this.isSelected,
-    required this.calendarColorMap,
+    required this.colorMap,
   }) {
     DateTime today = DateTime.now();
     if (day.year == today.year &&
@@ -797,8 +751,6 @@ class CustomCalendarBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double fontSize = calculateFontSize(context);
-
     return Container(
       child: Container(
         padding: const EdgeInsets.all(1.5),
@@ -838,111 +790,7 @@ class CustomCalendarBuilder extends StatelessWidget {
               child: Container(
                 //color: Colors.yellow.withOpacity(0.3),
                 child: LayoutBuilder(builder: (context, constraints) {
-                  double totalHeight = 0;
-                  int displayEvents = 0;
-                  int remainingEvents = 0;
-
-                  List<Widget> eventWidgets = [];
-
-                  if (events?[DateFormat('yyyy-MM-dd').format(day)] != null) {
-                    for (var event
-                        in events![DateFormat('yyyy-MM-dd').format(day)]!) {
-                      var startAtTime = DateFormat('HH:mm:ss')
-                          .format(DateTime.parse(event['startAt']));
-                      var endAtTime = DateFormat('HH:mm:ss')
-                          .format(DateTime.parse(event['endAt']));
-
-                      final bool isAllDay = (startAtTime == '00:00:00') &&
-                              (endAtTime == '00:00:00')
-                          ? false
-                          : true;
-                      final text = event['summary'];
-                      // TODO. lineHeight / fontSize
-                      final textStyle = TextStyle(
-                        color: isAllDay
-                            ? calendarColorMap[event['calendarId']]
-                            : Colors.white,
-                        fontSize: fontSize,
-                        height: 1.4,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.05,
-                        // TODO
-                        overflow: TextOverflow.ellipsis,
-                      );
-                      final textSpan = TextSpan(
-                        text: text,
-                        style: textStyle,
-                      );
-                      final textPainter = TextPainter(
-                        text: textSpan,
-                        maxLines: 1,
-                        textDirection: ui.TextDirection.ltr,
-                      );
-                      textPainter.layout(maxWidth: constraints.maxWidth);
-
-                      // final isOverflow = textPainter.didExceedMaxLines ||
-                      //     textPainter.width > constraints.maxWidth;
-
-                      final textHeight =
-                          textPainter.height + (2.0 + 4.0); // Add padding + 2
-                      // print(
-                      //     '${day}: ${totalHeight} + ${textHeight} > ${constraints.maxHeight}');
-                      if (totalHeight + textHeight + textHeight >
-                          constraints.maxHeight) {
-                        remainingEvents++;
-                      } else {
-                        totalHeight += textHeight;
-                        displayEvents++;
-                        eventWidgets.add(ClipRRect(
-                          borderRadius: BorderRadius.circular(4.0),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 1.0),
-                            child: Container(
-                              //margin: const EdgeInsets.symmetric(horizontal: 1.0),
-                              color: isAllDay
-                                  ? calendarColorMap[event['calendarId']]!
-                                      .withOpacity(0.15)
-                                  : calendarColorMap[event['calendarId']],
-                              width: double.infinity,
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  text,
-                                  style: textStyle,
-                                  overflow: TextOverflow.clip,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ));
-                      }
-                    }
-
-                    if (remainingEvents > 0) {
-                      //remainingEvents += 1;
-                      //displayEvents -= 1;
-                      eventWidgets.add(Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 1.0),
-                        child: Container(
-                          color: Color(0xFFAAAAAA).withOpacity(0.3),
-                          width: double.infinity,
-                          child: Center(
-                            child: Text(
-                              '+${remainingEvents}',
-                              style: TextStyle(fontSize: fontSize),
-                              overflow: TextOverflow.clip,
-                              maxLines: 1,
-                            ),
-                          ),
-                        ),
-                      ));
-                    }
-                  }
-
-                  return Column(
-                    children: eventWidgets,
-                  );
+                  return EventMonthViewCell(context, constraints, events, day, colorMap);
                 }),
               ),
             ),
@@ -952,14 +800,4 @@ class CustomCalendarBuilder extends StatelessWidget {
     );
   }
 
-  double calculateFontSize(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    if (screenWidth < 360) {
-      return 8.0;
-    } else if (screenWidth < 720) {
-      return 10.0;
-    } else {
-      return 12.0;
-    }
-  }
 }
