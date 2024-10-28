@@ -414,8 +414,8 @@ class _MainCalendarState extends State<MainCalendar> {
             return bEnd.compareTo(aEnd);
           }
           else{
-            if(a["summary"] < b["summary"]) return -1;
-            if(a["summary"] > b["summary"]) return 1;
+            if(a["priority"] >= b["priority"]) return -1;
+            if(a["priority"] < b["priority"]) return 1;
             return 0;
           }
         }
@@ -799,5 +799,4 @@ class CustomCalendarBuilder extends StatelessWidget {
       ),
     );
   }
-
 }
