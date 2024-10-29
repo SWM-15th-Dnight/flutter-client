@@ -34,55 +34,57 @@ class AuthTextFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      children: [
-        TextFormField(
-          focusNode: focusNode,
-          controller: controller,
-          autofocus: autofocus,
-          // 비밀번호 입력할 때
-          obscureText: obscureText,
-          // 값이 바뀔 때마다 실행되는 callback
-          onChanged: onChanged,
-          textAlign: textAlign,
-          maxLength: maxLength,
-
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(
-              fontSize: 14,
-              //color: Colors.grey,
-            ),
-            counterText: '',
-            contentPadding: EdgeInsets.symmetric(vertical: 12),
-            prefix: SizedBox(width: 48),
-            suffixIcon: IconButton(
-              // resize
-              icon: Icon(
-                suffixIcon,
-                size: 20,
-              ),
-              onPressed: () {
-                onIconPressed();
-              },
-            ),
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorPalette.GRAY_COLOR[50]!,
+        borderRadius: BorderRadius.circular(45),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 4,
+            offset: Offset(0, 4),
           ),
+        ],
+      ),
+      child: TextFormField(
+        focusNode: focusNode,
+        controller: controller,
+        autofocus: autofocus,
+        // 비밀번호 입력할 때
+        obscureText: obscureText,
+        // 값이 바뀔 때마다 실행되는 callback
+        onChanged: onChanged,
+        textAlign: textAlign,
+        maxLength: maxLength,
 
-          scrollPadding: EdgeInsets.only(bottom: scrollPadding ?? 0),
-          validator: validator,
-        ),
-        Positioned(
-          bottom: 0,
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.55, // 짧은 보더의 길이
-            height: 1.0, // 보더 두께
-            color: ColorPalette.PRIMARY_COLOR[400]!, // 보더 색상
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(
+            color: ColorPalette.GRAY_COLOR[400]!,
+            fontSize: 14,
           ),
+          counterText: '',
+          contentPadding: EdgeInsets.symmetric(vertical: 12),
+          /* set prefix to default IconButton size to hintText align center */
+          prefix: SizedBox(width: 48),
+          suffixIcon: IconButton(
+            // resize
+            icon: Icon(
+              suffixIcon,
+              color: ColorPalette.GRAY_COLOR[400]!,
+              size: 18,
+            ),
+            onPressed: () {
+              onIconPressed();
+            },
+          ),
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
         ),
-      ],
+
+        scrollPadding: EdgeInsets.only(bottom: scrollPadding ?? 0),
+        validator: validator,
+      ),
     );
   }
 }

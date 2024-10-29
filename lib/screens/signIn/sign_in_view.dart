@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen>
                 Align(
                   alignment: Alignment.center,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 132),
+                    padding: const EdgeInsets.only(top: 132 + 20),
                     child: AnimatedSize(
                       duration: const Duration(milliseconds: 500),
                       curve: Curves.decelerate,
@@ -194,32 +194,36 @@ class _LoginScreenState extends State<LoginScreen>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.60,
-                                    child: AuthTextFormField(
-                                      // autofocus: true,
-                                      scrollPadding: bottomInSet / 2,
-                                      focusNode: _emailFocusNode,
-                                      controller: _emailController,
-                                      textAlign: TextAlign.center,
-                                      hintText: '이메일',
-                                      maxLength: 40,
-                                      onChanged: (String value) async {
-                                        setState(() {
-                                          email = value;
-                                        });
-                                      },
-                                      suffixIcon: Icons.clear,
-                                      onIconPressed: () {
-                                        setState(() {
-                                          _emailController.clear();
-                                          email = '';
-                                        });
-                                      },
-                                    )),
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.65,
+                                  height: 36,
+                                  child: AuthTextFormField(
+                                    // autofocus: true,
+                                    scrollPadding: bottomInSet / 2,
+                                    focusNode: _emailFocusNode,
+                                    controller: _emailController,
+                                    textAlign: TextAlign.center,
+                                    hintText: '이메일',
+                                    maxLength: 40,
+                                    onChanged: (String value) async {
+                                      setState(() {
+                                        email = value;
+                                      });
+                                    },
+                                    suffixIcon: Icons.clear,
+                                    onIconPressed: () {
+                                      setState(() {
+                                        _emailController.clear();
+                                        email = '';
+                                      });
+                                    },
+                                  ),
+                                ),
+                                SizedBox(height: 10),
                                 Container(
                                   width:
-                                      MediaQuery.of(context).size.width * 0.60,
+                                      MediaQuery.of(context).size.width * 0.65,
+                                  height: 36,
                                   child: AuthTextFormField(
                                     scrollPadding: bottomInSet / 3,
                                     focusNode: _passwordFocusNode,
@@ -252,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen>
                 Align(
                   alignment: Alignment.center,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 264),
+                    padding: const EdgeInsets.only(top: 264 + 20),
                     child: AnimatedOpacity(
                       opacity: isEmailSignIn ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 300),
@@ -272,7 +276,8 @@ class _LoginScreenState extends State<LoginScreen>
                   alignment: Alignment.center,
                   child: AnimatedPadding(
                     duration: const Duration(milliseconds: 300),
-                    padding: EdgeInsets.only(top: isEmailSignIn ? 350 : 120),
+                    padding: EdgeInsets.only(
+                        top: isEmailSignIn ? 350 + 20 : 120 + 20),
                     child: AnimatedOpacity(
                       opacity: _isStartButtonVisible ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 300),
@@ -287,7 +292,7 @@ class _LoginScreenState extends State<LoginScreen>
                 Align(
                   alignment: Alignment.center,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 432),
+                    padding: const EdgeInsets.only(top: 432 + 20),
                     child: AnimatedOpacity(
                       opacity: isEmailSignIn ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 200),
