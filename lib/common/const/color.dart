@@ -61,16 +61,14 @@ class ColorPalette {
   static const MaterialColor GRAY_COLOR = const MaterialColor(
     _blackPrimaryValue,
     const <int, Color>{
-      50: const Color(0xFFe0e0e0),
-      100: const Color(0xFFb3b3b3),
-      200: const Color(0xFFF58865),
-      300: const Color(0xFFF37046),
-      400: const Color(0xFFF15928),
-      500: const Color(_blackPrimaryValue),
-      600: const Color(0xFF000000),
-      700: const Color(0xFF000000),
-      800: const Color(0xFF000000),
-      900: const Color(0xFF000000),
+      50: const Color(0xFFF7F8F9),
+      100: const Color(0xFFE8EBED),
+      200: const Color(0xFFC9CDD2),
+      400: const Color(0xFF9EA4AA),
+      500: const Color(0xFF72787F),
+      600: const Color(0xFF454C53),
+      800: const Color(0xFF26282B),
+      900: const Color(0xFF1B1D1F),
     },
   );
 }

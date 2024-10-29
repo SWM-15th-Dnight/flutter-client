@@ -49,7 +49,7 @@ class _App extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        fontFamily: 'NotoSans',
+        fontFamily: 'Pretendard',
       ),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [

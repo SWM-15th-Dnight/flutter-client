@@ -114,35 +114,39 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  void showDaysEventsModal(BuildContext parentContext, Map<String, List<Map<String, dynamic>>> dateEvents) {
-        var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
-        var numberOfEvents = dateEvents[day]?.length ?? 0;
-        modal(parentContext, DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay), ListView(
-            children: [
-              for (var event in dateEvents[day] ?? [])
-                ListTile(
-                  title: Text(
-                    event['summary'],
-                    style: TextStyle(
-                      fontSize: 14.0,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
-                    style: TextStyle(
-                      fontSize: 10.0,
-                    ),
-                  ),
-                  onTap: () {
-                    print(event);
-                    Navigator.pop(context);
-                    _showEventDetailModal(
-                        context, event, parentContext, dateEvents);
-                  },
+  void showDaysEventsModal(BuildContext parentContext,
+      Map<String, List<Map<String, dynamic>>> dateEvents) {
+    var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
+    var numberOfEvents = dateEvents[day]?.length ?? 0;
+    modal(
+      parentContext,
+      DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay),
+      ListView(
+        children: [
+          for (var event in dateEvents[day] ?? [])
+            ListTile(
+              title: Text(
+                event['summary'],
+                style: TextStyle(
+                  fontSize: 14.0,
                 ),
-            ],
-          ),
-        );
+              ),
+              subtitle: Text(
+                '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
+                style: TextStyle(
+                  fontSize: 10.0,
+                ),
+              ),
+              onTap: () {
+                print(event);
+                Navigator.pop(context);
+                _showEventDetailModal(
+                    context, event, parentContext, dateEvents);
+              },
+            ),
+        ],
+      ),
+    );
   }
 
   void _showEventDetailModal(
@@ -246,8 +250,8 @@ class _MainCalendarState extends State<MainCalendar> {
     print('getCalendarMap() resp: ${resp.data.runtimeType}');
 
     var firstId;
-    Map<int,Calendar> calMap = {};
-    for(var cal in resp.data){
+    Map<int, Calendar> calMap = {};
+    for (var cal in resp.data) {
       var elem = Calendar(cal);
       firstId = firstId ?? elem.id;
       calMap[elem.id] = elem;
@@ -274,13 +278,14 @@ class _MainCalendarState extends State<MainCalendar> {
     try {
       var resp = await dio.get(
           dotenv.env['BACKEND_MAIN_URL']! + '/eventList/all',
-          options:
-          Options(headers: {'authorization': 'Bearer $refreshToken'}));
+          options: Options(headers: {'authorization': 'Bearer $refreshToken'}));
       if (resp.statusCode == 200) {
         print(resp.data);
         eventList?.addAll(resp.data);
       }
-    } catch (e) { print("ERROR OCCURED ${e}"); }
+    } catch (e) {
+      print("ERROR OCCURED ${e}");
+    }
 
     print('eventList.length: ${eventList?.length}');
     setState(() {
@@ -400,22 +405,21 @@ class _MainCalendarState extends State<MainCalendar> {
     Map<String, List<Map<String, dynamic>>> dateEvents = {};
 
     if (eventList?.length != 0) {
-      eventList?.sort((a,b) {
+      eventList?.sort((a, b) {
         final aStart = DateTime.parse(a["startAt"]);
         final aEnd = DateTime.parse(a["endAt"]);
         final bStart = DateTime.parse(b["startAt"]);
         final bEnd = DateTime.parse(b["endAt"]);
 
-        if(aStart.compareTo(bStart) != 0){
+        if (aStart.compareTo(bStart) != 0) {
           return aStart.compareTo(bStart);
-        }
-        else{
-          if(bEnd.compareTo(aEnd) != 0){
+        } else {
+          if (bEnd.compareTo(aEnd) != 0) {
             return bEnd.compareTo(aEnd);
-          }
-          else{
-            if(a["summary"] < b["summary"]) return -1;
-            if(a["summary"] > b["summary"]) return 1;
+          } else {
+            // TODO.
+            //if(a["summary"] < b["summary"]) return -1;
+            //if(a["summary"] > b["summary"]) return 1;
             return 0;
           }
         }
@@ -790,7 +794,8 @@ class CustomCalendarBuilder extends StatelessWidget {
               child: Container(
                 //color: Colors.yellow.withOpacity(0.3),
                 child: LayoutBuilder(builder: (context, constraints) {
-                  return EventMonthViewCell(context, constraints, events, day, colorMap);
+                  return EventMonthViewCell(
+                      context, constraints, events, day, colorMap);
                 }),
               ),
             ),
@@ -799,5 +804,4 @@ class CustomCalendarBuilder extends StatelessWidget {
       ),
     );
   }
-
 }

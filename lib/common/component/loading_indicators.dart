@@ -12,6 +12,6 @@ class LoadingIndicators extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SpinKitChasingDots(
         color: color,
-        size: 30.0,
+        size: 32.0,
       );
 }

@@ -152,6 +152,26 @@ flutter:
     - family: Rockwell
       fonts:
         - asset: asset/fonts/english/Rockwell.ttc
+    - family: Pretendard
+      fonts:
+        - asset: asset/fonts/korean/Pretendard-Black.otf
+          weight: 900
+        - asset: asset/fonts/korean/Pretendard-ExtraBold.otf
+          weight: 800
+        - asset: asset/fonts/korean/Pretendard-Bold.otf
+          weight: 700
+        - asset: asset/fonts/korean/Pretendard-SemiBold.otf
+          weight: 600
+        - asset: asset/fonts/korean/Pretendard-Medium.otf
+          weight: 500
+        - asset: asset/fonts/korean/Pretendard-Regular.otf
+          weight: 400
+        - asset: asset/fonts/korean/Pretendard-Light.otf
+          weight: 300
+        - asset: asset/fonts/korean/Pretendard-ExtraLight.otf
+          weight: 200
+        - asset: asset/fonts/korean/Pretendard-Thin.otf
+          weight: 100
     - family: TestFamily
       fonts:
         - asset: asset/fonts/SCDream1.otf

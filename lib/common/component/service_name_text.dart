@@ -17,8 +17,10 @@ class ServiceNameText extends StatelessWidget {
       style: TextStyle(
         color: textColor ?? Colors.black,
         fontFamily: 'Rockwell',
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w700,
         fontSize: 40,
+        letterSpacing: 1.5,
+        textBaseline: TextBaseline.alphabetic,
       ),
     );
   }

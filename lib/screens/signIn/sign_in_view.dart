@@ -35,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen>
   // TextFormField
   final TextEditingController _emailController = TextEditingController();
   final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
   bool _isEmailFocused = true;
   bool _isPasswordVisible = false;
 
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen>
         _isLogoVisible = true;
       });
 
-      Future.delayed(const Duration(milliseconds: 1700), () {
+      Future.delayed(const Duration(milliseconds: 1000), () {
         setState(() {
           _isStartButtonVisible = true;
         });
@@ -67,10 +68,24 @@ class _LoginScreenState extends State<LoginScreen>
       if (_emailFocusNode.hasFocus) {
         setState(() {
           _emailController.text = email;
+          _isLogoVisible = false;
         });
       } else {
         setState(() {
           _emailController.text = _getDisplayEmail(email);
+          _isLogoVisible = true;
+        });
+      }
+    });
+
+    _passwordFocusNode.addListener(() {
+      if (_passwordFocusNode.hasFocus) {
+        setState(() {
+          _isLogoVisible = false;
+        });
+      } else {
+        setState(() {
+          _isLogoVisible = true;
         });
       }
     });
@@ -80,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen>
   void dispose() {
     _emailController.dispose();
     _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -104,6 +120,11 @@ class _LoginScreenState extends State<LoginScreen>
         child: SafeArea(
       child: Stack(
         children: [
+          // Background Color
+          Container(
+            color: ColorPalette.GRAY_COLOR[50]!,
+          ),
+          // AppBar
           Positioned(
             top: 0,
             left: 0,
@@ -132,6 +153,220 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
           ),
+
+          Transform.translate(
+            offset: Offset(0, -20),
+            child: Stack(
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 300),
+                    padding: EdgeInsets.only(bottom: 300),
+                    child: AnimatedOpacity(
+                      opacity: _isLogoVisible ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.decelerate,
+                      child: _Logo(),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.center,
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 300),
+                    padding: EdgeInsets.only(bottom: 0),
+                    child: ServiceNameText(
+                      serviceName: 'Calinify',
+                      textColor: Colors.black,
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 132),
+                    child: AnimatedSize(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.decelerate,
+                      child: isEmailSignIn
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.60,
+                                    child: AuthTextFormField(
+                                      // autofocus: true,
+                                      scrollPadding: bottomInSet / 2,
+                                      focusNode: _emailFocusNode,
+                                      controller: _emailController,
+                                      textAlign: TextAlign.center,
+                                      hintText: '이메일',
+                                      maxLength: 40,
+                                      onChanged: (String value) async {
+                                        setState(() {
+                                          email = value;
+                                        });
+                                      },
+                                      suffixIcon: Icons.clear,
+                                      onIconPressed: () {
+                                        setState(() {
+                                          _emailController.clear();
+                                          email = '';
+                                        });
+                                      },
+                                    )),
+                                Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.60,
+                                  child: AuthTextFormField(
+                                    scrollPadding: bottomInSet / 3,
+                                    focusNode: _passwordFocusNode,
+                                    obscureText: !_isPasswordVisible,
+                                    textAlign: TextAlign.center,
+                                    hintText: '비밀번호',
+                                    maxLength: 20,
+                                    onChanged: (String value) async {
+                                      password = value;
+                                    },
+                                    suffixIcon: _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    onIconPressed: () {
+                                      setState(() {
+                                        _isPasswordVisible =
+                                            !_isPasswordVisible;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )
+                          : SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+                // TODO. 이메일 입력 및 비밀번호 형식 경고 문구
+                /*
+                Align(
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 264),
+                    child: AnimatedOpacity(
+                      opacity: isEmailSignIn ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        '비밀번호는 8~20자, 특수문자를 포함해야합니다.',
+                        style: TextStyle(
+                          color: ColorPalette.SECONDARY_COLOR[400]!,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                */
+                Align(
+                  alignment: Alignment.center,
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 300),
+                    padding: EdgeInsets.only(top: isEmailSignIn ? 350 : 120),
+                    child: AnimatedOpacity(
+                      opacity: _isStartButtonVisible ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: _StartButton(
+                        isEmailSignIn: isEmailSignIn,
+                        auth: _auth,
+                        setEmailSignIn: setEmailSignIn,
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 432),
+                    child: AnimatedOpacity(
+                      opacity: isEmailSignIn ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.decelerate,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '회원가입',
+                            style: TextStyle(
+                              color: ColorPalette.PRIMARY_COLOR[300]!,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            ' | ',
+                            style: TextStyle(
+                              color: ColorPalette.GRAY_COLOR[600]!,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            '비밀번호 찾기',
+                            style: TextStyle(
+                              color: ColorPalette.GRAY_COLOR[600]!,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: AnimatedOpacity(
+                    opacity: isEmailSignIn && _isLogoVisible ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.decelerate,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '이용약관',
+                          style: TextStyle(
+                            decoration: TextDecoration.underline,
+                            color: ColorPalette.GRAY_COLOR[400]!,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          ' 및 ',
+                          style: TextStyle(
+                            color: ColorPalette.GRAY_COLOR[400]!,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          '개인정보 취급방침',
+                          style: TextStyle(
+                            decoration: TextDecoration.underline,
+                            color: ColorPalette.GRAY_COLOR[400]!,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+/*
           Positioned.fill(
             top: isEmailSignIn ? kToolbarHeight : 0,
             child: Center(
@@ -229,6 +464,7 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
           ),
+          */
         ],
       ),
     ));
