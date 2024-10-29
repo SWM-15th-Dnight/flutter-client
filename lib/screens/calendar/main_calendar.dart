@@ -365,37 +365,38 @@ class _MainCalendarState extends State<MainCalendar> {
     if (!isGetEventListDone) {
       return DefaultLayout(
         child: SafeArea(
-          child: SizedBox(
-            width: MediaQuery.of(context).size.width,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.3,
-                  child: Container(
-                    color: Colors.transparent,
-                  ),
+          child: Stack(
+            children: [
+              Container(
+                color: ColorPalette.GRAY_COLOR[50]!,
+              ),
+              Transform.translate(
+                offset: Offset(0, -20),
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        '일정 정보를 불러오고 있어요!',
+                        style: TextStyle(
+                          color: ColorPalette.PRIMARY_COLOR[300]!,
+                          fontWeight: FontWeight.w300,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 100),
+                        child: LoadingIndicators(
+                            color: ColorPalette.PRIMARY_COLOR[400]!),
+                      ),
+                    ),
+                  ],
                 ),
-                ServiceNameText(
-                  serviceName: 'Calinify',
-                  textColor: Colors.white,
-                ),
-                SizedBox(height: 20),
-                SizedBox(
-                  height: 40,
-                  child: Center(
-                    child: LoadingIndicators(
-                        color: ColorPalette.PRIMARY_COLOR[400]!),
-                  ),
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.3,
-                  child: Container(
-                    color: Colors.transparent,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
