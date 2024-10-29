@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_client/common/const/color.dart';
 
-class AuthTextFormField extends StatelessWidget {
+class RoundedInputBox extends StatelessWidget {
   final String? hintText;
   final bool obscureText;
   final ValueChanged<String>? onChanged;
@@ -16,14 +16,14 @@ class AuthTextFormField extends StatelessWidget {
   VoidCallback onIconPressed;
   String? Function(String?)? validator;
 
-  AuthTextFormField({
+  RoundedInputBox({
     super.key,
     this.hintText,
     this.obscureText = false,
     required this.onChanged,
     this.textAlign = TextAlign.start,
     this.scrollPadding,
-    this.maxLength = 100,
+    this.maxLength = 301,
     this.controller,
     this.focusNode,
     this.autofocus = false,
@@ -64,8 +64,9 @@ class AuthTextFormField extends StatelessWidget {
             fontSize: 14,
           ),
           counterText: '',
+          /* give contentPadding to hintText align vertically center */
           contentPadding: EdgeInsets.symmetric(vertical: 12),
-          /* set prefix to default IconButton size to hintText align center */
+          /* set prefix to default IconButton size to hintText align horizontally center */
           prefix: SizedBox(width: 48),
           suffixIcon: IconButton(
             // resize

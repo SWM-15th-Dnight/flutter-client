@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_client/services/main_request.dart';
-import 'package:mobile_client/widget/auth_text_form_field.dart';
+import 'package:mobile_client/widget/rounded_input_box.dart';
 
 class ScheduleBottomSheet extends StatefulWidget {
   const ScheduleBottomSheet({super.key});

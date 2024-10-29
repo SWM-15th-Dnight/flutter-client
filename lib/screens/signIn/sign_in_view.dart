@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/const/data.dart';
-import '../../widget/auth_text_form_field.dart';
+import '../../widget/rounded_input_box.dart';
 
 String email = '';
 String displayedEmail = '';
@@ -197,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   width:
                                       MediaQuery.of(context).size.width * 0.65,
                                   height: 36,
-                                  child: AuthTextFormField(
+                                  child: RoundedInputBox(
                                     // autofocus: true,
                                     scrollPadding: bottomInSet / 2,
                                     focusNode: _emailFocusNode,
@@ -224,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   width:
                                       MediaQuery.of(context).size.width * 0.65,
                                   height: 36,
-                                  child: AuthTextFormField(
+                                  child: RoundedInputBox(
                                     scrollPadding: bottomInSet / 3,
                                     focusNode: _passwordFocusNode,
                                     obscureText: !_isPasswordVisible,

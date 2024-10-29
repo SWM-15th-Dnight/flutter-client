@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile_client/common/component/snackbar_helper.dart';
 import 'package:mobile_client/services/auth_service.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
+import 'package:mobile_client/widget/rounded_input_box.dart';
 
 import '../common/const/color.dart';
 import '../common/const/data.dart';
@@ -45,6 +46,18 @@ class _PlainTextInputState extends State<PlainTextInput> {
               child: Row(
                 children: [
                   Expanded(
+                    child: RoundedInputBox(
+                      controller: plainTextController,
+                      maxLength: 300,
+                      hintText: '예. 내일 선릉역 근처에서 저녁 식사',
+                      autofocus: true,
+                      textAlign: TextAlign.center,
+                      onChanged: (value) {
+                        plainText = value;
+                      },
+                      onIconPressed: () {},
+                    ),
+                    /*
                     child: TextFormField(
                       style: TextStyle(
                         fontSize: 12,
@@ -62,6 +75,7 @@ class _PlainTextInputState extends State<PlainTextInput> {
                       autofocus: true,
                       textAlign: TextAlign.center,
                     ),
+                    */
                   ),
                   IconButton(
                     icon: Icon(Icons.send),

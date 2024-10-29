@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile_client/services/auth_service.dart';
+import 'package:mobile_client/widget/rounded_input_box.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../common/component/snackbar_helper.dart';
@@ -94,7 +95,21 @@ class _SpeechToTextInputState extends State<SpeechToTextInput> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextFormField(
+                    child: Container(
+                      child: RoundedInputBox(
+                        controller: _controller,
+                        maxLength: 300,
+                        hintText: '예. 내일 10시 수강신청.',
+                        textAlign: TextAlign.center,
+                        onChanged: (value) {
+                          sttText = value;
+                        },
+                        onIconPressed: () {},
+                      ),
+                    ),
+
+                    /*
+                    TextFormField(
                       style: TextStyle(
                         fontSize: 14,
                       ),
@@ -105,7 +120,7 @@ class _SpeechToTextInputState extends State<SpeechToTextInput> {
                       onChanged: (value) {
                         sttText = value;
                       },
-                    ),
+                    ),*/
                   ),
                   if (_isListeningLoading) // 녹음 로딩 상태일 때만 표시됩니다.
                     Padding(
