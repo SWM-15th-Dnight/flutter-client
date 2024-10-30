@@ -21,6 +21,7 @@ import '../../common/component/snackbar_helper.dart';
 import '../../common/const/data.dart';
 import '../../common/layout/default_layout.dart';
 import '../../entities/calendar.dart';
+import '../../entities/event.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
@@ -57,7 +58,7 @@ class _MainCalendarState extends State<MainCalendar> {
 
   ColorMap colorMap = ColorMap();
 
-  List<dynamic>? eventList = [];
+  List<Event>? eventList = [];
   bool isGetEventListDone = false;
 
   File? image;
@@ -115,7 +116,7 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 
   void showDaysEventsModal(BuildContext parentContext,
-      Map<String, List<Map<String, dynamic>>> dateEvents) {
+      Map<String, List<Event>> dateEvents) {
     var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
     var numberOfEvents = dateEvents[day]?.length ?? 0;
     modal(
@@ -151,9 +152,9 @@ class _MainCalendarState extends State<MainCalendar> {
 
   void _showEventDetailModal(
       BuildContext context,
-      Map<String, dynamic> event,
+      Event event,
       BuildContext parentContext,
-      Map<String, List<Map<String, dynamic>>> dateEvents) {
+      Map<String, List<Event>> dateEvents) {
     showModalBottomSheet(
       barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
       useSafeArea: true,
@@ -173,14 +174,14 @@ class _MainCalendarState extends State<MainCalendar> {
     );
   }
 
-  void updateEventList(List<dynamic>? newEventList) {
+  void updateEventList(List<Event>? newEventList) {
     setState(() {
       eventList = newEventList;
     });
   }
 
-  void addEventToMap(Map<String, List<Map<String, dynamic>>> events,
-      String dateKey, Map<String, dynamic> newEvent) {
+  void addEventToMap(Map<String, List<Event>> events,
+      String dateKey, Event newEvent) {
     if (events.containsKey(dateKey)) {
       // If the date key exists, append the new event to the list
       events[dateKey]!.add(newEvent);
@@ -281,6 +282,10 @@ class _MainCalendarState extends State<MainCalendar> {
           options: Options(headers: {'authorization': 'Bearer $refreshToken'}));
       if (resp.statusCode == 200) {
         print(resp.data);
+        for(var curr in resp.data){
+          Event event = Event.parse(curr);
+          calendarMap[event.calendarId]?.addEvent(event);
+        }
         eventList?.addAll(resp.data);
       }
     } catch (e) {
@@ -291,6 +296,16 @@ class _MainCalendarState extends State<MainCalendar> {
     setState(() {
       isGetEventListDone = true;
     });
+  }
+
+  List<Event> makeEventList(){
+    List<Event> eventList = [];
+    for(var cal in calendarMap.values){
+      if(cal.isSelected == true){
+        eventList.addAll(cal.eventList);
+      }
+    }
+    return eventList;
   }
 
   /*
@@ -333,15 +348,16 @@ class _MainCalendarState extends State<MainCalendar> {
     }
   }
 
-  void _addEventToList(dynamic event) {
+  void _addEventToList(dynamic input) {
     setState(() {
-      eventList?.add(event);
+      Event event = Event.parse(input);
+      calendarMap[event.calendarId]?.addEvent(event);
     });
   }
 
   Future<void> _editEventToList(int eventId) async {
     setState(() {
-      eventList?.removeWhere((element) => element['eventId'] == eventId);
+      eventList?.removeWhere((element) => element.eventId == eventId);
     });
 
     var _event = await MainRequest().getEvent(eventId);
@@ -403,32 +419,28 @@ class _MainCalendarState extends State<MainCalendar> {
     }
 
     // TODO. Range Event
-    Map<String, List<Map<String, dynamic>>> dateEvents = {};
+    Map<String, List<Event>> dateEvents = {};
+
+    List<Event> eventList = makeEventList();
 
     if (eventList?.length != 0) {
       eventList?.sort((a, b) {
-        final aStart = DateTime.parse(a["startAt"]);
-        final aEnd = DateTime.parse(a["endAt"]);
-        final bStart = DateTime.parse(b["startAt"]);
-        final bEnd = DateTime.parse(b["endAt"]);
-
-        if (aStart.compareTo(bStart) != 0) {
-          return aStart.compareTo(bStart);
+        if (a.startAt.compareTo(b.startAt) != 0) {
+          return a.startAt.compareTo(b.startAt);
         } else {
-          if (bEnd.compareTo(aEnd) != 0) {
-            return bEnd.compareTo(aEnd);
+          if (b.endAt.compareTo(a.endAt) != 0) {
+            return b.endAt.compareTo(a.endAt);
           } else {
             // TODO.
-            //if(a["summary"] < b["summary"]) return -1;
-            //if(a["summary"] > b["summary"]) return 1;
+            if(a.priority <= b.priority) return -1;
+            if(a.priority > b.priority) return 1;
             return 0;
           }
         }
       });
       for (var i = 0; i < eventList!.length; i++) {
         //print('[$i] : ${eventList![i]}');
-        String dateKey = DateFormat('yyyy-MM-dd')
-            .format(DateTime.parse(eventList![i]['startAt']));
+        String dateKey = DateFormat('yyyy-MM-dd').format(eventList![i].startAt);
         //print('dateKey: $dateKey');
         addEventToMap(dateEvents, dateKey, eventList![i]);
       }
@@ -597,6 +609,27 @@ class _MainCalendarState extends State<MainCalendar> {
                           //dayFontWeight: FontWeight.w500,
                         );
                       },
+                        markerBuilder: (context, day, events) {
+                          if (events.isNotEmpty) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: events.asMap().entries.map((entry) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 1.0),
+                                  child: Container(
+                                    width: 7.0,
+                                    height: 7.0,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.green,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          }
+                          return const SizedBox();
+                        },
                     ),
                   ),
                 ),
@@ -726,7 +759,7 @@ class _CustomHeaderState extends State<CustomHeader> {
 class CustomCalendarBuilder extends StatelessWidget {
   final DateTime day;
   final DateTime focusedDay;
-  final Map<String, List<Map<String, dynamic>>>? events;
+  final Map<String, List<Event>>? events;
   final colorMap;
 
   Color? dayColor = Colors.black;

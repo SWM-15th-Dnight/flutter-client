@@ -7,17 +7,18 @@ import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 
 import '../common/const/color.dart';
 import '../common/const/data.dart';
+import '../entities/event.dart';
 import '../services/auth_service.dart';
 
 class CustomEventSheet extends StatefulWidget {
-  final Map<String, dynamic> event;
-  final List<dynamic>? eventList;
-  final Function(List<dynamic>?) updateEventList;
+  final Event event;
+  final List<Event>? eventList;
+  final Function(List<Event>?) updateEventList;
   final Function(int) onEventEdited;
   // for back button
   final BuildContext parentContext;
-  final Map<String, List<Map<String, dynamic>>> dateEvents;
-  final Function(BuildContext, Map<String, List<Map<String, dynamic>>>)
+  final Map<String, List<Event>> dateEvents;
+  final Function(BuildContext, Map<String, List<Event>>)
       showDaysEventsModal;
 
   CustomEventSheet({
@@ -55,8 +56,8 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
   void initState() {
     super.initState();
 
-    startAt = DateTime.parse(widget.event['startAt']);
-    endAt = DateTime.parse(widget.event['endAt']);
+    startAt = widget.event.startAt;
+    endAt = widget.event.endAt;
     _checkMultiDayEvent();
 
     _checkDateFormat();
@@ -134,9 +135,9 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
                   children: [
                     ListTile(
                       leading: Icon(Icons.location_on_outlined),
-                      title: Text(widget.event['location'].toString() == 'null'
+                      title: Text(widget.event.location.toString() == 'null'
                           ? ''
-                          : widget.event['location'].toString()),
+                          : widget.event.location.toString()),
                       // subtitle: Text('장소'),
                       onTap: () {},
                     ),
@@ -144,16 +145,16 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
                       // icon for description
                       leading: Icon(Icons.comment_outlined),
                       title: Text(
-                          widget.event['description'].toString() == 'null'
+                          widget.event.description.toString() == 'null'
                               ? ''
-                              : widget.event['description'].toString()),
+                              : widget.event.description.toString()),
                       // subtitle: Text('설명'),
                       onTap: () {},
                     ),
                     ListTile(
                       leading: Icon(Icons.flag),
                       title: Text(
-                          '우선순위' + ' ' + widget.event['priority'].toString()),
+                          '우선순위' + ' ' + widget.event.priority.toString()),
                       // subtitle: 'subtitle',
                       onTap: () {},
                     ),
@@ -200,7 +201,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
                 ),
               ),
               Text(
-                widget.event['summary'],
+                widget.event.summary,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w500,
@@ -246,7 +247,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
       if (value == 'edit') {
         // TODO. Handle edit action
         print(widget.event);
-        _showEditEventSheet(context, widget.event);
+        _showEditEventSheet(context, Event.parse(widget.event));
       } else if (value == 'delete') {
         // Handle delete action
         _showDeleteConfirmationDialog(context);
@@ -275,16 +276,16 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
                 var resp =
-                    await MainRequest().deleteEvent(widget.event['eventId']);
+                    await MainRequest().deleteEvent(widget.event.eventId);
 
                 if (resp.statusCode == 200) {
                   // delete event from dataEvents
                   String dateKey = DateFormat('yyyy-MM-dd')
-                      .format(DateTime.parse(widget.event['startAt']));
+                      .format(widget.event.startAt);
                   widget.dateEvents[dateKey]!.removeWhere((element) =>
-                      element['eventId'] == widget.event['eventId']);
+                      element.eventId == widget.event.eventId);
                   widget.eventList!.removeWhere((element) =>
-                      element['eventId'] == widget.event['eventId']);
+                      element.eventId == widget.event.eventId);
                   widget.updateEventList(widget.eventList);
                 }
 
@@ -302,7 +303,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
     );
   }
 
-  void _showEditEventSheet(BuildContext context, Map<String, dynamic> event) {
+  void _showEditEventSheet(BuildContext context, Event event) {
     showModalBottomSheet(
       barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
       useSafeArea: true,
@@ -310,7 +311,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
       context: context,
       builder: (context) {
         return CustomBottomSheet(
-          currentCalendarId: event['calendarId'],
+          currentCalendarId: event.calendarId,
           //onEventAdded: onEventAdded,
           startTime: DateTime.now(),
           isEditMode: true,

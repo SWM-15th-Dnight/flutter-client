@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 
+import '../../entities/event.dart';
+
 // EventMonthViewCell
 // 캘린더의 한 칸을 렌더링하는 함수
 Widget EventMonthViewCell(context, constraints, events, day, colorMap){
@@ -62,14 +64,14 @@ class EventMonthViewElem{
   late final textStyle;
   late final eventColor;
 
-  EventMonthViewElem(var event, fontSize, colorMap){
-    startAtTime = DateFormat('HH:mm:ss').format(DateTime.parse(event['startAt']));
-    endAtTime = DateFormat('HH:mm:ss').format(DateTime.parse(event['endAt']));
+  EventMonthViewElem(Event event, fontSize, colorMap){
+    startAtTime = DateFormat('HH:mm:ss').format(event.startAt);
+    endAtTime = DateFormat('HH:mm:ss').format(event.endAt);
     isAllDay = (startAtTime == '00:00:00') &&
         (endAtTime == '00:00:00')
         ? false
         : true;
-    text = event['summary'];
+    text = event.summary;
     textStyle = TextStyle(
       fontSize: fontSize,
       height: 1.4,
@@ -77,7 +79,7 @@ class EventMonthViewElem{
       letterSpacing: -0.05,
       overflow: TextOverflow.ellipsis,
     );
-    eventColor = colorMap.get(event['colorSetId']);
+    eventColor = colorMap.get(event.colorSetId);
   }
 
   double calcHeight(constraints){

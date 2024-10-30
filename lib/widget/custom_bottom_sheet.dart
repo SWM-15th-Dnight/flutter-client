@@ -11,6 +11,7 @@ import 'package:mobile_client/services/auth_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../common/const/data.dart';
+import '../entities/event.dart';
 
 class CustomBottomSheet extends StatefulWidget {
   final int? currentCalendarId;
@@ -19,7 +20,7 @@ class CustomBottomSheet extends StatefulWidget {
   Map<String, dynamic>? responseData;
   // for edit mode
   bool isEditMode;
-  Map<String, dynamic>? event;
+  Event? event;
   final Function(int)? onEventEdited;
 
   CustomBottomSheet({
@@ -86,25 +87,25 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       location = widget.responseData?['location'] ?? '';
       locationController.text = location;
     } else if (widget.event != null) {
-      summary = widget.event?['summary'];
+      summary = widget.event!.summary;
       summaryController.text = summary;
 
-      if (widget.event?['startAt'] == null) {
+      if (widget.event?.startAt == null) {
         startAt = DateTime.now();
       } else {
-        startAt = DateTime.parse(widget.event?['startAt']);
+        startAt = widget.event!.startAt;
       }
 
-      if (widget.event?['endAt'] == null) {
+      if (widget.event?.endAt == null) {
         endAt = startAt.add(Duration(hours: 1));
       } else {
-        endAt = DateTime.parse(widget.event?['endAt']);
+        endAt = widget.event!.endAt;
       }
 
-      description = widget.event?['description'] ?? '';
+      description = widget.event?.description ?? '';
       descriptionController.text = description;
 
-      location = widget.event?['location'] ?? '';
+      location = widget.event?.location ?? '';
       locationController.text = location;
     } else {
       print('form input: initState');
@@ -315,7 +316,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       }
     } else {
       // edit event
-      data['eventId'] = widget.event?['eventId'];
+      data['eventId'] = widget.event?.eventId;
 
       final jsonData = jsonEncode(data);
       print('(edit) _submitForm $jsonData');

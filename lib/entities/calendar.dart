@@ -2,6 +2,7 @@
 import 'dart:ui';
 
 import 'color_map.dart';
+import 'event.dart';
 
 class Calendar {
   late final int id;
@@ -14,6 +15,8 @@ class Calendar {
 
   late Color color = hexToColor("#2457A5");
   late bool isSelected;
+
+  List<Event> eventList = [];
 
   Calendar(input){
     id = input['calendarId'];
@@ -31,5 +34,8 @@ class Calendar {
 
     isSelected = true; // 기본으로 Displayed 됨
   }
-}
 
+  void addEvent(Event event){
+    eventList.add(event);
+  }
+}
