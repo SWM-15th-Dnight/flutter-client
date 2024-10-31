@@ -45,7 +45,6 @@ class _MainCalendarState extends State<MainCalendar> {
   User? user;
   final dio = Dio();
 
-  Map<String, dynamic>? _calendarData;
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
 
@@ -213,7 +212,6 @@ class _MainCalendarState extends State<MainCalendar> {
       // 16a765, 000000
 
       setState(() {
-        _calendarData = resp.data;
       });
     } catch (e) {
       print(e.toString());
@@ -264,6 +262,7 @@ class _MainCalendarState extends State<MainCalendar> {
         print(resp.data);
         for(var curr in resp.data){
           Event event = Event.parse(curr);
+          event.colorSetId = calendarMap[event.calendarId]!.colorSetId;
           calendarMap[event.calendarId]?.addEvent(event);
         }
       }

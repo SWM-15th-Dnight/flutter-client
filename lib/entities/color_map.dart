@@ -10,7 +10,9 @@ class ColorMap{
   final dio = Dio();
   static Map<int, Color> ColorDict = {};
 
-  ColorMap();
+  ColorMap(){
+    update();
+  }
 
   Color get (int key) {
     if(!ColorDict.containsKey(key)) update();
