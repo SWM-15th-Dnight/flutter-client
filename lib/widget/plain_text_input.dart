@@ -134,10 +134,10 @@ class _PlainTextInputState extends State<PlainTextInput> {
                           },
                         );
                       } on DioError catch (e) {
-                        if (e.response?.statusCode == 422) {
+                        if (e.response?.statusCode != 200) {
                           Navigator.of(context).pop();
                           showSnackbar(
-                              context, '내용에서 일정 정보를 찾지 못했어요! 다시 입력해주세요.');
+                              context, '오류가 발생했어요! 잠시 후 다시 시도해주세요.');
                         }
                         // ScaffoldMessenger.of(context).showSnackBar(
                         //   SnackBar(

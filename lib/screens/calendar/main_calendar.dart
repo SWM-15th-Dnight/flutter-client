@@ -58,7 +58,6 @@ class _MainCalendarState extends State<MainCalendar> {
 
   ColorMap colorMap = ColorMap();
 
-  List<Event>? eventList = [];
   bool isGetEventListDone = false;
 
   File? image;
@@ -127,13 +126,13 @@ class _MainCalendarState extends State<MainCalendar> {
           for (var event in dateEvents[day] ?? [])
             ListTile(
               title: Text(
-                event['summary'],
+                event.summary,
                 style: TextStyle(
                   fontSize: 14.0,
                 ),
               ),
               subtitle: Text(
-                '${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['startAt']))} ~ ${DateFormat('aa h:mm', 'ko_KR').format(DateTime.parse(event['endAt']))}',
+                '${DateFormat('aa h:mm', 'ko_KR').format(event.startAt)} ~ ${DateFormat('aa h:mm', 'ko_KR').format(event.endAt)}',
                 style: TextStyle(
                   fontSize: 10.0,
                 ),
@@ -154,7 +153,8 @@ class _MainCalendarState extends State<MainCalendar> {
       BuildContext context,
       Event event,
       BuildContext parentContext,
-      Map<String, List<Event>> dateEvents) {
+      Map<String, List<Event>> dateEvents,
+      ) {
     showModalBottomSheet(
       barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
       useSafeArea: true,
@@ -166,29 +166,10 @@ class _MainCalendarState extends State<MainCalendar> {
           parentContext: parentContext,
           dateEvents: dateEvents,
           showDaysEventsModal: showDaysEventsModal,
-          eventList: eventList,
-          updateEventList: updateEventList,
-          onEventEdited: _editEventToList,
+          onEventEdited: _renewEvent,
         );
       },
     );
-  }
-
-  void updateEventList(List<Event>? newEventList) {
-    setState(() {
-      eventList = newEventList;
-    });
-  }
-
-  void addEventToMap(Map<String, List<Event>> events,
-      String dateKey, Event newEvent) {
-    if (events.containsKey(dateKey)) {
-      // If the date key exists, append the new event to the list
-      events[dateKey]!.add(newEvent);
-    } else {
-      // If the date key does not exist, create a new list with the event
-      events[dateKey] = [newEvent];
-    }
   }
 
   Future<void> fetchCalendarData() async {
@@ -254,6 +235,7 @@ class _MainCalendarState extends State<MainCalendar> {
     Map<int, Calendar> calMap = {};
     for (var cal in resp.data) {
       var elem = Calendar(cal);
+      elem.setColorMap(colorMap);
       firstId = firstId ?? elem.id;
       calMap[elem.id] = elem;
     }
@@ -274,8 +256,6 @@ class _MainCalendarState extends State<MainCalendar> {
     await widget.auth.checkToken();
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
 
-    eventList = [];
-
     try {
       var resp = await dio.get(
           dotenv.env['BACKEND_MAIN_URL']! + '/eventList/all',
@@ -286,13 +266,11 @@ class _MainCalendarState extends State<MainCalendar> {
           Event event = Event.parse(curr);
           calendarMap[event.calendarId]?.addEvent(event);
         }
-        eventList?.addAll(resp.data);
       }
     } catch (e) {
       print("ERROR OCCURED ${e}");
     }
 
-    print('eventList.length: ${eventList?.length}');
     setState(() {
       isGetEventListDone = true;
     });
@@ -348,23 +326,25 @@ class _MainCalendarState extends State<MainCalendar> {
     }
   }
 
-  void _addEventToList(dynamic input) {
+  void _addEvent(dynamic input) {
     setState(() {
       Event event = Event.parse(input);
       calendarMap[event.calendarId]?.addEvent(event);
     });
   }
 
-  Future<void> _editEventToList(int eventId) async {
+  void _delEvent(int eventId) async {
     setState(() {
-      eventList?.removeWhere((element) => element.eventId == eventId);
+      for(Calendar cal in calendarMap.values){
+        cal.eventList.removeWhere((elem) => elem.eventId == eventId );
+      }
     });
+  }
 
+  Future<void> _renewEvent(int eventId) async {
+    _delEvent(eventId);
     var _event = await MainRequest().getEvent(eventId);
-
-    setState(() {
-      eventList?.add(_event.data);
-    });
+    _addEvent(_event.data);
   }
 
   @override
@@ -420,7 +400,6 @@ class _MainCalendarState extends State<MainCalendar> {
 
     // TODO. Range Event
     Map<String, List<Event>> dateEvents = {};
-
     List<Event> eventList = makeEventList();
 
     if (eventList?.length != 0) {
@@ -438,12 +417,7 @@ class _MainCalendarState extends State<MainCalendar> {
           }
         }
       });
-      for (var i = 0; i < eventList!.length; i++) {
-        //print('[$i] : ${eventList![i]}');
-        String dateKey = DateFormat('yyyy-MM-dd').format(eventList![i].startAt);
-        //print('dateKey: $dateKey');
-        addEventToMap(dateEvents, dateKey, eventList![i]);
-      }
+      dateEvents = EventList.AsMap(eventList);
     }
 
     return Scaffold(
@@ -453,7 +427,7 @@ class _MainCalendarState extends State<MainCalendar> {
         // TODO. 따라서 사이드바에서 토스트가 떠야하고, 입력 폼에서 currentCalendarId가 보여져야 한다.
         child: CustomSpeedDial(
           currentCalendarId: currentCalendarId,
-          onEventAdded: _addEventToList,
+          onEventAdded: _addEvent,
           auth: widget.auth,
         ),
       ),

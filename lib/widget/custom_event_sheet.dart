@@ -12,8 +12,6 @@ import '../services/auth_service.dart';
 
 class CustomEventSheet extends StatefulWidget {
   final Event event;
-  final List<Event>? eventList;
-  final Function(List<Event>?) updateEventList;
   final Function(int) onEventEdited;
   // for back button
   final BuildContext parentContext;
@@ -27,8 +25,6 @@ class CustomEventSheet extends StatefulWidget {
     required this.parentContext,
     required this.dateEvents,
     required this.showDaysEventsModal,
-    required this.eventList,
-    required this.updateEventList,
     required this.onEventEdited,
   });
 
@@ -280,13 +276,9 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
 
                 if (resp.statusCode == 200) {
                   // delete event from dataEvents
-                  String dateKey = DateFormat('yyyy-MM-dd')
-                      .format(widget.event.startAt);
-                  widget.dateEvents[dateKey]!.removeWhere((element) =>
-                      element.eventId == widget.event.eventId);
-                  widget.eventList!.removeWhere((element) =>
-                      element.eventId == widget.event.eventId);
-                  widget.updateEventList(widget.eventList);
+                  String dateKey = DateFormat('yyyy-MM-dd').format(widget.event.startAt);
+                  widget.dateEvents[dateKey]!.removeWhere((element) => element.eventId == widget.event.eventId);
+                  widget.onEventEdited(widget.event.eventId);
                 }
 
                 widget.showDaysEventsModal(

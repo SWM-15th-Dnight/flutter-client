@@ -1,4 +1,6 @@
 
+import 'package:intl/intl.dart';
+
 class Event {
   late int eventId;
   late String summary;
@@ -23,5 +25,20 @@ class Event {
     isAllDay = (input['isAllday'] == 1 ? true : false);
     calendarId = input['calendarId'];
     colorSetId = input['colorSetId'];
+  }
+}
+
+class EventList{
+  static Map<String, List<Event>> AsMap(List<Event> li){
+    Map<String, List<Event>> ret = {};
+    for(Event event in li){
+      String key = DateFormat('yyyy-MM-dd').format(event.startAt);
+      if (ret.containsKey(key)) {
+        ret[key]!.add(event);
+      } else {
+        ret[key] = [event];
+      }
+    }
+    return ret;
   }
 }

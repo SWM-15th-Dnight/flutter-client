@@ -12,11 +12,12 @@ class Calendar {
   late final DateTime updatedAt;
   late final int colorSetId;
   late final String? description;
-
-  late Color color = hexToColor("#2457A5");
   late bool isSelected;
 
   List<Event> eventList = [];
+
+  late Color color;
+  late ColorMap colorMap;
 
   Calendar(input){
     id = input['calendarId'];
@@ -26,16 +27,18 @@ class Calendar {
     updatedAt = DateTime.parse(input['updatedAt']);
     colorSetId = input['colorSetId'];
     description = input['description'];
-
-    () { // color setting anonymous function
-      ColorMap colormap = ColorMap();
-      color = ColorMap().get(colorSetId);
-    };
-
     isSelected = true; // 기본으로 Displayed 됨
+  }
+
+  void setColor(){
+    color = colorMap.get(colorSetId);
   }
 
   void addEvent(Event event){
     eventList.add(event);
+  }
+
+  void setColorMap(ColorMap input){
+    colorMap = input;
   }
 }
