@@ -53,21 +53,29 @@ class EventList{
     return ret;
   }
 
-  static Map<DateTime, List<Event>> AsDisplay(Map<int, Calendar> calendarMap){
-    Map<DateTime, List<Event>> ret = {};
+  static Map<DateTime, List<DisplayEvent>> AsDisplay(Map<int, Calendar> calendarMap){
+    List<DisplayEvent> list = [];
+    Map<DateTime, List<DisplayEvent>> ret = {};
+
     for(Calendar cal in calendarMap.values){
-      if(cal.isSelected == false){
-        continue;
-      }
+      if(cal.isSelected == false) continue;
+
       for(Event event in cal.eventList){
-        String str = "${event.startAt.toString().split(' ')[0]} 00:00:00Z";
-        DateTime key = DateTime.parse(str);
-        print(key);
-        if (ret.containsKey(key)) {
-          ret[key]!.add(event);
-        } else {
-          ret[key] = [event];
+        DateTime curr = onlyDate(event.startAt);
+        DateTime end = onlyDate(event.endAt);
+        while(curr.compareTo(end) != 1){
+          print(curr);
+          list.add(DisplayEvent.from(event,curr));
+          curr = curr.add(Duration(days: 1));
         }
+      }
+    }
+
+    for(DisplayEvent event in list){
+      if (ret.containsKey(event.date)) {
+        ret[event.date]!.add(event);
+      } else {
+        ret[event.date] = [event];
       }
     }
     return ret;

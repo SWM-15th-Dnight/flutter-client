@@ -5,7 +5,7 @@ import 'calendar.dart';
 
 enum EventType { day, start, during, end }
 
-class Event {
+class Event { // Event = 서버와 통신하는 값을 적재해두는 인스턴스 클래스.
   late int eventId;
   late String summary;
   late DateTime startAt;
@@ -19,6 +19,20 @@ class Event {
   String? description;
   String? location;
 
+  Event({
+    required this.eventId,
+    required this.summary,
+    required this.startAt,
+    required this.endAt,
+    this.repeatRule,
+    required this.priority,
+    required this.isAllDay,
+    required this.calendarId,
+    required this.colorSetId,
+    this.description,
+    this.location,
+  });
+
   Event.parse(input){
     eventId = input['eventId'];
     summary = input['summary'];
@@ -30,4 +44,47 @@ class Event {
     calendarId = input['calendarId'];
     colorSetId = input['colorSetId'];
   }
+}
+
+class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값들을 실제 담고 있는 클래스.
+  late EventType range;
+  late DateTime date;
+
+  DisplayEvent.from(Event event, DateTime day)
+      : super(
+    eventId: event.eventId,
+    summary: event.summary,
+    startAt: event.startAt,
+    endAt: event.endAt,
+    repeatRule: event.repeatRule,
+    priority: event.priority,
+    isAllDay: event.isAllDay,
+    calendarId: event.calendarId,
+    colorSetId: event.colorSetId,
+    description: event.description,
+    location: event.location,
+  ){
+    DateTime start = onlyDate(event.startAt);
+    DateTime end = onlyDate(event.endAt);
+
+    if(start == end) {
+      range = EventType.day;
+    }
+    else if(start == day){
+      range = EventType.start;
+    }
+    else if(end == day){
+      range = EventType.end;
+    }
+    else{
+      range = EventType.during;
+    }
+
+    date = day;
+  }
+}
+
+DateTime onlyDate(DateTime T){
+  String s = "${T.toString().split(' ')[0]} 00:00:00Z";
+  return DateTime.parse(s);
 }

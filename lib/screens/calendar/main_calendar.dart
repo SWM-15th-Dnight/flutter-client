@@ -399,7 +399,7 @@ class _MainCalendarState extends State<MainCalendar> {
     Map<String, List<Event>> dateEvents = {};
     List<Event> eventList = EventList.Make(calendarMap);
 
-    Map<DateTime, List<Event>> display = EventList.AsDisplay(calendarMap);
+    Map<DateTime, List<DisplayEvent>> display = EventList.AsDisplay(calendarMap);
 
     if (eventList?.length != 0) {
       eventList?.sort((a, b) {
