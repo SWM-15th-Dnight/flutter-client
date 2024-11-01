@@ -21,7 +21,9 @@ class Event { // Event = 서버와 통신하는 값을 적재해두는 인스턴
   String? description;
   String? location;
 
-  Event({
+  Event();
+
+  Event.set({
     required this.eventId,
     required this.summary,
     required this.startAt,
@@ -52,9 +54,14 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
   late EventType range;
   late DateTime date;
   late Color color;
+  late bool isEmpty = false;
+
+  DisplayEvent() : super(){
+    isEmpty = true;
+  }
 
   DisplayEvent.from(Event event, DateTime day)
-      : super(
+      : super.set(
     eventId: event.eventId,
     summary: event.summary,
     startAt: event.startAt,
@@ -70,18 +77,10 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
     DateTime start = onlyDate(event.startAt);
     DateTime end = onlyDate(event.endAt);
 
-    if(start == end) {
-      range = EventType.day;
-    }
-    else if(start == day){
-      range = EventType.start;
-    }
-    else if(end == day){
-      range = EventType.end;
-    }
-    else{
-      range = EventType.during;
-    }
+    if(start == end) range = EventType.day;
+    else if(start == day) range = EventType.start;
+    else if(end == day) range = EventType.end;
+    else range = EventType.during;
 
     date = day;
   }
