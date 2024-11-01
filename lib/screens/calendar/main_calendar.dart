@@ -276,16 +276,6 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  List<Event> makeEventList(){
-    List<Event> eventList = [];
-    for(var cal in calendarMap.values){
-      if(cal.isSelected == true){
-        eventList.addAll(cal.eventList);
-      }
-    }
-    return eventList;
-  }
-
   /*
   Future<Map<String, dynamic>> fetchCalendarData() async {
     http.Client client = http.Client();
@@ -396,28 +386,8 @@ class _MainCalendarState extends State<MainCalendar> {
     }
 
     // TODO. Range Event
-    Map<String, List<Event>> dateEvents = {};
-    List<Event> eventList = EventList.Make(calendarMap);
-
+    Map<String, List<Event>> dateEvents = EventList.AsMap(calendarMap);
     Map<DateTime, List<DisplayEvent>> display = EventList.AsDisplay(calendarMap);
-
-    if (eventList?.length != 0) {
-      eventList?.sort((a, b) {
-        if (a.startAt.compareTo(b.startAt) != 0) {
-          return a.startAt.compareTo(b.startAt);
-        } else {
-          if (b.endAt.compareTo(a.endAt) != 0) {
-            return b.endAt.compareTo(a.endAt);
-          } else {
-            // TODO.
-            if(a.priority <= b.priority) return -1;
-            if(a.priority > b.priority) return 1;
-            return 0;
-          }
-        }
-      });
-      dateEvents = EventList.AsMap(calendarMap);
-    }
 
     return Scaffold(
       //resizeToAvoidBottomInset: false,

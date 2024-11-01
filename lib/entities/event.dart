@@ -85,6 +85,6 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
 }
 
 DateTime onlyDate(DateTime T){
-  String s = "${T.toString().split(' ')[0]} 00:00:00Z";
-  return DateTime.parse(s);
+  DateTime ret = DateTime.utc(T.year, T.month, T.day);
+  return ret;
 }
