@@ -22,6 +22,7 @@ import '../../common/const/data.dart';
 import '../../common/layout/default_layout.dart';
 import '../../entities/calendar.dart';
 import '../../entities/event.dart';
+import '../../entities/event_list.dart';
 import '../../services/auth_service.dart';
 import '../../widget/custom_event_sheet.dart';
 import '../../widget/custom_speed_dial.dart';
@@ -262,8 +263,8 @@ class _MainCalendarState extends State<MainCalendar> {
         print(resp.data);
         for(var curr in resp.data){
           Event event = Event.parse(curr);
-          event.colorSetId = calendarMap[event.calendarId]!.colorSetId;
-          calendarMap[event.calendarId]?.addEvent(event);
+          event.colorSetId = calendarMap[event.calendarId]!.colorSetId; // temp function
+          EventList.Add(calendarMap, event);
         }
       }
     } catch (e) {
@@ -327,16 +328,13 @@ class _MainCalendarState extends State<MainCalendar> {
 
   void _addEvent(dynamic input) {
     setState(() {
-      Event event = Event.parse(input);
-      calendarMap[event.calendarId]?.addEvent(event);
+      EventList.Add(calendarMap, input);
     });
   }
 
   void _delEvent(int eventId) async {
     setState(() {
-      for(Calendar cal in calendarMap.values){
-        cal.eventList.removeWhere((elem) => elem.eventId == eventId );
-      }
+      EventList.Delete(calendarMap, eventId);
     });
   }
 
@@ -399,7 +397,9 @@ class _MainCalendarState extends State<MainCalendar> {
 
     // TODO. Range Event
     Map<String, List<Event>> dateEvents = {};
-    List<Event> eventList = makeEventList();
+    List<Event> eventList = EventList.Make(calendarMap);
+
+    Map<DateTime, List<Event>> display = EventList.AsDisplay(calendarMap);
 
     if (eventList?.length != 0) {
       eventList?.sort((a, b) {
@@ -416,7 +416,7 @@ class _MainCalendarState extends State<MainCalendar> {
           }
         }
       });
-      dateEvents = EventList.AsMap(eventList);
+      dateEvents = EventList.AsMap(calendarMap);
     }
 
     return Scaffold(
@@ -525,6 +525,7 @@ class _MainCalendarState extends State<MainCalendar> {
                     },
                     // TODO. onDayLongPressed
                     //onDayLongPressed: ,
+                    eventLoader: (day) => display[day] ?? [],
                     calendarBuilders: CalendarBuilders(
                       defaultBuilder: (context, day, focusedDay) {
                         return CustomCalendarBuilder(
@@ -582,42 +583,9 @@ class _MainCalendarState extends State<MainCalendar> {
                           //dayFontWeight: FontWeight.w500,
                         );
                       },
-                        markerBuilder: (context, day, events) {
-                          if (events.isNotEmpty) {
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: events.asMap().entries.map((entry) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 1.0),
-                                  child: Container(
-                                    width: 7.0,
-                                    height: 7.0,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.green,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            );
-                          }
-                          return const SizedBox();
-                        },
                     ),
                   ),
                 ),
-                /*
-                Flexible(
-                  flex: 10,
-                  child: ,
-                ),
-                */
-                /*
-                Flexible(
-                  flex: 1,
-                  child: Container(),
-                )
-                */
               ],
             ),
             // TODO.

@@ -34,10 +34,6 @@ class Calendar {
     color = colorMap.get(colorSetId);
   }
 
-  void addEvent(Event event){
-    eventList.add(event);
-  }
-
   void setColorMap(ColorMap input){
     colorMap = input;
   }
