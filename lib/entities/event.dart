@@ -1,4 +1,6 @@
 
+import 'dart:ui';
+
 import 'package:intl/intl.dart';
 
 import 'calendar.dart';
@@ -49,6 +51,7 @@ class Event { // Event = 서버와 통신하는 값을 적재해두는 인스턴
 class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값들을 실제 담고 있는 클래스.
   late EventType range;
   late DateTime date;
+  late Color color;
 
   DisplayEvent.from(Event event, DateTime day)
       : super(
@@ -81,6 +84,10 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
     }
 
     date = day;
+  }
+
+  setColor(Color val){
+    color = val;
   }
 }
 

@@ -16,15 +16,46 @@ Widget EventMonthViewCell(context, constraints, events, day, colorMap){
   List<Widget> eventWidgets = [];
 
   if (events?[DateFormat('yyyy-MM-dd').format(day)] != null) {
-    for (var event in events![DateFormat('yyyy-MM-dd').format(day)]!) {
-      var eventView = EventMonthViewElem(event, fontSize, colorMap);
+    for (Event event in events![DateFormat('yyyy-MM-dd').format(day)]!) {
 
-      var textHeight = eventView.calcHeight(constraints);
+      DisplayEvent eventView = DisplayEvent.from(event, onlyDate(event.startAt));
+      eventView.setColor(colorMap.get(eventView.colorSetId));
+
+      var textStyle = TextStyle(
+        fontSize: fontSize,
+        height: 1.4,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.05,
+        overflow: TextOverflow.ellipsis,
+      );
+
+      var textHeight = calcHeight(constraints, event.summary, textStyle);
       if (totalHeight + textHeight * 2 > constraints.maxHeight) {
         remainingEvents++;
       } else {
         totalHeight += textHeight;
-        eventWidgets.add(eventView.render());
+        eventWidgets.add(ClipRRect(
+          borderRadius: BorderRadius.circular(4.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 1.0),
+            child: Container(
+              // margin: const EdgeInsets.symmetric(horizontal: 1.0),
+              color: event.isAllDay
+                  ? eventView.color.withOpacity(0.15)
+                  : eventView.color.withOpacity(0.5,),
+              width: double.infinity,
+              child: Align(
+                alignment: Alignment.center,
+                child: Text(
+                  eventView.summary,
+                  style: textStyle,
+                  overflow: TextOverflow.clip,
+                  maxLines: 1,
+                ),
+              ),
+            ),
+          ),
+        ));
       }
     }
 
@@ -54,77 +85,6 @@ Widget EventMonthViewCell(context, constraints, events, day, colorMap){
   );
 }
 
-// EventMonthViewElem
-// 캘린더의 일정 하나를 저장하고 렌더링하는 클래스
-class EventMonthViewElem{
-  late final startAtTime;
-  late final endAtTime;
-  late final isAllDay;
-  late final text;
-  late final textStyle;
-  late final eventColor;
-
-  EventMonthViewElem(Event event, fontSize, colorMap){
-    startAtTime = DateFormat('HH:mm:ss').format(event.startAt);
-    endAtTime = DateFormat('HH:mm:ss').format(event.endAt);
-    isAllDay = (startAtTime == '00:00:00') &&
-        (endAtTime == '00:00:00')
-        ? false
-        : true;
-    text = event.summary;
-    textStyle = TextStyle(
-      fontSize: fontSize,
-      height: 1.4,
-      fontWeight: FontWeight.w400,
-      letterSpacing: -0.05,
-      overflow: TextOverflow.ellipsis,
-    );
-    eventColor = colorMap.get(event.colorSetId);
-  }
-
-  double calcHeight(constraints){
-    final textSpan = TextSpan(
-      text: text,
-      style: textStyle,
-    );
-    final textPainter = TextPainter(
-      text: textSpan,
-      maxLines: 1,
-      textDirection: ui.TextDirection.ltr,
-    );
-    textPainter.layout(maxWidth: constraints.maxWidth);
-    final textHeight =
-        textPainter.height + (2.0 + 4.0); // Add padding + 2
-    return textHeight;
-  }
-
-  Widget render(){
-    return (ClipRRect(
-      borderRadius: BorderRadius.circular(4.0),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 1.0),
-        child: Container(
-          // margin: const EdgeInsets.symmetric(horizontal: 1.0),
-          color: isAllDay
-              ? eventColor
-              .withOpacity(0.15)
-              : eventColor,
-          width: double.infinity,
-          child: Align(
-            alignment: Alignment.center,
-            child: Text(
-              text,
-              style: textStyle,
-              overflow: TextOverflow.clip,
-              maxLines: 1,
-            ),
-          ),
-        ),
-      ),
-    ));
-  }
-}
-
 double calculateFontSize(BuildContext context) {
   double screenWidth = MediaQuery.of(context).size.width;
   if (screenWidth < 360) {
@@ -134,4 +94,20 @@ double calculateFontSize(BuildContext context) {
   } else {
     return 12.0;
   }
+}
+
+double calcHeight(constraints, text, textStyle){
+  final textSpan = TextSpan(
+    text: text,
+    style: textStyle,
+  );
+  final textPainter = TextPainter(
+    text: textSpan,
+    maxLines: 1,
+    textDirection: ui.TextDirection.ltr,
+  );
+  textPainter.layout(maxWidth: constraints.maxWidth);
+  final textHeight =
+      textPainter.height + (2.0 + 4.0); // Add padding + 2
+  return textHeight;
 }
