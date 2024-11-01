@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/common/component/service_name_text.dart';
 import 'package:mobile_client/common/component/snackbar_helper.dart';
 import 'package:mobile_client/common/const/color.dart';
@@ -125,32 +126,18 @@ class _LoginScreenState extends State<LoginScreen>
             color: ColorPalette.GRAY_COLOR[50]!,
           ),
           // AppBar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Visibility(
-              visible: isEmailSignIn,
-              child: PreferredSize(
-                preferredSize: Size.fromHeight(kToolbarHeight),
-                child: Container(
-                  color: Colors.transparent,
-                  height: kToolbarHeight,
-                  child: Row(
-                    children: [
-                      BackButton(
-                        onPressed: () {
-                          FocusScope.of(context).unfocus();
-                          _emailController.clear();
-                          email = '';
-                          password = '';
-                          setEmailSignIn(false);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          CustomAppBar(
+            isVisible: isEmailSignIn,
+            leftWidget: IconButton(
+              icon: Icon(Icons.arrow_back),
+              //iconSize: 24.0, // default 24.0
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                _emailController.clear();
+                email = '';
+                password = '';
+                setEmailSignIn(false);
+              },
             ),
           ),
 
