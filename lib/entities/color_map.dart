@@ -43,15 +43,19 @@ class ColorMap{
     );
 
     for (var r in resp.data) {
-      ColorDict[r['colorSetId']] = hexToColor(r['hexCode']);
+      try{
+        ColorDict[r['colorSetId']] = hexToColor(r['hexCode']);
+      }
+      catch(e) {} // 추가를 안하면 되므로 무시.
     }
     return;
   }
 }
 
-Color hexToColor(String hexString) {
-  final buffer = StringBuffer();
-  if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-  buffer.write(hexString.replaceFirst('#', ''));
-  return Color(int.parse(buffer.toString(), radix: 16));
+Color hexToColor(String input) {
+  input = input.replaceAll('#', '');
+  if (input.length == 6) {
+    input = 'FF$input';
+  }
+  return Color(int.parse(input, radix: 16));
 }
