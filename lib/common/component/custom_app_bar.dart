@@ -12,6 +12,7 @@ import '../const/color.dart';
 // add                  // +
 // chevron_left, Icons.chevron_right   // '<', '>'
 // check
+// edit                 // pencil
 
 class CustomAppBar extends StatelessWidget {
   final bool isVisible;
