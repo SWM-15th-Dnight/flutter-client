@@ -22,11 +22,6 @@ class FirebaseApi {
   }
 
   Future initPushNotifications() async {
-    print(
-        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ${_androidNotificationChannel.id}');
-    print(
-        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ${_androidNotificationChannel.name}');
-
     await _firebaseMessaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,

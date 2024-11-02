@@ -7,6 +7,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:mobile_client/screens/calendar/form_bottom_sheet.dart';
 import 'package:mobile_client/services/auth_service.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
+import 'package:mobile_client/widget/custom_modal_bottom_sheet.dart';
 import 'package:mobile_client/widget/plain_text_input.dart';
 import 'package:mobile_client/widget/speech_to_text_input.dart';
 import 'package:provider/provider.dart';
@@ -60,40 +61,12 @@ class CustomSpeedDial extends ConsumerWidget {
         spacing: 5.0,
         children: [
           SpeedDialChild(
-            // shape: RoundedRectangleBorder(
-            //   borderRadius: BorderRadius.circular(161616.0),
-            // ),
-            shape: CircleBorder(),
-            child: const Icon(Icons.edit, // arrow_circle_down_rounded,
-                color: Colors.white),
-            label: '수동으로 등록',
-            backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-            onTap: () {
-              showModalBottomSheet(
-                backgroundColor: Colors.transparent,
-                barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
-                useSafeArea: true,
-                // TODO. 폼에 입력된 정보가 있을 경우, 경고창 띄우기
-                isDismissible: true,
-                context: context,
-                isScrollControlled: true,
-                builder: (context) {
-                  return CustomBottomSheet(
-                    currentCalendarId: currentCalendarId,
-                    onEventAdded: onEventAdded,
-                    startTime: DateTime.now(),
-                  );
-                },
-              );
-            },
-          ),
-          SpeedDialChild(
             shape: CircleBorder(),
             child: const Icon(
-              Icons.text_fields, //email,
+              Icons.text_fields,
               color: Colors.white,
             ),
-            label: '자연어로 등록',
+            label: '문장 입력',
             backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
             onTap: () {
               showModalBottomSheet(
@@ -109,6 +82,79 @@ class CustomSpeedDial extends ConsumerWidget {
                 isScrollControlled: true,
                 useSafeArea: true,
                 barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+              );
+            },
+          ),
+          SpeedDialChild(
+            shape: CircleBorder(),
+            child: const Icon(
+              Icons.image,
+              color: Colors.white,
+            ),
+            label: '이미지 등록',
+            backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
+            onTap: () {
+              // TODO. 이미지 등록 기능 추가
+              CustomModalBottomSheet(
+                context: context,
+                content: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '이미지로 일정 등록',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12.0),
+                      child: Column(
+                        children: [
+                          Container(
+                            color: ColorPalette.GRAY_COLOR[50]!,
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.80,
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  '갤러리에서 선택',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          // TODO. Custom Divider
+                          Container(
+                            width: MediaQuery.of(context).size.width * 0.80,
+                            height: 1.0,
+                            color: ColorPalette.GRAY_COLOR[100]!,
+                          ),
+                          Container(
+                            color: ColorPalette.GRAY_COLOR[50]!,
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.80,
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  '카메라로 촬영',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -136,7 +182,35 @@ class CustomSpeedDial extends ConsumerWidget {
                 barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
               );
             },
-          )
+          ),
+          SpeedDialChild(
+            // shape: RoundedRectangleBorder(
+            //   borderRadius: BorderRadius.circular(161616.0),
+            // ),
+            shape: CircleBorder(),
+            child: const Icon(Icons.edit, // arrow_circle_down_rounded,
+                color: Colors.white),
+            label: '일정 직접 입력',
+            backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
+            onTap: () {
+              showModalBottomSheet(
+                backgroundColor: Colors.transparent,
+                barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+                useSafeArea: true,
+                // TODO. 폼에 입력된 정보가 있을 경우, 경고창 띄우기
+                isDismissible: true,
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  return CustomBottomSheet(
+                    currentCalendarId: currentCalendarId,
+                    onEventAdded: onEventAdded,
+                    startTime: DateTime.now(),
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
     );
