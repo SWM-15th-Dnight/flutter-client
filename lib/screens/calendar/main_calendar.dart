@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/common/component/loading_indicators.dart';
 import 'package:mobile_client/screens/event/event_month_view.dart';
 import 'package:mobile_client/services/main_request.dart';
@@ -114,8 +115,8 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  void showDaysEventsModal(BuildContext parentContext,
-      Map<String, List<Event>> dateEvents) {
+  void showDaysEventsModal(
+      BuildContext parentContext, Map<String, List<Event>> dateEvents) {
     var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
     var numberOfEvents = dateEvents[day]?.length ?? 0;
     modal(
@@ -150,11 +151,11 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 
   void _showEventDetailModal(
-      BuildContext context,
-      Event event,
-      BuildContext parentContext,
-      Map<String, List<Event>> dateEvents,
-      ) {
+    BuildContext context,
+    Event event,
+    BuildContext parentContext,
+    Map<String, List<Event>> dateEvents,
+  ) {
     showModalBottomSheet(
       barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
       useSafeArea: true,
@@ -212,8 +213,7 @@ class _MainCalendarState extends State<MainCalendar> {
       // 9fe1e7, 000000
       // 16a765, 000000
 
-      setState(() {
-      });
+      setState(() {});
     } catch (e) {
       print(e.toString());
     }
@@ -261,9 +261,10 @@ class _MainCalendarState extends State<MainCalendar> {
           options: Options(headers: {'authorization': 'Bearer $refreshToken'}));
       if (resp.statusCode == 200) {
         print(resp.data);
-        for(var curr in resp.data){
+        for (var curr in resp.data) {
           Event event = Event.parse(curr);
-          event.colorSetId = calendarMap[event.calendarId]!.colorSetId; // temp function
+          event.colorSetId =
+              calendarMap[event.calendarId]!.colorSetId; // temp function
           EventList.Add(calendarMap, event);
         }
       }
@@ -387,7 +388,8 @@ class _MainCalendarState extends State<MainCalendar> {
 
     // TODO. Range Event
     Map<String, List<Event>> dateEvents = EventList.AsMap(calendarMap);
-    Map<DateTime, List<DisplayEvent>> display = EventList.AsDisplay(calendarMap);
+    Map<DateTime, List<DisplayEvent>> display =
+        EventList.AsDisplay(calendarMap);
 
     return Scaffold(
       //resizeToAvoidBottomInset: false,
@@ -405,47 +407,53 @@ class _MainCalendarState extends State<MainCalendar> {
           children: [
             Column(
               children: [
-                CustomHeader(
-                  focusedDay: _focusedDay,
-                  onSidebarButtonPressed: () {
-                    showModalSideSheet(
-                      context: context,
-                      builder: (context) {
-                        return CustomSidebarModal(
-                          colorMap: colorMap,
-                          calendarMap: calendarMap,
-                          currentCalendarId: currentCalendarId,
-                          onCalendarSelected: (int selectedCalendarId) {
-                            print(
-                                '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
-                            setState(() {
-                              currentCalendarId = selectedCalendarId;
-                            });
-                            showSnackbar(context,
-                                '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
-                          },
-                          onSelectedCalendarDeleted: (int primaryCalendarId) {
-                            setState(() {
-                              currentCalendarId = primaryCalendarId;
-                            });
-                          },
-                          onCalendarCreated: getCalendarMap,
-                        );
-                      },
-                    );
-                  },
-                  onProfileButtonPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => PreferenceView(
-                          auth: widget.auth,
-                          currentCalendar: calendarMap[currentCalendarId]!,
-                          onCalendarModified: getCalendarMap,
+                // TODO. image
+                CustomAppBar(
+                  leftWidget: IconButton(
+                    icon: Icon(Icons.menu),
+                    onPressed: () {
+                      showModalSideSheet(
+                        context: context,
+                        builder: (context) {
+                          return CustomSidebarModal(
+                            colorMap: colorMap,
+                            calendarMap: calendarMap,
+                            currentCalendarId: currentCalendarId,
+                            onCalendarSelected: (int selectedCalendarId) {
+                              print(
+                                  '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
+                              setState(() {
+                                currentCalendarId = selectedCalendarId;
+                              });
+                              showSnackbar(context,
+                                  '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
+                            },
+                            onSelectedCalendarDeleted: (int primaryCalendarId) {
+                              setState(() {
+                                currentCalendarId = primaryCalendarId;
+                              });
+                            },
+                            onCalendarCreated: getCalendarMap,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  centerContent: _focusedDay,
+                  rightWidget: IconButton(
+                    icon: Icon(Icons.account_circle),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PreferenceView(
+                            auth: widget.auth,
+                            currentCalendar: calendarMap[currentCalendarId]!,
+                            onCalendarModified: getCalendarMap,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  image: image,
+                      );
+                    },
+                  ),
                 ),
                 Expanded(
                   child: TableCalendar(
@@ -594,75 +602,6 @@ class _MainCalendarState extends State<MainCalendar> {
           child: child,
         );
       },
-    );
-  }
-}
-
-class CustomHeader extends StatefulWidget {
-  final DateTime focusedDay;
-  final VoidCallback onSidebarButtonPressed;
-  final VoidCallback onProfileButtonPressed;
-  String? headerTile;
-  File? image;
-
-  CustomHeader({
-    required this.focusedDay,
-    required this.onSidebarButtonPressed,
-    required this.onProfileButtonPressed,
-    this.image,
-  }) {
-    this.headerTile = DateFormat.MMMM('ko_KR').format(focusedDay);
-    if (focusedDay.year != DateTime.now().year) {
-      headerTile = DateFormat.yMMMM('ko_KR').format(focusedDay);
-    }
-  }
-
-  @override
-  State<CustomHeader> createState() => _CustomHeaderState();
-}
-
-class _CustomHeaderState extends State<CustomHeader> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: Icon(
-              Icons.menu,
-              size: 32,
-            ),
-            onPressed: widget.onSidebarButtonPressed,
-          ),
-          HeaderText(text: widget.headerTile!),
-          widget.image != null
-              ? Padding(
-                  // (icon_button.dart) it defaults to 8.0 padding on all sides.
-                  padding: const EdgeInsets.all(8.0),
-                  child: GestureDetector(
-                    onTap: widget.onProfileButtonPressed,
-                    child: CircleAvatar(
-                      backgroundImage: FileImage(widget.image!),
-                      radius: 16,
-                    ),
-                  ),
-                )
-              : IconButton(
-                  icon: Icon(
-                    Icons.account_circle,
-                    size: 32,
-                  ),
-                  onPressed: widget.onProfileButtonPressed,
-                ),
-        ],
-      ),
     );
   }
 }
