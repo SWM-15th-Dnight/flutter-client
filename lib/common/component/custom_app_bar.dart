@@ -32,15 +32,33 @@ class CustomAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String centerText = '';
+    TextStyle defaultTextStyle = TextStyle(
+      color: ColorPalette.PRIMARY_COLOR[400]!,
+      fontWeight: FontWeight.w400,
+      fontSize: 16,
+    );
+
+    Text centerWidgetText;
+
     if (centerContent is String) {
       centerText = centerContent;
+      centerWidgetText = Text(
+        centerText,
+        style: defaultTextStyle,
+      );
     } else if (centerContent is DateTime) {
       centerText = DateFormat.MMMM('ko_KR').format(centerContent);
       if (centerContent.year != DateTime.now().year) {
         centerText = DateFormat.yMMMM('ko_KR').format(centerContent);
       }
+      centerWidgetText = Text(
+        centerText,
+        style: defaultTextStyle,
+      );
+    } else if (centerContent is Text) {
+      centerWidgetText = centerContent;
     } else {
-      centerText = '';
+      centerWidgetText = Text('', style: defaultTextStyle);
     }
 
     return Visibility(
@@ -59,14 +77,7 @@ class CustomAppBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 leftWidget != null ? leftWidget! : SizedBox(width: 48.0),
-                Text(
-                  centerText ?? '',
-                  style: TextStyle(
-                    color: ColorPalette.PRIMARY_COLOR[400]!,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 16,
-                  ),
-                ),
+                centerWidgetText,
                 rightWidget != null ? rightWidget! : SizedBox(width: 48.0),
               ],
             ),

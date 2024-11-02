@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/services/auth_service.dart';
 import 'package:mobile_client/widget/modal.dart';
 
@@ -55,40 +56,30 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
         width: MediaQuery.of(context).size.width * 0.75,
         child: Column(
           children: [
-            AppBar(
-              automaticallyImplyLeading: false,
-              title: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4.0),
-                    child: Image.asset(
-                      'asset/img/logo/logo.png',
-                      height: 34,
-                    ),
-                  ),
-                  const SizedBox(width: 14.0),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 7.0),
-                    child: Text(
-                      'Calinify',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontFamily: 'Rockwell',
-                      ),
-                    ),
-                  ),
-                  Spacer(),
-                  IconButton(
-                    onPressed: _toggleDeleteMode,
-                    icon: Icon(isDeleteMode ? Icons.check : Icons.edit),
-                  )
-                ],
+            CustomAppBar(
+              leftWidget: Image.asset(
+                'asset/img/logo/logo.png',
+                height: 34,
               ),
+              centerContent: Text(
+                'Calinify',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Rockwell',
+                ),
+              ),
+              rightWidget: IconButton(
+                icon: Icon(isDeleteMode ? Icons.check : Icons.edit),
+                onPressed: _toggleDeleteMode,
+              ),
+              gutterSize: 20.0,
             ),
             Expanded(
                 child: Column(
               children: [
-                for (var cal in widget.calendarMap.values) containerList(cal, widget.colorMap),
+                for (var cal in widget.calendarMap.values)
+                  containerList(cal, widget.colorMap),
                 // Spacer(),
                 Container(
                   decoration: BoxDecoration(
@@ -142,37 +133,41 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
     );
   }
 
-  void editModal(context, calendar){
-    modal(context, calendar.title,
-      Column(children: [
-        Text("색상 변경"),
-        Spacer(),
-        FilledButton.icon(
-          onPressed: () {},
-          icon: const Icon(Icons.delete),
-          label: const Text("캘린더 삭제"),
-          iconAlignment: IconAlignment.start,
-          style: TextButton.styleFrom(backgroundColor: Colors.red),
-        ),
-      ])
-    );
+  void editModal(context, calendar) {
+    modal(
+        context,
+        calendar.title,
+        Column(children: [
+          Text("색상 변경"),
+          Spacer(),
+          FilledButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.delete),
+            label: const Text("캘린더 삭제"),
+            iconAlignment: IconAlignment.start,
+            style: TextButton.styleFrom(backgroundColor: Colors.red),
+          ),
+        ]));
   }
 
   Widget containerList(calendar, colorMap) {
     return ListTile(
       leading: !isDeleteMode
           ? Checkbox(
-            value: calendar.isSelected,
-            onChanged: (bool? value) {},
-            activeColor: colorMap.get(calendar.colorSetId),
-          )
+              value: calendar.isSelected,
+              onChanged: (bool? value) {},
+              activeColor: colorMap.get(calendar.colorSetId),
+            )
           : Checkbox(
-          value: selectedDeletingCalendarIds.contains(calendar.id),
-          onChanged: (bool? value) {}),
+              value: selectedDeletingCalendarIds.contains(calendar.id),
+              onChanged: (bool? value) {}),
       title: Text(calendar.title),
-      trailing: IconButton(icon: const Icon(Icons.more_vert), onPressed: () {
-        editModal(context, calendar);
-      },),
+      trailing: IconButton(
+        icon: const Icon(Icons.more_vert),
+        onPressed: () {
+          editModal(context, calendar);
+        },
+      ),
       onTap: () {
         setState(() {
           if (!isDeleteMode) {
@@ -188,8 +183,7 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
 
         // set calendarId to the selected calendar
         if (widget.onCalendarSelected != null) {
-          widget.onCalendarSelected!(
-              calendar.id);
+          widget.onCalendarSelected!(calendar.id);
         }
       },
     );
