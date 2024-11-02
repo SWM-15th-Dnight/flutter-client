@@ -11,6 +11,7 @@ import 'package:mobile_client/common/layout/default_layout.dart';
 import 'package:mobile_client/screens/calendar/main_calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view_model.dart';
 import 'package:mobile_client/services/auth_service.dart';
+import 'package:mobile_client/widget/custom_modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -620,103 +621,93 @@ class _StartButtonState extends State<_StartButton> {
                   context, 'An unexpected error occurred. Please try again.');
             }
           } else {
-            showModalBottomSheet<void>(
+            CustomModalBottomSheet(
               context: context,
-              builder: (BuildContext context) {
-                return ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16.0),
-                    topRight: Radius.circular(16.0),
-                  ),
-                  child: Container(
-                    height: MediaQuery.of(context).size.height * 0.25,
-                    width: double.infinity,
-                    child: Column(
-                      children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: Container(
-                            width: 40,
-                            height: 2,
-                            margin: const EdgeInsets.only(top: 8),
-                            decoration: BoxDecoration(
-                              color: Color(0xFFAAAAAA),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
+              backgroundColor: ColorPalette.GRAY_COLOR[50]!,
+              content: Column(
+                children: [
+                  Visibility(
+                    visible: true,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Container(
+                        width: 40,
+                        height: 2,
+                        margin: const EdgeInsets.only(top: 8),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFAAAAAA),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        Spacer(),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.55,
-                          height: 40,
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              //viewModel.signInWithGoogle();
-                              await widget.auth.signInWithGoogle();
-                              Navigator.pop(context);
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          MainCalendar(auth: widget.auth)));
-                            },
-                            icon: SvgPicture.asset(
-                              'asset/img/logo/google_logo.svg',
-                              width: 24,
-                              height: 24,
-                            ),
-                            label: const Text.rich(
-                              TextSpan(children: [
-                                TextSpan(
-                                  text: 'Google로 계속하기',
-                                  style: TextStyle(
-                                    color: Color(0xFFF7F8F9),
-                                  ),
-                                ),
-                              ]),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    ColorPalette.PRIMARY_COLOR[400]!,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.0))),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.55,
-                          height: 40,
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              //viewModel.signInWithMicrosoft();
-                              widget.setEmailSignIn(true);
-                              email = '';
-                              password = '';
-                              Navigator.pop(context);
-                            },
-                            icon: Icon(
-                              Icons.email,
-                              color: Colors.white,
-                            ),
-                            label: const Text(
-                              '이메일로 계속하기',
-                              style: TextStyle(
-                                color: Color(0xFFF7F8F9),
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    ColorPalette.SECONDARY_COLOR[400]!,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.0))),
-                          ),
-                        ),
-                        Spacer(),
-                      ],
+                      ),
                     ),
                   ),
-                );
-              },
+                  Spacer(),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.55,
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        //viewModel.signInWithGoogle();
+                        await widget.auth.signInWithGoogle();
+                        Navigator.pop(context);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    MainCalendar(auth: widget.auth)));
+                      },
+                      icon: SvgPicture.asset(
+                        'asset/img/logo/google_logo.svg',
+                        width: 24,
+                        height: 24,
+                      ),
+                      label: const Text.rich(
+                        TextSpan(children: [
+                          TextSpan(
+                            text: 'Google로 계속하기',
+                            style: TextStyle(
+                              color: Color(0xFFF7F8F9),
+                            ),
+                          ),
+                        ]),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0))),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.55,
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        //viewModel.signInWithMicrosoft();
+                        widget.setEmailSignIn(true);
+                        email = '';
+                        password = '';
+                        Navigator.pop(context);
+                      },
+                      icon: Icon(
+                        Icons.email,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        '이메일로 계속하기',
+                        style: TextStyle(
+                          color: Color(0xFFF7F8F9),
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorPalette.SECONDARY_COLOR[400]!,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0))),
+                    ),
+                  ),
+                  Spacer(),
+                ],
+              ),
             );
           }
         },
