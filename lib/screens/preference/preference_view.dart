@@ -160,11 +160,46 @@ class _PreferenceViewState extends State<PreferenceView> {
                   },
                 ),
                 centerContent: '프로필 및 설정',
-                rightWidget: IconButton(
+                // TODO. show popup with 'logout' button
+                rightWidget: PopupMenuButton<int>(
                   icon: Icon(Icons.more_horiz),
-                  onPressed: () {
-                    // TODO. show popup with 'logout' button
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  onSelected: (int value) {
+                    if (value == 1) {
+                      _showAlertDialog(context);
+                    }
+                    // TODO. show alert dialog for '회원탈퇴'
                   },
+                  itemBuilder: (BuildContext context) => [
+                    PopupMenuItem(
+                      value: 1,
+                      height: 32.0,
+                      child: Center(
+                          child: Text(
+                        '로그아웃',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      )),
+                    ),
+                    PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 2,
+                      height: 32.0,
+                      child: Center(
+                          child: Text(
+                        '회원탈퇴',
+                        style: TextStyle(
+                          color: ColorPalette.ERROR_COLOR[400]!,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      )),
+                    ),
+                  ],
                 ),
               ),
               GestureDetector(
@@ -235,29 +270,6 @@ class _PreferenceViewState extends State<PreferenceView> {
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 24),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    _showAlertDialog(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorPalette.PRIMARY_COLOR[400]!,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  child: Text(
-                    '로그아웃',
-                    style: TextStyle(
-                      color: ColorPalette.GRAY_COLOR[50]!,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
               ),
               const SizedBox(height: 24.0),
               ListTile(

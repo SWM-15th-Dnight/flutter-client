@@ -71,6 +71,21 @@ class ColorPalette {
       900: const Color(0xFF1B1D1F),
     },
   );
+
+  static const MaterialColor ERROR_COLOR = const MaterialColor(
+    _blackPrimaryValue,
+    const <int, Color>{
+      50: const Color(0xFFFCDDD0),
+      100: const Color(0xFFFAB3A3),
+      200: const Color(0xFFF17F73),
+      300: const Color(0xFFE4504F),
+      400: const Color(0xFFD31B2A),
+      500: const Color(0xFFB5132F),
+      600: const Color(0xFF970D31),
+      700: const Color(0xFF7A0830),
+      800: const Color(0xFF65052F),
+    },
+  );
 }
 
 /* transparency percentages and their hex values
