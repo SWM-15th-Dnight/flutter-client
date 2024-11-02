@@ -20,7 +20,7 @@ class CustomBottomSheet extends StatefulWidget {
   Map<String, dynamic>? responseData;
   // for edit mode
   bool isEditMode;
-  Event? event;
+  DisplayEvent? event;
   final Function(int)? onEventEdited;
 
   CustomBottomSheet({
@@ -283,6 +283,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       "status": "TENTATIVE",
       "transp": "OPAQUE",
       "calendarId": widget.currentCalendarId,
+      "colorSetId": 1,
     };
     print('data: $data');
 

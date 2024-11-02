@@ -19,7 +19,7 @@ class Event { // Event = 서버와 통신하는 값을 적재해두는 인스턴
   late int priority;
   late bool isAllDay;
   late int calendarId;
-  late int colorSetId;
+  late int? colorSetId;
 
   String? description;
   String? location;
@@ -92,7 +92,7 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
   }
 
   setColor(ColorMap colorMap){
-    color = colorMap.get(colorSetId);
+    color = colorMap.get(colorSetId ?? 1);
   }
 
   setIdx(int val){

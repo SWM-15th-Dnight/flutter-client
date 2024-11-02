@@ -11,7 +11,7 @@ import '../entities/event.dart';
 import '../services/auth_service.dart';
 
 class CustomEventSheet extends StatefulWidget {
-  final Event event;
+  final DisplayEvent event;
   final Function(int) onEventEdited;
   // for back button
   final BuildContext parentContext;
@@ -44,16 +44,15 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
   DateFormat startTimeFormat = DateFormat('aa h시 mm분', 'ko_KR');
   DateFormat endTimeFormat = DateFormat('aa h시 mm분', 'ko_KR');
 
-  bool isMultiDayEvent = false;
   bool isBothAMOrPM = false;
   String displayedDateTime = '';
+
+  late DisplayEvent event;
 
   @override
   void initState() {
     super.initState();
-
-    startAt = widget.event.startAt;
-    endAt = widget.event.endAt;
+    event = widget.event;
     _checkMultiDayEvent();
 
     _checkDateFormat();
@@ -64,18 +63,16 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
   }
 
   void _checkMultiDayEvent() {
-    if (startAt.day != endAt.day) {
-      isMultiDayEvent = true;
-    } else if (startAt.hour < 12 && endAt.hour < 12) {
+    if (widget.event.startAt.hour < 12 && widget.event.endAt.hour < 12) {
       isBothAMOrPM = true;
-    } else if (startAt.hour >= 12 && endAt.hour >= 12) {
+    } else if (widget.event.startAt.hour >= 12 && widget.event.endAt.hour >= 12) {
       isBothAMOrPM = true;
     }
   }
 
   void _checkDateFormat() {
-    if (startAt.year != DateTime.now().year ||
-        endAt.year != DateTime.now().year) {
+    if (event.startAt.year != DateTime.now().year ||
+        event.endAt.year != DateTime.now().year) {
       dateFormat = DateFormat('yyyy년 M월 dd일 (EE)', 'ko_KR');
     } else {
       dateFormat = DateFormat('M월 d일 (EE)', 'ko_KR');
@@ -83,7 +80,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
   }
 
   void _checkStartTimeFormat() {
-    if (startAt.minute == 0 && !isMultiDayEvent) {
+    if (event.startAt.minute == 0 && event.range == EventType.day) {
       startTimeFormat = DateFormat('aa h시', 'ko_KR');
     } else {
       startTimeFormat = DateFormat('aa h:mm', 'ko_KR');
@@ -91,7 +88,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
   }
 
   void _checkEndTimeFormat() {
-    if (endAt.minute == 0 && !isMultiDayEvent) {
+    if (event.endAt.minute == 0 && event.range == EventType.day) {
       endTimeFormat = DateFormat('aa h시', 'ko_KR');
       if (isBothAMOrPM) {
         endTimeFormat = DateFormat('h시', 'ko_KR');
@@ -106,13 +103,13 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
 
   void _setDisplayedDateTime() {
     displayedDateTime =
-        dateFormat.format(startAt) + ' ' + startTimeFormat.format(startAt);
+        dateFormat.format(event.startAt) + ' ' + startTimeFormat.format(event.startAt);
 
-    if (isMultiDayEvent) {
+    if (event.range != EventType.day) {
       displayedDateTime +=
-          ' ~\n' + dateFormat.format(endAt) + ' ' + endTimeFormat.format(endAt);
+          ' ~\n' + dateFormat.format(event.endAt) + ' ' + endTimeFormat.format(event.endAt);
     } else {
-      displayedDateTime += ' - ' + endTimeFormat.format(endAt);
+      displayedDateTime += ' - ' + endTimeFormat.format(event.endAt);
     }
   }
 
@@ -295,7 +292,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
     );
   }
 
-  void _showEditEventSheet(BuildContext context, Event event) {
+  void _showEditEventSheet(BuildContext context, DisplayEvent event) {
     showModalBottomSheet(
       barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
       useSafeArea: true,

@@ -124,7 +124,7 @@ class _MainCalendarState extends State<MainCalendar> {
       DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay),
       ListView(
         children: [
-          for (var event in (display ?? []))
+          for (DisplayEvent event in (display ?? []))
             ListTile(
               title: Text(
                 event.summary,
@@ -152,7 +152,7 @@ class _MainCalendarState extends State<MainCalendar> {
 
   void _showEventDetailModal(
     BuildContext context,
-    Event event,
+    DisplayEvent event,
     BuildContext parentContext,
     List<DisplayEvent>? display,
   ) {
@@ -263,8 +263,7 @@ class _MainCalendarState extends State<MainCalendar> {
         print(resp.data);
         for (var curr in resp.data) {
           Event event = Event.parse(curr);
-          event.colorSetId =
-              calendarMap[event.calendarId]!.colorSetId; // temp function
+          event.colorSetId = calendarMap[event.calendarId]!.colorSetId; // temp function
           EventList.Add(calendarMap, event: event);
         }
       }
