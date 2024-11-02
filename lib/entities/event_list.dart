@@ -4,7 +4,7 @@ import 'event.dart';
 import 'calendar.dart';
 
 class EventList{
-  static void Add(Map<int, Calendar> calendarMap, [Event? event, Map<String, dynamic>? input]){
+  static void Add(Map<int, Calendar> calendarMap, {Event? event, Map<String, dynamic>? input}){
     if(event != null){
       calendarMap[event.calendarId]?.eventList.add(event);
     }
@@ -25,22 +25,6 @@ class EventList{
         cal.eventList.removeWhere((elem) => elem.eventId == event.eventId );
       }
     }
-  }
-
-  static Map<String, List<Event>> AsMap(Map<int, Calendar> calendarMap){
-    Map<String, List<Event>> ret = {};
-    for(Calendar cal in calendarMap.values){
-      if(cal.isSelected == false) continue;
-      for(Event event in cal.eventList){
-        String key = DateFormat('yyyy-MM-dd').format(event.startAt);
-        if (ret.containsKey(key)) {
-          ret[key]!.add(event);
-        } else {
-          ret[key] = [event];
-        }
-      }
-    }
-    return ret;
   }
 
   static Map<DateTime, List<DisplayEvent>> AsDisplay(Map<int, Calendar> calendarMap){

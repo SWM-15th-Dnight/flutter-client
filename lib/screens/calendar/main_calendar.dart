@@ -118,16 +118,13 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  void showDaysEventsModal(
-      BuildContext parentContext, Map<String, List<Event>> dateEvents) {
-    var day = DateFormat('yyyy-MM-dd').format(_selectedDay);
-    var numberOfEvents = dateEvents[day]?.length ?? 0;
+  void showDaysEventsModal(BuildContext parentContext, List<DisplayEvent>? display) {
     modal(
       parentContext,
       DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay),
       ListView(
         children: [
-          for (var event in dateEvents[day] ?? [])
+          for (var event in (display ?? []))
             ListTile(
               title: Text(
                 event.summary,
@@ -145,7 +142,7 @@ class _MainCalendarState extends State<MainCalendar> {
                 print(event);
                 Navigator.pop(context);
                 _showEventDetailModal(
-                    context, event, parentContext, dateEvents);
+                    context, event, parentContext, display);
               },
             ),
         ],
@@ -157,7 +154,7 @@ class _MainCalendarState extends State<MainCalendar> {
     BuildContext context,
     Event event,
     BuildContext parentContext,
-    Map<String, List<Event>> dateEvents,
+    List<DisplayEvent>? display,
   ) {
     showModalBottomSheet(
       barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
@@ -168,7 +165,7 @@ class _MainCalendarState extends State<MainCalendar> {
         return CustomEventSheet(
           event: event,
           parentContext: parentContext,
-          dateEvents: dateEvents,
+          display: display,
           showDaysEventsModal: showDaysEventsModal,
           onEventEdited: _renewEvent,
         );
@@ -268,7 +265,7 @@ class _MainCalendarState extends State<MainCalendar> {
           Event event = Event.parse(curr);
           event.colorSetId =
               calendarMap[event.calendarId]!.colorSetId; // temp function
-          EventList.Add(calendarMap, event);
+          EventList.Add(calendarMap, event: event);
         }
       }
     } catch (e) {
@@ -322,7 +319,7 @@ class _MainCalendarState extends State<MainCalendar> {
 
   void _addEvent(dynamic input) {
     setState(() {
-      EventList.Add(calendarMap, input);
+      EventList.Add(calendarMap, input: input);
     });
   }
 
@@ -381,7 +378,6 @@ class _MainCalendarState extends State<MainCalendar> {
     }
 
     // TODO. Range Event
-    Map<String, List<Event>> dateEvents = EventList.AsMap(calendarMap);
     Map<DateTime, List<DisplayEvent>> display =
         EventList.AsDisplay(calendarMap);
 
@@ -488,7 +484,7 @@ class _MainCalendarState extends State<MainCalendar> {
                         print('selectdDay: ${_selectedDay}, ${selectedDay}');
                         if (_selectedDay == selectedDay) {
                           print('double tab!');
-                          showDaysEventsModal(context, dateEvents);
+                          showDaysEventsModal(context, display[onlyDate(_selectedDay)]);
                         }
                         _selectedDay = selectedDay;
                         _focusedDay = focusedDay;
@@ -519,7 +515,7 @@ class _MainCalendarState extends State<MainCalendar> {
                                   //color: Colors.yellow.withOpacity(0.3),
                                   child: LayoutBuilder(builder: (context, constraints) {
                                     return EventMonthViewCell(
-                                        context, constraints, dateEvents, day, colorMap);
+                                        context, constraints, display[day], day, colorMap);
                                   }),
                                 ),
                               ),

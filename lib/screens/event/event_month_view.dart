@@ -15,11 +15,9 @@ Widget EventMonthViewCell(context, constraints, events, day, colorMap){
 
   List<Widget> eventWidgets = [];
 
-  if (events?[DateFormat('yyyy-MM-dd').format(day)] != null) {
-    for (Event event in events![DateFormat('yyyy-MM-dd').format(day)]!) {
-
-      DisplayEvent eventView = DisplayEvent.from(event, onlyDate(event.startAt));
-      eventView.setColor(colorMap);
+  if (events != null) {
+    for (DisplayEvent event in events) {
+      event.setColor(colorMap);
 
       var textStyle = TextStyle(
         fontSize: fontSize,
@@ -29,12 +27,12 @@ Widget EventMonthViewCell(context, constraints, events, day, colorMap){
         overflow: TextOverflow.ellipsis,
       );
 
-      var textHeight = calcHeight(constraints, eventView.summary, textStyle);
+      var textHeight = calcHeight(constraints, event.summary, textStyle);
       if (totalHeight + textHeight * 2 > constraints.maxHeight) {
         remainingEvents++;
       } else {
         totalHeight += textHeight;
-        eventWidgets.add(eventView.render(textStyle));
+        eventWidgets.add(event.render(textStyle));
       }
     }
 

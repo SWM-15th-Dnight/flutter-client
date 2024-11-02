@@ -15,15 +15,15 @@ class CustomEventSheet extends StatefulWidget {
   final Function(int) onEventEdited;
   // for back button
   final BuildContext parentContext;
-  final Map<String, List<Event>> dateEvents;
-  final Function(BuildContext, Map<String, List<Event>>)
+  final List<DisplayEvent>? display;
+  final Function(BuildContext, List<DisplayEvent>?)
       showDaysEventsModal;
 
   CustomEventSheet({
     super.key,
     required this.event,
     required this.parentContext,
-    required this.dateEvents,
+    required this.display,
     required this.showDaysEventsModal,
     required this.onEventEdited,
   });
@@ -176,7 +176,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
                       onPressed: () {
                         Navigator.pop(context);
                         widget.showDaysEventsModal(
-                            widget.parentContext, widget.dateEvents);
+                            widget.parentContext, widget.display);
                       },
                       icon: Icon(
                         Icons.arrow_back,
@@ -243,7 +243,7 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
       if (value == 'edit') {
         // TODO. Handle edit action
         print(widget.event);
-        _showEditEventSheet(context, Event.parse(widget.event));
+        _showEditEventSheet(context, widget.event);
       } else if (value == 'delete') {
         // Handle delete action
         _showDeleteConfirmationDialog(context);
@@ -277,12 +277,12 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
                 if (resp.statusCode == 200) {
                   // delete event from dataEvents
                   String dateKey = DateFormat('yyyy-MM-dd').format(widget.event.startAt);
-                  widget.dateEvents[dateKey]!.removeWhere((element) => element.eventId == widget.event.eventId);
+                  widget.display?.removeWhere((element) => element.eventId == widget.event.eventId);
                   widget.onEventEdited(widget.event.eventId);
                 }
 
                 widget.showDaysEventsModal(
-                    widget.parentContext, widget.dateEvents);
+                    widget.parentContext, widget.display);
               },
               child: Text(
                 '삭제',
