@@ -43,37 +43,32 @@ class CustomAppBar extends StatelessWidget {
       centerText = '';
     }
 
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: Visibility(
-        visible: isVisible,
-        child: PreferredSize(
+    return Visibility(
+      visible: isVisible,
+      child: PreferredSize(
+        // set the height of the app bar
+        preferredSize: Size.fromHeight(52),
+        child: Container(
+          color: Colors.transparent,
           // set the height of the app bar
-          preferredSize: Size.fromHeight(52),
-          child: Container(
-            color: Colors.transparent,
-            // set the height of the app bar
-            height: 52,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: gutterSize),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  leftWidget != null ? leftWidget! : SizedBox(width: 48.0),
-                  Text(
-                    centerText ?? '',
-                    style: TextStyle(
-                      color: ColorPalette.PRIMARY_COLOR[400]!,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 16,
-                    ),
+          height: 52,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: gutterSize),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                leftWidget != null ? leftWidget! : SizedBox(width: 48.0),
+                Text(
+                  centerText ?? '',
+                  style: TextStyle(
+                    color: ColorPalette.PRIMARY_COLOR[400]!,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
                   ),
-                  rightWidget != null ? rightWidget! : SizedBox(width: 48.0),
-                ],
-              ),
+                ),
+                rightWidget != null ? rightWidget! : SizedBox(width: 48.0),
+              ],
             ),
           ),
         ),
