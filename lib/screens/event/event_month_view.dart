@@ -19,7 +19,7 @@ Widget EventMonthViewCell(context, constraints, events, day, colorMap){
     for (Event event in events![DateFormat('yyyy-MM-dd').format(day)]!) {
 
       DisplayEvent eventView = DisplayEvent.from(event, onlyDate(event.startAt));
-      eventView.setColor(colorMap.get(eventView.colorSetId));
+      eventView.setColor(colorMap);
 
       var textStyle = TextStyle(
         fontSize: fontSize,
@@ -29,33 +29,12 @@ Widget EventMonthViewCell(context, constraints, events, day, colorMap){
         overflow: TextOverflow.ellipsis,
       );
 
-      var textHeight = calcHeight(constraints, event.summary, textStyle);
+      var textHeight = calcHeight(constraints, eventView.summary, textStyle);
       if (totalHeight + textHeight * 2 > constraints.maxHeight) {
         remainingEvents++;
       } else {
         totalHeight += textHeight;
-        eventWidgets.add(ClipRRect(
-          borderRadius: BorderRadius.circular(4.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 1.0),
-            child: Container(
-              // margin: const EdgeInsets.symmetric(horizontal: 1.0),
-              color: event.isAllDay
-                  ? eventView.color.withOpacity(0.15)
-                  : eventView.color.withOpacity(0.5,),
-              width: double.infinity,
-              child: Align(
-                alignment: Alignment.center,
-                child: Text(
-                  eventView.summary,
-                  style: textStyle,
-                  overflow: TextOverflow.clip,
-                  maxLines: 1,
-                ),
-              ),
-            ),
-          ),
-        ));
+        eventWidgets.add(eventView.render(textStyle));
       }
     }
 
@@ -107,7 +86,6 @@ double calcHeight(constraints, text, textStyle){
     textDirection: ui.TextDirection.ltr,
   );
   textPainter.layout(maxWidth: constraints.maxWidth);
-  final textHeight =
-      textPainter.height + (2.0 + 4.0); // Add padding + 2
+  final textHeight = textPainter.height + (2.0 + 4.0); // Add padding + 2
   return textHeight;
 }

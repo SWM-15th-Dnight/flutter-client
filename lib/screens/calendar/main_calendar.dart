@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
@@ -58,6 +59,8 @@ class _MainCalendarState extends State<MainCalendar> {
   int? currentCalendarId; // assign at getCalendarMap()
 
   ColorMap colorMap = ColorMap();
+
+  ColorMap getColorMap(){ return colorMap; }
 
   bool isGetEventListDone = false;
 
@@ -337,15 +340,6 @@ class _MainCalendarState extends State<MainCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    /*
-    if (events[DateFormat('yyyy-MM-dd').format(day)] !=
-        null) {
-      eventTitle =
-          '${events[DateFormat('yyyy-MM-dd').format(day)]!.length}';
-    }
-    if (cals?['item']['start'])
-    */
-
     if (!isGetEventListDone) {
       return DefaultLayout(
         child: SafeArea(
@@ -505,62 +499,34 @@ class _MainCalendarState extends State<MainCalendar> {
                     //onDayLongPressed: ,
                     eventLoader: (day) => display[day] ?? [],
                     calendarBuilders: CalendarBuilders(
-                      defaultBuilder: (context, day, focusedDay) {
-                        return CustomCalendarBuilder(
-                          day: day,
-                          focusedDay: focusedDay,
-                          events: dateEvents,
-                          colorMap: colorMap,
-                        );
-                      },
+                      defaultBuilder: CustomCalendarBuilder,
                       outsideBuilder: (context, day, focusedDay) {
                         return CustomCalendarBuilder(
-                          day: day,
-                          focusedDay: focusedDay,
+                          context,
+                          day,
+                          focusedDay,
                           dayColor: Color(0XFFAAAAAA),
-                          events: dateEvents,
-                          colorMap: colorMap,
                         );
                       },
-                      todayBuilder: (context, day, focusedDay) {
-                        return CustomCalendarBuilder(
-                          day: day,
-                          focusedDay: focusedDay,
-                          events: dateEvents,
-                          colorMap: colorMap,
-                          /* debug - border
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                            color: ColorPalette.PRIMARY_COLOR[400]!,
-                                            width: 0.8),
-                                        borderRadius: BorderRadius.circular(3.0),
-                                      ),
-                                      */
+                      todayBuilder: CustomCalendarBuilder,
+                      selectedBuilder: CustomCalendarBuilder,
+                      markerBuilder: (context, day, focusedDay){
+                        return (
+                          Column(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  //color: Colors.yellow.withOpacity(0.3),
+                                  child: LayoutBuilder(builder: (context, constraints) {
+                                    return EventMonthViewCell(
+                                        context, constraints, dateEvents, day, colorMap);
+                                  }),
+                                ),
+                              ),
+                            ],
+                          )
                         );
-                      },
-                      selectedBuilder: (context, day, focusedDay) {
-                        return CustomCalendarBuilder(
-                          day: day,
-                          focusedDay: focusedDay,
-                          events: dateEvents,
-                          colorMap: colorMap,
-                          isSelected: ColorPalette.PRIMARY_COLOR[400]!
-                              .withOpacity(0.05),
-                          /*
-                                  decoration: BoxDecoration(
-                                    color:
-                                        ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.05),
-                                    // border: Border.all(
-                                    //     color: ColorPalette.SECONDARY_COLOR[400]!
-                                    //         .withOpacity(0.0),
-                                    //     width: 0.8),
-                                    // borderRadius: BorderRadius.circular(3.0),
-                                  ),
-                                  */
-
-                          //dayFontWeight: FontWeight.w500,
-                        );
-                      },
+                      }
                     ),
                   ),
                 ),
@@ -606,86 +572,55 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 }
 
-class CustomCalendarBuilder extends StatelessWidget {
-  final DateTime day;
-  final DateTime focusedDay;
-  final Map<String, List<Event>>? events;
-  final colorMap;
+Widget? CustomCalendarBuilder (context, day, focusedDay, {Color dayColor = Colors.black}) {
+  Color selectedDay = Colors.transparent;
+  Color dayWrapper = Colors.transparent;
 
-  Color? dayColor = Colors.black;
-  double isTargetDay = 0.0;
-  FontWeight? dayFontWeight = FontWeight.w400;
-  Color? isSelected;
-
-  CustomCalendarBuilder({
-    super.key,
-    required this.day,
-    required this.focusedDay,
-    this.events,
-    this.dayColor,
-    this.dayFontWeight,
-    this.isSelected,
-    required this.colorMap,
-  }) {
-    DateTime today = DateTime.now();
-    if (day.year == today.year &&
-        day.month == today.month &&
-        day.day == today.day) {
-      isTargetDay = 1.0;
-      dayColor = Colors.white;
-      dayFontWeight = FontWeight.w400;
-    }
+  if (onlyDate(DateTime.now()) == onlyDate(day)) {
+    dayWrapper = ColorPalette.PRIMARY_COLOR[400]!;
+    dayColor = Colors.white;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Container(
-        padding: const EdgeInsets.all(1.5),
-        decoration: BoxDecoration(
-          color: isSelected ?? Colors.transparent,
-          border: Border(
-              top: BorderSide(
-            color: Color(0xFFE8EBED),
-            width: 0.5,
-          )),
-        ),
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(161616.0),
-                child: Container(
-                  color:
-                      ColorPalette.PRIMARY_COLOR[400]!.withOpacity(isTargetDay),
-                  width: 24,
-                  height: 24,
-                  child: Center(
-                    child: Text(
-                      '${day.day}',
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: dayFontWeight,
-                        color: dayColor,
-                      ),
+  if(day == focusedDay){
+    selectedDay = ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.05);
+  }
+
+  return Container(
+    child: Container(
+      padding: const EdgeInsets.all(1.5),
+      decoration: BoxDecoration(
+        color: selectedDay,
+        border: const Border(
+            top: BorderSide(
+              color: Color(0xFFE8EBED),
+              width: 0.5,
+            )),
+      ),
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(161616.0),
+              child: Container(
+                color: dayWrapper,
+                width: 24,
+                height: 24,
+                child: Center(
+                  child: Text(
+                    '${day.day}',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w400,
+                      color: dayColor,
                     ),
                   ),
                 ),
               ),
             ),
-            Expanded(
-              child: Container(
-                //color: Colors.yellow.withOpacity(0.3),
-                child: LayoutBuilder(builder: (context, constraints) {
-                  return EventMonthViewCell(
-                      context, constraints, events, day, colorMap);
-                }),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

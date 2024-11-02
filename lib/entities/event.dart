@@ -1,9 +1,12 @@
 
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'calendar.dart';
+import 'color_map.dart';
 
 enum EventType { day, start, during, end }
 
@@ -55,9 +58,12 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
   late DateTime date;
   late Color color;
   late bool isEmpty = false;
+  late int idx;
+  late double displayHeight;
 
   DisplayEvent() : super(){
     isEmpty = true;
+    summary = "";
   }
 
   DisplayEvent.from(Event event, DateTime day)
@@ -85,8 +91,44 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
     date = day;
   }
 
-  setColor(Color val){
-    color = val;
+  setColor(ColorMap colorMap){
+    color = colorMap.get(colorSetId);
+  }
+
+  setIdx(int val){
+    idx = val;
+  }
+
+  setHeight(constraints, Text text, TextStyle textStyle){
+
+  }
+
+  Widget render(TextStyle textStyle){
+    Color calcColor(){
+      if(isEmpty) return Colors.transparent;
+      if(isAllDay) return color.withOpacity(0.15);
+      return color.withOpacity(0.5);
+    }
+
+    return (ClipRRect(
+      borderRadius: BorderRadius.circular(4.0),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 1.0),
+        child: Container(
+          color: calcColor(),
+          width: double.infinity,
+          child: Align(
+            alignment: Alignment.center,
+            child: Text(
+              summary,
+              style: textStyle,
+              overflow: TextOverflow.clip,
+              maxLines: 1,
+            ),
+          ),
+        ),
+      ),
+    ));
   }
 }
 
