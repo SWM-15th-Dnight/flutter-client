@@ -28,23 +28,42 @@ class EventList{
   }
 
   static Map<DateTime, List<DisplayEvent>> AsDisplay(Map<int, Calendar> calendarMap){
-    List<DisplayEvent> list = [];
+    List<DisplayEvent> dayList = [];
+    List<DisplayEvent> rangeList = [];
     Map<DateTime, List<DisplayEvent>> ret = {};
 
     for(Calendar cal in calendarMap.values){
       if(cal.isSelected == false) continue;
 
       for(Event event in cal.eventList){
-        DateTime curr = onlyDate(event.startAt);
+        DateTime start = onlyDate(event.startAt);
         DateTime end = onlyDate(event.endAt);
-        while(curr.compareTo(end) != 1){
-          list.add(DisplayEvent.from(event,curr));
-          curr = curr.add(Duration(days: 1));
+        DateTime curr = onlyDate(event.startAt);
+
+        if(start == end){
+          dayList.add(DisplayEvent.from(event,start));
+        }
+        else{
+          while(curr.compareTo(end) != 1){
+            DisplayEvent curEvent = DisplayEvent.from(event,curr);
+            if(start != curr){
+              curEvent.summary = "";
+            }
+            rangeList.add(curEvent);
+            curr = curr.add(Duration(days: 1));
+          }
         }
       }
     }
 
-    for(DisplayEvent event in list){
+    for(DisplayEvent event in dayList){
+      if (ret.containsKey(event.date)) {
+        ret[event.date]!.add(event);
+      } else {
+        ret[event.date] = [event];
+      }
+    }
+    for(DisplayEvent event in rangeList){
       if (ret.containsKey(event.date)) {
         ret[event.date]!.add(event);
       } else {
