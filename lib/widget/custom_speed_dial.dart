@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:mobile_client/common/component/custom_divider.dart';
 import 'package:mobile_client/screens/calendar/form_bottom_sheet.dart';
 import 'package:mobile_client/services/auth_service.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
@@ -128,12 +129,7 @@ class CustomSpeedDial extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          // TODO. Custom Divider
-                          Container(
-                            width: MediaQuery.of(context).size.width * 0.80,
-                            height: 1.0,
-                            color: ColorPalette.GRAY_COLOR[100]!,
-                          ),
+                          CustomDivider(),
                           Container(
                             color: ColorPalette.GRAY_COLOR[50]!,
                             child: SizedBox(

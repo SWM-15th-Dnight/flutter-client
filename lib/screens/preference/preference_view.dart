@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/common/component/custom_app_bar.dart';
+import 'package:mobile_client/common/component/custom_divider.dart';
+import 'package:mobile_client/common/component/plan_badge.dart';
 import 'package:mobile_client/entities/calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/services/auth_service.dart';
@@ -21,7 +23,7 @@ import '../root/root_view.dart';
 
 class PreferenceView extends StatefulWidget {
   final FBAuthService auth;
-  String? displayName = '익명';
+  String? displayName = '이것은 이름입니다.';
   final Calendar currentCalendar;
   final Function? onCalendarModified;
   // TODO. FCM test
@@ -92,7 +94,7 @@ class _PreferenceViewState extends State<PreferenceView> {
 
   Future<void> _loadDisplayName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    widget.displayName = prefs.getString('display_name') ?? '익명';
+    widget.displayName = prefs.getString('display_name') ?? '이것은 이름입니다.';
     setState(() {
       displayNameController.text = widget.displayName!;
     });
@@ -143,15 +145,17 @@ class _PreferenceViewState extends State<PreferenceView> {
 
   @override
   Widget build(BuildContext context) {
-    final double photoLength = MediaQuery.of(context).size.width * 0.4;
+    final double photoLength = 100.0;
     // TODO. use shared preference before using local DB
     return Scaffold(
+      backgroundColor: ColorPalette.GRAY_COLOR[50]!,
       body: SafeArea(
         child: SingleChildScrollView(
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Column(
             children: [
+              // Appbar
               CustomAppBar(
                 leftWidget: IconButton(
                   icon: Icon(Icons.arrow_back),
@@ -202,84 +206,254 @@ class _PreferenceViewState extends State<PreferenceView> {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: _pickImage,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(161616.0),
-                  child: image != null
-                      ? Image.file(
-                          image!,
-                          width: photoLength,
-                          height: photoLength,
-                          fit: BoxFit.cover,
-                        )
-                      : widget.auth.getCurrentUser()?.photoURL != null
-                          ? Image.network(
-                              widget.auth.getCurrentUser()!.photoURL!,
-                              width: photoLength,
-                              height: photoLength,
-                              fit: BoxFit.cover,
-                            )
-                          : Stack(
-                              children: [
-                                Container(
-                                  width: photoLength,
-                                  height: photoLength,
-                                  color: Colors.grey,
-                                ),
-                                Image.asset(
-                                  'asset/img/user/default_account_profile.png',
-                                  width: photoLength,
-                                  height: photoLength,
-                                  fit: BoxFit.cover,
-                                  color: Colors.black,
-                                ),
-                              ],
+              // Profile summary
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 32.0,
+                  bottom: 12.0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(161616.0),
+                        child: image != null
+                            ? Image.file(
+                                image!,
+                                width: photoLength,
+                                height: photoLength,
+                                fit: BoxFit.cover,
+                              )
+                            : widget.auth.getCurrentUser()?.photoURL != null
+                                ? Image.network(
+                                    widget.auth.getCurrentUser()!.photoURL!,
+                                    width: photoLength,
+                                    height: photoLength,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Stack(
+                                    children: [
+                                      Container(
+                                        width: photoLength,
+                                        height: photoLength,
+                                        color: Colors.grey,
+                                      ),
+                                      Image.asset(
+                                        'asset/img/user/default_account_profile.png',
+                                        width: photoLength,
+                                        height: photoLength,
+                                        fit: BoxFit.cover,
+                                        color: Colors.black,
+                                      ),
+                                    ],
+                                  ),
+                      ),
+                    ),
+                    SizedBox(width: 12.0),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            isEditing
+                                ? Container(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.6,
+                                    child: TextField(
+                                      controller: displayNameController,
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        labelText: '보여질 이름을 알려주세요!',
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    widget.displayName!,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: _updateDisplayName,
+                              child: Icon(
+                                isEditing ? Icons.check : Icons.edit,
+                                size: 20,
+                                //color: Colors.transparent,
+                              ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PlanBadge(tier: 'Basic'),
+                            SizedBox(width: 8),
+                            Text(
+                              '2024. 10. 1 ~ 11. 1',
+                              style: TextStyle(
+                                color: ColorPalette.GRAY_COLOR[400]!,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 16,
+                              color: ColorPalette.GRAY_COLOR[400]!,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  isEditing
-                      ? Container(
-                          width: MediaQuery.of(context).size.width * 0.6,
-                          child: TextField(
-                            controller: displayNameController,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: '보여질 이름을 알려주세요!',
+              // Preference list
+              Container(
+                color: ColorPalette.GRAY_COLOR[100]!,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: 8.0,
+                    bottom: 8.0,
+                  ),
+                  child: Column(
+                    children: [
+                      // TODO. split Preference list widget
+                      Container(
+                        color: ColorPalette.GRAY_COLOR[50]!,
+                        child: ListTile(
+                          title: Text(
+                            "현재 선택된 캘린더",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        )
-                      : Text(
-                          widget.displayName!,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.currentCalendar.title,
+                                style: TextStyle(
+                                  color: ColorPalette.GRAY_COLOR[400]!,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: ColorPalette.GRAY_COLOR[400]!,
+                              ),
+                            ],
                           ),
+                          onTap: () async {
+                            // modify calendar's title
+                            _showEditCalendarTitleDialog(context);
+                          },
                         ),
-                  const SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: _updateDisplayName,
-                    child: Icon(
-                      isEditing ? Icons.check : Icons.edit_note,
-                      size: 24,
-                      //color: Colors.transparent,
-                    ),
+                      ),
+                      SizedBox(height: 8.0),
+                      Container(
+                        color: ColorPalette.GRAY_COLOR[50]!,
+                        child: ListTile(
+                          title: Text(
+                            '일정 불러오기',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: ColorPalette.GRAY_COLOR[400]!,
+                          ),
+                          onTap: () {
+                            // TODO. show file picker
+                          },
+                        ),
+                      ),
+                      CustomDivider(),
+                      Container(
+                        color: ColorPalette.GRAY_COLOR[50]!,
+                        child: ListTile(
+                          title: Text(
+                            '일정 내보내기',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: ColorPalette.GRAY_COLOR[400]!,
+                          ),
+                          onTap: () {},
+                        ),
+                      ),
+                      CustomDivider(),
+                      Container(
+                        color: ColorPalette.GRAY_COLOR[50]!,
+                        child: ListTile(
+                          title: Text(
+                            '이것은 설정들 입니다.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: ColorPalette.GRAY_COLOR[400]!,
+                          ),
+                          onTap: () {},
+                        ),
+                      ),
+                      CustomDivider(),
+                      Container(
+                        color: ColorPalette.GRAY_COLOR[50]!,
+                        child: ListTile(
+                          title: Text(
+                            '이것은 설정들 입니다.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: ColorPalette.GRAY_COLOR[400]!,
+                          ),
+                          onTap: () {},
+                        ),
+                      ),
+                      CustomDivider(),
+                      Container(
+                        color: ColorPalette.GRAY_COLOR[50]!,
+                        child: ListTile(
+                          title: Text(
+                            '이것은 설정들 입니다.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: ColorPalette.GRAY_COLOR[400]!,
+                          ),
+                          onTap: () {},
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 24.0),
-              ListTile(
-                title: Center(
-                    child:
-                        Text("현재 선택된 캘린더 - ${widget.currentCalendar.title}")),
-                onTap: () async {
-                  // modify calendar's title
-                  _showEditCalendarTitleDialog(context);
-                },
+                ),
               ),
             ],
           ),

@@ -29,16 +29,16 @@ class ColorPalette {
   static const MaterialColor PRIMARY_COLOR = const MaterialColor(
     _blackPrimaryValue,
     const <int, Color>{
-      50: const Color(0xFFe0e0e0),
-      100: const Color(0xFFb3b3b3),
-      200: const Color(0xFF808080),
+      50: const Color(0xFF91ABD2),
+      100: const Color(0xFF6D8FC3),
+      200: const Color(0xFF4873B4),
       300: const Color(0xFF2457A5),
       400: const Color(0xFF003C97),
-      500: const Color(_blackPrimaryValue),
-      600: const Color(0xFF000000),
-      700: const Color(0xFF000000),
-      800: const Color(0xFF000000),
-      900: const Color(0xFF000000),
+      500: const Color(0xFF003381),
+      600: const Color(0xFF002A6B),
+      700: const Color(0xFF002256),
+      800: const Color(0xFF001940),
+      900: const Color(0xFF00112B),
     },
   );
 
