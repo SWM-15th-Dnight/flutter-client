@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/common/component/custom_divider.dart';
 import 'package:mobile_client/common/component/plan_badge.dart';
+import 'package:mobile_client/common/component/setting_tile.dart';
 import 'package:mobile_client/entities/calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/services/auth_service.dart';
@@ -46,7 +48,8 @@ class _PreferenceViewState extends State<PreferenceView> {
   final TextEditingController displayNameController = TextEditingController();
   bool isEditing = false;
 
-  // for modify calendar info
+  // for modify calendar info, import/export ics file
+  final FBAuthService auth = FBAuthService();
   final dio = Dio();
 
   @override
@@ -326,131 +329,108 @@ class _PreferenceViewState extends State<PreferenceView> {
                   child: Column(
                     children: [
                       // TODO. split Preference list widget
-                      Container(
-                        color: ColorPalette.GRAY_COLOR[50]!,
-                        child: ListTile(
-                          title: Text(
-                            "현재 선택된 캘린더",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                widget.currentCalendar.title,
-                                style: TextStyle(
-                                  color: ColorPalette.GRAY_COLOR[400]!,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: ColorPalette.GRAY_COLOR[400]!,
-                              ),
-                            ],
-                          ),
-                          onTap: () async {
-                            // modify calendar's title
-                            _showEditCalendarTitleDialog(context);
-                          },
-                        ),
+                      SettingTile(
+                        titleText: '현재 선택된 캘린더',
+                        trailingText: widget.currentCalendar.title,
+                        onTapEvent: () => _showEditCalendarTitleDialog(context),
                       ),
                       SizedBox(height: 8.0),
-                      Container(
-                        color: ColorPalette.GRAY_COLOR[50]!,
-                        child: ListTile(
-                          title: Text(
-                            '일정 불러오기',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: ColorPalette.GRAY_COLOR[400]!,
-                          ),
-                          onTap: () {
-                            // TODO. show file picker
-                          },
-                        ),
+                      // TODO. show file picker
+                      SettingTile(
+                        titleText: '일정 불러오기',
+                        onTapEvent: () async {
+                          FilePickerResult? result =
+                              await FilePicker.platform.pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: ['ics'],
+                          );
+
+                          if (result != null) {
+                            //File file = File(result.files.single.path!);
+                            PlatformFile file = result.files.first;
+
+                            const int MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+                            if (file.extension != 'ics') {
+                              showSnackbar(context, '올바른 ics 파일 형식이 아닙니다.');
+                              return;
+                            }
+
+                            if (file.size > MAX_FILE_SIZE) {
+                              showSnackbar(context, '파일 크기는 5MB를 넘을 수 없습니다.');
+                              return;
+                            }
+
+                            try {
+                              await auth.checkToken();
+                              var refreshToken =
+                                  await storage.read(key: REFRESH_TOKEN_KEY);
+
+                              FormData formData = FormData.fromMap({
+                                // TODO. use /api/v1/user/
+                                'user_id': dotenv.env['USER_ID']!,
+                                'ics_file': await MultipartFile.fromFile(
+                                  file.path!,
+                                  filename: file.name,
+                                ),
+                              });
+
+                              Response response = await dio.post(
+                                dotenv.env['BACKEND_TRANSPORT_URL']! +
+                                    '/api/v1/import',
+                                data: formData,
+                                options: Options(headers: {
+                                  'Content-Type': 'multipart/form-data',
+                                  'authorization': 'Bearer $refreshToken',
+                                }),
+                              );
+
+                              // 응답 확인
+                              print('응답 코드: ${response.statusCode}');
+                              print('응답 데이터: ${response.data}');
+
+                              if (response.statusCode == 200) {
+                                print('파일 업로드 성공');
+                              }
+                            } on DioError catch (e) {
+                              // DioError의 응답 코드 및 메시지 확인
+                              if (e.response != null) {
+                                print(
+                                    'DioError 응답 코드: ${e.response?.statusCode}');
+                                print('DioError 응답 데이터: ${e.response?.data}');
+                              } else {
+                                print('DioError 메시지: ${e.message}');
+                              }
+
+                              // 422 Unprocessable Entity: 올바르지 않은 형식의 요청
+                              if (e.response?.statusCode == 422) {
+                                showSnackbar(context, '올바른 형식이 아닙니다.');
+                              }
+
+                              // 서버 응답 없음 또는 타임아웃
+                              else if (e.type == DioErrorType.connectTimeout ||
+                                  e.type == DioErrorType.receiveTimeout) {
+                                showSnackbar(
+                                    context, '서버와의 응답이 없습니다. 잠시 후 다시 시도해 주세요.');
+                              }
+
+                              // 기타 에러
+                              else {
+                                showSnackbar(context, '잠시후 다시 시도해 주세요.');
+                              }
+                            } catch (e) {
+                              // 예상하지 못한 예외 처리
+                              showSnackbar(context, '파일 업로드 중 오류가 발생했습니다.');
+                            }
+
+                            showSnackbar(context, '파일 크기 : ${file.size} bytes');
+                          }
+                        },
                       ),
                       CustomDivider(),
-                      Container(
-                        color: ColorPalette.GRAY_COLOR[50]!,
-                        child: ListTile(
-                          title: Text(
-                            '일정 내보내기',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: ColorPalette.GRAY_COLOR[400]!,
-                          ),
-                          onTap: () {},
-                        ),
-                      ),
+                      SettingTile(titleText: '일정 내보내기'),
                       CustomDivider(),
-                      Container(
-                        color: ColorPalette.GRAY_COLOR[50]!,
-                        child: ListTile(
-                          title: Text(
-                            '이것은 설정들 입니다.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: ColorPalette.GRAY_COLOR[400]!,
-                          ),
-                          onTap: () {},
-                        ),
-                      ),
-                      CustomDivider(),
-                      Container(
-                        color: ColorPalette.GRAY_COLOR[50]!,
-                        child: ListTile(
-                          title: Text(
-                            '이것은 설정들 입니다.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: ColorPalette.GRAY_COLOR[400]!,
-                          ),
-                          onTap: () {},
-                        ),
-                      ),
-                      CustomDivider(),
-                      Container(
-                        color: ColorPalette.GRAY_COLOR[50]!,
-                        child: ListTile(
-                          title: Text(
-                            '이것은 설정들 입니다.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: ColorPalette.GRAY_COLOR[400]!,
-                          ),
-                          onTap: () {},
-                        ),
-                      ),
+                      SettingTile(titleText: '이것은 설정입니다.'),
                     ],
                   ),
                 ),
