@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:intl/intl.dart';
 
 import 'event.dart';
@@ -27,9 +29,37 @@ class EventList{
     }
   }
 
+  static int getIdx(Map<int, DisplayEvent>? cur){
+    if(cur == null) return 0;
+    int cnt = 0;
+    while(cur.containsKey(cnt)){
+      cnt++;
+    }
+    return cnt;
+  }
+
+  static List<DisplayEvent> getList(Map<int,DisplayEvent> cur){
+    List<DisplayEvent> ret = [];
+
+    int idx = cur.keys.reduce(max);
+    print("lastidx ${idx}");
+    for(var i=0; i<=idx; i++){
+      if(cur.containsKey(i)){
+        ret.add(cur[i]!);
+      }
+      else{
+        ret.add(DisplayEvent());
+      }
+    }
+
+    return ret;
+  }
+
   static Map<DateTime, List<DisplayEvent>> AsDisplay(Map<int, Calendar> calendarMap){
-    List<DisplayEvent> dayList = [];
-    List<DisplayEvent> rangeList = [];
+    List<Event> dayList = [];
+    List<Event> rangeList = [];
+
+    Map<DateTime, Map<int, DisplayEvent>> cur = {};
     Map<DateTime, List<DisplayEvent>> ret = {};
 
     for(Calendar cal in calendarMap.values){
@@ -38,38 +68,45 @@ class EventList{
       for(Event event in cal.eventList){
         DateTime start = onlyDate(event.startAt);
         DateTime end = onlyDate(event.endAt);
-        DateTime curr = onlyDate(event.startAt);
 
-        if(start == end){
-          dayList.add(DisplayEvent.from(event,start));
-        }
-        else{
-          while(curr.compareTo(end) != 1){
-            DisplayEvent curEvent = DisplayEvent.from(event,curr);
-            if(start != curr){
-              curEvent.summary = "";
-            }
-            rangeList.add(curEvent);
-            curr = curr.add(Duration(days: 1));
-          }
-        }
+        if(start == end) dayList.add(event);
+        else rangeList.add(event);
       }
     }
 
-    for(DisplayEvent event in dayList){
-      if (ret.containsKey(event.date)) {
-        ret[event.date]!.add(event);
-      } else {
-        ret[event.date] = [event];
+    print("daylist ${dayList.length}, rangelist ${rangeList.length}");
+
+    for(Event event in rangeList){
+      DateTime start = onlyDate(event.startAt);
+      DateTime end = onlyDate(event.endAt);
+      DateTime curr = onlyDate(event.startAt);
+
+      int idx = getIdx(cur[start]);
+
+      while(curr.compareTo(end) != 1){
+        DisplayEvent curEvent = DisplayEvent.from(event,curr);
+
+        if(cur[curr] == null) cur[curr] = {};
+        cur[curr]![idx] = curEvent;
+
+        curr = curr.add(Duration(days: 1));
       }
     }
-    for(DisplayEvent event in rangeList){
-      if (ret.containsKey(event.date)) {
-        ret[event.date]!.add(event);
-      } else {
-        ret[event.date] = [event];
-      }
+
+    for(Event event in dayList){
+      DateTime curr = onlyDate(event.startAt);
+      int idx = getIdx(cur[curr]);
+
+      DisplayEvent curEvent = DisplayEvent.from(event, curr);
+
+      if(cur[curr] == null) cur[curr] = {};
+      cur[curr]![idx] = curEvent;
     }
+
+    for(var key in cur.keys){
+      ret[key] = getList(cur[key]!);
+    }
+
     return ret;
   }
 }

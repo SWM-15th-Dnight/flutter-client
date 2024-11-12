@@ -64,6 +64,7 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
   DisplayEvent() : super(){
     isEmpty = true;
     summary = "";
+    colorSetId = 1;
   }
 
   DisplayEvent.from(Event event, DateTime day)
@@ -88,6 +89,9 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
     else if(end == day) range = EventType.end;
     else range = EventType.during;
 
+    if(start != day){
+      summary = "";
+    }
     date = day;
   }
 
@@ -106,28 +110,62 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
   Widget render(TextStyle textStyle){
     Color calcColor(){
       if(isEmpty) return Colors.transparent;
-      if(isAllDay) return color.withOpacity(0.15);
-      return color.withOpacity(0.5);
+      if(range != EventType.day) return color.withOpacity(0.5);
+      return color.withOpacity(0.25);
     }
 
-    return (ClipRRect(
-      borderRadius: BorderRadius.circular(4.0),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 1.0),
-        child: Container(
-          color: calcColor(),
-          width: double.infinity,
-          child: Align(
-            alignment: Alignment.center,
-            child: Text(
-              summary,
-              style: textStyle,
-              overflow: TextOverflow.clip,
-              maxLines: 1,
+    BorderRadius calcRadius(){
+      if(range == EventType.start) return BorderRadius.only(topLeft: Radius.circular(4.0),bottomLeft: Radius.circular(4.0));
+      if(range == EventType.end) return BorderRadius.only(topRight: Radius.circular(4.0),bottomRight: Radius.circular(4.0));
+      if(range == EventType.during) return BorderRadius.circular(0.0);
+      return BorderRadius.circular(4.0);
+    }
+
+    EdgeInsets calcPadding(){
+      if(range == EventType.start) return EdgeInsets.only(left: 2.0, top: 2.0, bottom: 2.0);
+      if(range == EventType.end) return EdgeInsets.only(right: 2.0, top: 2.0, bottom: 2.0);
+      if(range == EventType.during) return EdgeInsets.symmetric(vertical: 2.0);
+      return EdgeInsets.all(2.0);
+    }
+
+    if(isEmpty){
+      return (ClipRRect(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          child: Container(
+            width: double.infinity,
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(
+                summary,
+                style: textStyle,
+                overflow: TextOverflow.clip,
+                maxLines: 1,
+              ),
             ),
           ),
         ),
-      ),
+      ));
+    }
+
+    return (Padding(
+        padding: calcPadding(),
+        child: ClipRRect(
+          borderRadius: calcRadius(),
+          child: Container(
+            color: calcColor(),
+            width: double.infinity,
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(
+                summary,
+                style: textStyle,
+                overflow: TextOverflow.clip,
+                maxLines: 1,
+              ),
+            ),
+          ),
+        )
     ));
   }
 }

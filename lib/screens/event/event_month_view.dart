@@ -57,8 +57,11 @@ Widget EventMonthViewCell(context, constraints, events, day, colorMap){
     }
   }
 
-  return Column(
-    children: eventWidgets,
+  return Container(
+    padding: EdgeInsets.only(top: 32.0),
+    child: Column(
+      children: eventWidgets,
+    )
   );
 }
 
