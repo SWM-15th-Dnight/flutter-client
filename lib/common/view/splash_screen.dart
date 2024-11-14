@@ -27,20 +27,18 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(Duration(seconds: 3), () async {
       if (await _auth.checkToken()) {
-        //print('SplashScreen to MainCalendar');
         Navigator.pushReplacement(
           context,
           FadePageRoute(
             builder: (context) => MainCalendar(auth: _auth),
-          ), // Replace with your target screen
+          ),
         );
       } else {
-        //print('SplashScreen to LoginScreen');
         Navigator.pushReplacement(
           context,
           FadePageRoute(
             builder: (context) => LoginScreen(),
-          ), // Replace with your target screen
+          ),
         );
       }
     });

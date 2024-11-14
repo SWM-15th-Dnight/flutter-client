@@ -10,7 +10,7 @@ class SignInModel {
   // }
 
   void signInWithGoogle() async {
-    await authService.signInWithGoogle();
+    //await authService.signInWithGoogle();
   }
 
   void signInWithMicrosoft() async {

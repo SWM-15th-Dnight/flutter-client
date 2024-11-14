@@ -2,34 +2,38 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/common/component/service_name_text.dart';
 import 'package:mobile_client/common/component/snackbar_helper.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/common/layout/default_layout.dart';
+import 'package:mobile_client/riverpod/state_provider.dart';
 import 'package:mobile_client/screens/calendar/main_calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view_model.dart';
 import 'package:mobile_client/services/auth_service.dart';
+import 'package:mobile_client/services/dio_client.dart';
 import 'package:mobile_client/widget/custom_modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/const/data.dart';
+import '../../entities/utils.dart';
 import '../../widget/rounded_input_box.dart';
 
 String email = '';
 String displayedEmail = '';
 String password = '';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _LoginScreenState extends ConsumerState<LoginScreen>
     with TickerProviderStateMixin {
   final FBAuthService _auth = FBAuthService();
   bool isEmailSignIn = false;
@@ -116,6 +120,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    final provider = ref.watch(signInValidateProvider);
     final bottomInSet = MediaQuery.of(context).viewInsets.bottom;
 
     return DefaultLayout(
@@ -240,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ),
                 // TODO. 이메일 입력 및 비밀번호 형식 경고 문구
-                /*
+
                 Align(
                   alignment: Alignment.center,
                   child: Padding(
@@ -249,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen>
                       opacity: isEmailSignIn ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 300),
                       child: Text(
-                        '비밀번호는 8~20자, 특수문자를 포함해야합니다.',
+                        provider,
                         style: TextStyle(
                           color: ColorPalette.SECONDARY_COLOR[400]!,
                           fontWeight: FontWeight.w500,
@@ -259,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                   ),
                 ),
-                */
+
                 Align(
                   alignment: Alignment.center,
                   child: AnimatedPadding(
@@ -359,105 +364,6 @@ class _LoginScreenState extends State<LoginScreen>
               ],
             ),
           ),
-/*
-          Positioned.fill(
-            top: isEmailSignIn ? kToolbarHeight : 0,
-            child: Center(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.3,
-                      child: AnimatedOpacity(
-                        opacity: _isLogoVisible ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 1500),
-                        curve: Curves.decelerate,
-                        child: _Logo(),
-                      ),
-                    ),
-                    ServiceNameText(serviceName: 'Calinify'),
-                    SizedBox(height: 0),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.decelerate,
-                      child: isEmailSignIn
-                          ? Column(
-                              children: [
-                                Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.60,
-                                    child: AuthTextFormField(
-                                      // autofocus: true,
-                                      scrollPadding: bottomInSet / 2,
-                                      focusNode: _emailFocusNode,
-                                      controller: _emailController,
-                                      textAlign: TextAlign.center,
-                                      hintText: '이메일',
-                                      maxLength: 40,
-                                      onChanged: (String value) async {
-                                        setState(() {
-                                          email = value;
-                                        });
-                                      },
-                                      suffixIcon: Icons.clear,
-                                      onIconPressed: () {
-                                        setState(() {
-                                          _emailController.clear();
-                                          email = '';
-                                        });
-                                      },
-                                    )),
-                                Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.60,
-                                  child: AuthTextFormField(
-                                    scrollPadding: bottomInSet / 3,
-                                    obscureText: !_isPasswordVisible,
-                                    textAlign: TextAlign.center,
-                                    hintText: '비밀번호',
-                                    maxLength: 20,
-                                    onChanged: (String value) async {
-                                      password = value;
-                                    },
-                                    suffixIcon: _isPasswordVisible
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    onIconPressed: () {
-                                      setState(() {
-                                        _isPasswordVisible =
-                                            !_isPasswordVisible;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              ],
-                            )
-                          : SizedBox.shrink(),
-                    ),
-                    SizedBox(height: 20),
-                    SizedBox(
-                      height: 40,
-                      child: AnimatedOpacity(
-                        opacity: _isStartButtonVisible ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: _StartButton(
-                          isEmailSignIn: isEmailSignIn,
-                          auth: _auth,
-                          setEmailSignIn: setEmailSignIn,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                        width: 50,
-                        height: MediaQuery.of(context).size.height * 0.3),
-                    //SizedBox(height: bottomInSet),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          */
         ],
       ),
     ));
@@ -482,7 +388,7 @@ class _Logo extends StatelessWidget {
   }
 }
 
-class _StartButton extends StatefulWidget {
+class _StartButton extends ConsumerStatefulWidget {
   final FBAuthService auth;
   final bool isEmailSignIn;
   final Function(bool) setEmailSignIn;
@@ -494,10 +400,10 @@ class _StartButton extends StatefulWidget {
   });
 
   @override
-  State<_StartButton> createState() => _StartButtonState();
+  ConsumerState<_StartButton> createState() => _StartButtonState();
 }
 
-class _StartButtonState extends State<_StartButton> {
+class _StartButtonState extends ConsumerState<_StartButton> {
   Map<String, String?> data = {};
 
   @override
@@ -505,122 +411,98 @@ class _StartButtonState extends State<_StartButton> {
     super.initState();
   }
 
-  Future<Map<String, String?>> getEmailPassword() async {
+  Future<void> getEmailPassword() async {
     data = {
       'email': email,
       'password': password,
     };
-    print(data);
-    return data;
   }
 
-  bool _validateForm() {
-    if (_validateEmail() && _validatePassword()) {
-      return true;
+  String _validateForm() {
+    String result = _validateEmail();
+    if (result == '') {
+      result = _validatePassword();
     }
-    return false;
+    return result;
   }
 
-  bool _validateEmail() {
+  String _validateEmail() {
     if (email.isEmpty) {
-      showSnackbar(context, '에메일을 입력해주세요.');
-      return false;
+      return '이메일을 입력해주세요.';
     }
-
-    final RegExp emailRegExp =
-        RegExp(r'^[^@]+@[^@]+\.[^@]+'); // r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+    final RegExp emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
     if (!emailRegExp.hasMatch(email)) {
-      showSnackbar(context, '올바른 이메일 형식이 아닙니다.');
-      return false;
+      return '올바른 이메일 형식이 아닙니다.';
     }
-    return true;
+    return '';
   }
 
-  bool _validatePassword() {
+  String _validatePassword() {
     if (password.isEmpty) {
-      showSnackbar(context, '비밀번호를 입력해주세요.');
-      return false;
+      return '비밀번호를 입력해주세요.';
     }
-
     final RegExp passwordRegExp =
         RegExp(r'^(?=.*[A-Za-z])(?=.*[\W_])[A-Za-z\d\W_]{8,20}$');
-
     if (!passwordRegExp.hasMatch(password)) {
-      showSnackbar(context, '비밀번호는 8-20자이며, 특수문자를 포함해야 합니다.');
-      return false;
+      return '비밀번호는 8-20자이며, 특수문자를 포함해야 합니다.';
     }
-    return true;
+    return '';
   }
 
   @override
   Widget build(BuildContext context) {
-    final dio = Dio();
-
     return SizedBox(
       height: 40,
       width: MediaQuery.of(context).size.width * 0.45,
       child: ElevatedButton(
+        // '로그인' 버튼을 누를 때 동작
         onPressed: () async {
           if (widget.isEmailSignIn) {
             FocusScope.of(context).unfocus();
-
-            if (!_validateForm()) return;
+            String validateResult = _validateForm();
+            ref
+                .read(signInValidateProvider.notifier)
+                .update((state) => validateResult);
+            if (validateResult.isNotEmpty) return;
 
             try {
               await getEmailPassword();
-              final resp = await dio.post(
-                dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/auth/login',
-                data: data,
-              );
+              final resp = await DioClient().post(
+                  '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/auth/login', data);
+              print('[sign_in_view.dart] data: $data');
+
               if (resp.statusCode == 200) {
-                print(resp);
+                print('sign_in_view: ${resp.data}');
 
-                // checked.
-                // if (await storage.read(key: ACCESS_TOKEN_KEY) == null) {
-                //   print('null ACCESS_TOKEN_KEY');
-                // }
+                setEmailPassword(email, password);
 
-                await storage.write(key: USER_EMAIL_KEY, value: email);
-                await storage.write(key: USER_PASSWORD_KEY, value: password);
                 await storage.write(
                     key: ACCESS_TOKEN_KEY, value: resp.data['accessToken']);
                 await storage.write(
                     key: REFRESH_TOKEN_KEY, value: resp.data['refreshToken']);
 
-                if (await widget.auth.checkToken()) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => MainCalendar(auth: widget.auth)));
-                } else {
-                  print('sign_in_view: token update failled');
-                }
-              }
-            } on DioError catch (e) {
-              // 401 Unauthorized: 없는 계정 또는 잘못된 비밀번호
-              if (e.response?.statusCode == 401) {
-                showSnackbar(context, '이메일 또는 비밀번호가 일치하지 않습니다.');
-              }
-
-              // 422 Unprocessable Entity: 올바르지 않은 형식의 요청
-              else if (e.response?.statusCode == 422) {
-                showSnackbar(context, '올바른 형식이 아닙니다.');
-              }
-
-              // 서버 응답 없음 또는 타임아웃
-              else if (e.type == DioErrorType.connectTimeout ||
-                  e.type == DioErrorType.receiveTimeout) {
-                showSnackbar(context, '서버와의 응답이 없습니다. 잠시 후 다시 시도해 주세요.');
-              }
-
-              // 기타 에러
-              else {
-                showSnackbar(context, '잠시후 다시 시도해 주세요.');
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => MainCalendar(auth: widget.auth)));
               }
             } catch (e) {
-              // 예상하지 못한 예외 처리
-              showSnackbar(
-                  context, 'An unexpected error occurred. Please try again.');
+              String errorString = '';
+              if (e == 401) {
+                // 401 Unauthorized: 없는 계정 또는 잘못된 비밀번호
+                errorString = '이메일 또는 비밀번호가 일치하지 않습니다.';
+              } else if (e == 422) {
+                // 422 Unprocessable Entity: 올바르지 않은 형식의 요청
+                errorString = '올바른 형식이 아닙니다.';
+              } else {
+                // 서버 응답 없음 또는 타임아웃
+                errorString = '서버와의 응답이 없습니다, 잠시 후 다시 시도해 주세요.';
+              }
+              ref
+                  .read(signInValidateProvider.notifier)
+                  .update((state) => errorString);
             }
-          } else {
+          }
+          // '시작' 버튼을 누를 때 동작
+          else {
             CustomModalBottomSheet(
               context: context,
               backgroundColor: ColorPalette.GRAY_COLOR[50]!,
@@ -647,14 +529,30 @@ class _StartButtonState extends State<_StartButton> {
                     height: 40,
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        //viewModel.signInWithGoogle();
-                        await widget.auth.signInWithGoogle();
+                        final response =
+                            await widget.auth.signInWithGoogle(ref);
+
                         Navigator.pop(context);
-                        Navigator.push(
+                        if (response != null) {
+                          // && response['statusCode'] == 200) {
+                          await storage.write(
+                              key: ACCESS_TOKEN_KEY,
+                              value: response['accessToken']);
+                          await storage.write(
+                              key: REFRESH_TOKEN_KEY,
+                              value: response['refreshToken']);
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    MainCalendar(auth: widget.auth)));
+                              builder: (context) =>
+                                  MainCalendar(auth: widget.auth),
+                            ),
+                          );
+                        } else {
+                          print('response: $response');
+                          showSnackbar(
+                              context, '로그인 중 오류가 발생했습니다, 잠시 후 다시 시도해 주세요.');
+                        }
                       },
                       icon: SvgPicture.asset(
                         'asset/img/logo/google_logo.svg',

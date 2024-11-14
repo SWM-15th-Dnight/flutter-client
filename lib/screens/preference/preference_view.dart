@@ -368,16 +368,15 @@ class _PreferenceViewState extends State<PreferenceView> {
 
                               FormData formData = FormData.fromMap({
                                 // TODO. use /api/v1/user/
-                                'user_id': dotenv.env['USER_ID']!,
-                                'ics_file': await MultipartFile.fromFile(
+                                'file': await MultipartFile.fromFile(
                                   file.path!,
                                   filename: file.name,
                                 ),
                               });
 
                               Response response = await dio.post(
-                                dotenv.env['BACKEND_TRANSPORT_URL']! +
-                                    '/api/v1/import',
+                                dotenv.env['BACKEND_MAIN_URL']! +
+                                    '/api/v1/transport/import',
                                 data: formData,
                                 options: Options(headers: {
                                   'Content-Type': 'multipart/form-data',

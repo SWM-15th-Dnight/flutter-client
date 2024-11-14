@@ -95,7 +95,7 @@ class FirebaseApi {
 
   Future<void> getFCMToken() async {
     final fcmToken = await _firebaseMessaging.getToken();
-    print('fcmToken: ${fcmToken}');
+    // print('[firebase_api.dart] fcmToken: ${fcmToken}');
   }
 
   Future<void> initNotification() async {

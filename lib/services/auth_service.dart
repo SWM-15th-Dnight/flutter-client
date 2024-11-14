@@ -4,11 +4,17 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mobile_client/common/component/snackbar_helper.dart';
+import 'package:mobile_client/entities/utils.dart';
+import 'package:mobile_client/services/dio_client.dart';
 import 'package:mobile_client/services/main_request.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../common/const/data.dart';
+
+final authServiceProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
 
 class FBAuthService {
   FBAuthService();
@@ -94,16 +100,13 @@ class FBAuthService {
     var accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
     var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
 
-    // TODO. 로그아웃 시 둘 다 널인지 확인
     if (accessToken == null || refreshToken == null) {
-      print('checkToken: null tokens!');
+      print('[auth_service.dart] checkToken(): null tokens');
       return false;
     }
 
-    var resp;
-    var login;
     try {
-      resp = await dio.get(
+      await dio.get(
         dotenv.env['BACKEND_MAIN_URL']! + '/colorSet/',
         options: Options(
           headers: {
@@ -111,79 +114,130 @@ class FBAuthService {
           },
         ),
       );
-      print('/colorSet/ resp: $resp');
     } catch (e) {
-      print('/colorSet/ error: $e');
-
       try {
-        login = await dio.post(
+        Response login = await dio.post(
           dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/auth/login',
           data: {
             'email': await storage.read(key: USER_EMAIL_KEY),
             'password': await storage.read(key: USER_PASSWORD_KEY),
           },
         );
-        print('/auth/login resp: ${login.data}');
-
         await storage.write(
             key: ACCESS_TOKEN_KEY, value: login.data['accessToken']);
         await storage.write(
             key: REFRESH_TOKEN_KEY, value: login.data['refreshToken']);
-        print('tokens updated!!!!!!!!!!!!!!!!!!!');
+        print('[auth_service.dart] checkToken(): tokens updated');
         return true;
       } catch (e) {
-        print('/auth/login error: $e');
-        print('checkToken: token update failed!');
+        print('[auth_service.dart] checkToken(): fail to update token:$e');
         return false;
       }
     }
+    print('[auth_service.dart] checkToken(): tokens are valid');
     return true;
   }
 
-  Future<void> signInWithGoogle() async {
+  Future<Map<String, dynamic>?> signInWithGoogle(WidgetRef ref) async {
+    const List<String> scopes = <String>[
+      'email',
+      'https://www.googleapis.com/auth/calendar',
+    ];
+
     try {
       // Sign out from any existing Google account
-      //await GoogleSignIn(signInOption: SignInOption.standard).signOut();
-
-      const List<String> scopes = <String>[
-        'email',
-        'https://www.googleapis.com/auth/calendar',
-      ];
+      await GoogleSignIn(signInOption: SignInOption.standard).signOut();
 
       // Trigger the authentication flow
       GoogleSignInAccount? googleUser = await GoogleSignIn(
         signInOption: SignInOption.standard,
         scopes: scopes,
       ).signIn();
+      if (googleUser == null) {
+        // 사용자가 로그인을 취소함
+        return null;
+      }
 
-      _saveAuthHeaders(await googleUser!.authHeaders);
+      // TODO.
+      // _saveAuthHeaders(await googleUser!.authHeaders);
 
       // Obtain the auth details from the request
       final GoogleSignInAuthentication? googleAuth =
           await googleUser?.authentication;
 
-      //print(googleAuth!.accessToken);
-
       // Create a new credential
-      final credential = GoogleAuthProvider.credential(
+      final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth?.accessToken,
         idToken: googleAuth?.idToken,
       );
 
       // Once signed in, return the UserCredential
-      await _auth.signInWithCredential(credential);
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      final User? user = userCredential.user;
+      if (user == null) {
+        print('Firebase 인증 실패');
+        return null;
+      }
 
-      Map<String, dynamic> data = {
-        'email': getCurrentUser()?.email,
-        'name': getCurrentUser()?.displayName,
-        'uid': getCurrentUser()?.uid,
+      // user.email, user,displayName, user.uid
+
+      Map<String, String?> data = {
+        'email': user.email,
+        'password': user.uid,
       };
 
-      // Future<Map<String, dynamic>?> resp =
-      //     MainRequest().postRequest('/api/v1/auth/google', data);
-      // print('resp: ${resp}');
+      setEmailPassword(user.email!, user.uid);
+
+      Response response;
+
+      try {
+        print('Google 사용자 로그인 시도');
+        print('data: $data');
+        response = await DioClient()
+            .post('${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/auth/login', data);
+      } catch (e) {
+        // 로그인 실패 시 회원가입 시도
+        data = {
+          'email': user.email,
+          'name': user.displayName,
+          'uid': user.uid,
+          'gender': 'male',
+          'phoneNumber': 'string',
+        };
+
+        response = await DioClient().post(
+            '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/auth/google', data);
+
+        if (response.statusCode != 200) {
+          print('Google 사용자 가입 실패');
+          print(response.statusCode);
+          print(response.data);
+          return null;
+        }
+
+        // 회원가입 성공 시 로그인 재시도
+        data = {
+          'email': user.email,
+          'password': user.uid,
+        };
+
+        response = await DioClient()
+            .post('${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/auth/login', data);
+
+        if (response.statusCode != 200) {
+          print('Google 사용자 로그인 실패');
+          print(response.statusCode);
+          print(response.data);
+          return null;
+        }
+      }
+
+      ref.read(authServiceProvider.notifier).state = response.data;
+      return response.data;
     } catch (e) {
       print(e.toString());
+      return null;
     }
   }
 
@@ -255,8 +309,10 @@ class FBAuthService {
   }
 
   Future<void> signOut() async {
+    // 토큰 삭제
     await storage.delete(key: ACCESS_TOKEN_KEY);
     await storage.delete(key: REFRESH_TOKEN_KEY);
+    // 계정 정보 삭제
     await storage.delete(key: USER_EMAIL_KEY);
     await storage.delete(key: USER_PASSWORD_KEY);
 
