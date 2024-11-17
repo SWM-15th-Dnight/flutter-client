@@ -84,6 +84,15 @@ class DioClient {
         throw 401;
       }
 
+      // 422 Unprocessable Entity: 올바르지 않은 형식의 요청
+      else if (e.response?.statusCode == 422) {
+        throw DioError(
+          response: e.response,
+          requestOptions: e.requestOptions,
+          type: DioErrorType.response,
+        );
+      }
+
       // 서버 응답 없음 또는 타임아웃
       else if (e.type == DioErrorType.connectTimeout ||
           e.type == DioErrorType.receiveTimeout) {

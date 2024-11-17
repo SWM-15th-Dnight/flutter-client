@@ -25,7 +25,7 @@ import '../root/root_view.dart';
 
 class PreferenceView extends StatefulWidget {
   final FBAuthService auth;
-  String? displayName = '이것은 이름입니다.';
+  String? displayName = '익명';
   final Calendar currentCalendar;
   final Function? onCalendarModified;
   // TODO. FCM test
@@ -97,20 +97,20 @@ class _PreferenceViewState extends State<PreferenceView> {
 
   Future<void> _loadDisplayName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    widget.displayName = prefs.getString('display_name') ?? '이것은 이름입니다.';
+    widget.displayName = await prefs.getString('display_name') ?? '익명';
     setState(() {
       displayNameController.text = widget.displayName!;
     });
   }
 
   Future<void> _updateDisplayName() async {
-    print('onTap: update display name');
     if (isEditing) {
       final newName = displayNameController.text;
       if (newName.isNotEmpty) {
         widget.auth.getCurrentUser()?.updateDisplayName(newName);
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setString('display_name', newName);
+        await prefs.setString('display_name', newName);
+        // await prefs.setString('userName', newName);
         setState(() {
           widget.displayName = newName;
           print('수정된 이름: ${widget.displayName}');

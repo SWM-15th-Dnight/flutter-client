@@ -319,6 +319,7 @@ class FBAuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('authHeaders');
     //await prefs.remove('profile_image_path');
+    await prefs.remove('userName');
 
     await GoogleSignIn(signInOption: SignInOption.standard).signOut();
     return await FirebaseAuth.instance.signOut();

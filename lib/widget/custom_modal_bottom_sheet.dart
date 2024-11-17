@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_client/common/const/color.dart';
 
-Future<void> CustomModalBottomSheet({
+Future<String?> CustomModalBottomSheet({
   required BuildContext context,
   required Widget content,
   Color? backgroundColor,
   bool isScrollControlled = false,
 }) {
-  return showModalBottomSheet<void>(
+  return showModalBottomSheet<String>(
     context: context,
     barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.2),
     backgroundColor: Colors.transparent,

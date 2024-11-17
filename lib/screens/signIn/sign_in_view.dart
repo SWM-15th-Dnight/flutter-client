@@ -7,6 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/common/component/service_name_text.dart';
 import 'package:mobile_client/common/component/snackbar_helper.dart';
+import 'package:mobile_client/common/component/text_styles.dart';
 import 'package:mobile_client/common/const/color.dart';
 import 'package:mobile_client/common/layout/default_layout.dart';
 import 'package:mobile_client/riverpod/state_provider.dart';
@@ -21,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../common/const/data.dart';
 import '../../entities/utils.dart';
 import '../../widget/rounded_input_box.dart';
+import '../signup/sign_up_screen.dart';
 
 String email = '';
 String displayedEmail = '';
@@ -186,57 +188,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           ? Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Container(
-                                  width:
+                                RoundedInputBox(
+                                  // autofocus: true,
+                                  customWidth:
                                       MediaQuery.of(context).size.width * 0.65,
-                                  height: 36,
-                                  child: RoundedInputBox(
-                                    // autofocus: true,
-                                    scrollPadding: bottomInSet / 2,
-                                    focusNode: _emailFocusNode,
-                                    controller: _emailController,
-                                    textAlign: TextAlign.center,
-                                    hintText: '이메일',
-                                    maxLength: 40,
-                                    onChanged: (String value) async {
-                                      setState(() {
-                                        email = value;
-                                      });
-                                    },
-                                    suffixIcon: Icons.clear,
-                                    onIconPressed: () {
-                                      setState(() {
-                                        _emailController.clear();
-                                        email = '';
-                                      });
-                                    },
-                                  ),
+                                  customHeight: 36,
+                                  scrollPadding: bottomInSet / 2,
+                                  focusNode: _emailFocusNode,
+                                  controller: _emailController,
+                                  textAlign: TextAlign.center,
+                                  hintText: '이메일',
+                                  maxLength: 40,
+                                  onChanged: (String value) async {
+                                    setState(() {
+                                      email = value;
+                                    });
+                                  },
+                                  suffixIcon: Icons.clear,
+                                  onIconPressed: () {
+                                    setState(() {
+                                      _emailController.clear();
+                                      email = '';
+                                    });
+                                  },
                                 ),
                                 SizedBox(height: 10),
-                                Container(
-                                  width:
+                                RoundedInputBox(
+                                  customWidth:
                                       MediaQuery.of(context).size.width * 0.65,
-                                  height: 36,
-                                  child: RoundedInputBox(
-                                    scrollPadding: bottomInSet / 3,
-                                    focusNode: _passwordFocusNode,
-                                    obscureText: !_isPasswordVisible,
-                                    textAlign: TextAlign.center,
-                                    hintText: '비밀번호',
-                                    maxLength: 20,
-                                    onChanged: (String value) async {
-                                      password = value;
-                                    },
-                                    suffixIcon: _isPasswordVisible
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    onIconPressed: () {
-                                      setState(() {
-                                        _isPasswordVisible =
-                                            !_isPasswordVisible;
-                                      });
-                                    },
-                                  ),
+                                  customHeight: 36,
+                                  scrollPadding: bottomInSet / 3,
+                                  focusNode: _passwordFocusNode,
+                                  obscureText: !_isPasswordVisible,
+                                  textAlign: TextAlign.center,
+                                  hintText: '비밀번호',
+                                  maxLength: 20,
+                                  onChanged: (String value) async {
+                                    password = value;
+                                  },
+                                  suffixIcon: _isPasswordVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  onIconPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible = !_isPasswordVisible;
+                                    });
+                                  },
                                 ),
                               ],
                             )
@@ -293,29 +290,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            '회원가입',
-                            style: TextStyle(
-                              color: ColorPalette.PRIMARY_COLOR[300]!,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => SignUpScreen()));
+                            },
+                            child: Text(
+                              '회원가입',
+                              style: AppTextStyles.loginOptionTextStyle,
                             ),
                           ),
                           Text(
                             ' | ',
-                            style: TextStyle(
-                              color: ColorPalette.GRAY_COLOR[600]!,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                            ),
+                            style: AppTextStyles.loginOptionTextStyle,
                           ),
                           Text(
                             '비밀번호 찾기',
-                            style: TextStyle(
-                              color: ColorPalette.GRAY_COLOR[600]!,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                            ),
+                            style: AppTextStyles.loginOptionTextStyle,
                           ),
                         ],
                       ),
@@ -333,29 +324,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       children: [
                         Text(
                           '이용약관',
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                            color: ColorPalette.GRAY_COLOR[400]!,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 10,
-                          ),
+                          style: AppTextStyles.policyUnderlineTextStyle,
                         ),
                         Text(
                           ' 및 ',
-                          style: TextStyle(
-                            color: ColorPalette.GRAY_COLOR[400]!,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 10,
-                          ),
+                          style: AppTextStyles.policyTextStyle,
                         ),
                         Text(
                           '개인정보 취급방침',
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                            color: ColorPalette.GRAY_COLOR[400]!,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 10,
-                          ),
+                          style: AppTextStyles.policyUnderlineTextStyle,
                         ),
                       ],
                     ),
@@ -480,6 +457,13 @@ class _StartButtonState extends ConsumerState<_StartButton> {
                     key: ACCESS_TOKEN_KEY, value: resp.data['accessToken']);
                 await storage.write(
                     key: REFRESH_TOKEN_KEY, value: resp.data['refreshToken']);
+
+                // TODO. 로그인 시에도 userName 반환 or 프로필 수정 API 필요
+                // 임시로 로그인 시, userName이 존재하지 않는다면 email로 설정
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                if (await prefs.getString('userName') == null) {
+                  await prefs.setString('userName', email);
+                }
 
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => MainCalendar(auth: widget.auth)));
