@@ -529,10 +529,10 @@ class _StartButtonState extends ConsumerState<_StartButton> {
                     height: 40,
                     child: ElevatedButton.icon(
                       onPressed: () async {
+                        Navigator.pop(context);
                         final response =
                             await widget.auth.signInWithGoogle(ref);
 
-                        Navigator.pop(context);
                         if (response != null) {
                           // && response['statusCode'] == 200) {
                           await storage.write(

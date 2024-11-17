@@ -11,6 +11,9 @@ import 'package:intl/intl.dart';
 import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/common/component/loading_indicators.dart';
 import 'package:mobile_client/screens/event/event_month_view.dart';
+import 'package:mobile_client/screens/root/root_view.dart';
+import 'package:mobile_client/screens/signIn/sign_in_view.dart';
+import 'package:mobile_client/services/dio_client.dart';
 import 'package:mobile_client/services/main_request.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -60,7 +63,9 @@ class _MainCalendarState extends State<MainCalendar> {
 
   ColorMap colorMap = ColorMap();
 
-  ColorMap getColorMap(){ return colorMap; }
+  ColorMap getColorMap() {
+    return colorMap;
+  }
 
   bool isGetEventListDone = false;
 
@@ -118,7 +123,8 @@ class _MainCalendarState extends State<MainCalendar> {
     });
   }
 
-  void showDaysEventsModal(BuildContext parentContext, List<DisplayEvent>? display) {
+  void showDaysEventsModal(
+      BuildContext parentContext, List<DisplayEvent>? display) {
     modal(
       parentContext,
       DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay),
@@ -141,8 +147,7 @@ class _MainCalendarState extends State<MainCalendar> {
               onTap: () {
                 print(event);
                 Navigator.pop(context);
-                _showEventDetailModal(
-                    context, event, parentContext, display);
+                _showEventDetailModal(context, event, parentContext, display);
               },
             ),
         ],
@@ -220,18 +225,52 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 
   Future<void> getCalendarMap() async {
-    print('getCalendarMap()');
+    print('[main_calendar.dart] getCalendarMap()');
     await widget.auth.checkToken();
-    var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
-    var resp = await dio.get(
-        dotenv.env['BACKEND_MAIN_URL']! + '/api/v1/calendars/',
-        options: Options(headers: {'authorization': 'Bearer $refreshToken'}));
-    print('getCalendarMap() resp: $resp');
-    print('getCalendarMap() resp: ${resp.statusCode}');
-    print('getCalendarMap() resp: ${resp.data.runtimeType}');
+    var resp;
+    try {
+      resp = await DioClient()
+          .get('${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/calendars/');
+    } catch (e) {
+      widget.auth.signOut();
+      showSnackbar(context, '캘린더 정보를 불러오는 중 오류가 발생했습니다.');
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => RootView(auth: widget.auth)));
+    }
 
     var firstId;
     Map<int, Calendar> calMap = {};
+    print('resp.data.length: ${resp.data.length}');
+
+    if (resp.data.length == 0) {
+      print('[main_calendar.dart] No calendar data');
+      // 첫 로그인 시 캘린더가 하나도 없을 경우, 기본 캘린더 생성하기
+      var data = {"title": "기본 캘린더", "timezone": "Asia/Seoul", "colorSetId": 1};
+      try {
+        resp = await DioClient()
+            .post('${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/calendars/', data);
+      } catch (e) {
+        widget.auth.signOut();
+        showSnackbar(context, '캘린더 생성에 오류가 발생했습니다.');
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => RootView(auth: widget.auth)));
+      }
+      // 다시 캘린더 데이터 불러오기
+      try {
+        resp = await DioClient()
+            .get('${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/calendars/');
+      } catch (e) {
+        widget.auth.signOut();
+        showSnackbar(context, '캘린더 정보를 불러오는 중 오류가 발생했습니다.');
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => RootView(auth: widget.auth)));
+      }
+    }
+
     for (var cal in resp.data) {
       var elem = Calendar(cal);
       elem.setColorMap(colorMap);
@@ -251,19 +290,23 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 
   Future<void> getEventList() async {
-    //print('getEventList()');
+    print('[main_calendar.dart] getEventList()');
     await widget.auth.checkToken();
-    var refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
 
     try {
-      var resp = await dio.get(
-          dotenv.env['BACKEND_MAIN_URL']! + '/eventList/all',
-          options: Options(headers: {'authorization': 'Bearer $refreshToken'}));
+      var resp = await DioClient().get(
+        '${dotenv.env['BACKEND_MAIN_URL']!}/eventList/all',
+        queryParameters: {
+          'timeMin': timeMin,
+          'timeMax': timeMax,
+        },
+      );
       if (resp.statusCode == 200) {
         print(resp.data);
         for (var curr in resp.data) {
           Event event = Event.parse(curr);
-          event.colorSetId = calendarMap[event.calendarId]!.colorSetId; // temp function
+          event.colorSetId =
+              calendarMap[event.calendarId]!.colorSetId; // temp function
           EventList.Add(calendarMap, event: event);
         }
       }
@@ -483,7 +526,8 @@ class _MainCalendarState extends State<MainCalendar> {
                         print('selectdDay: ${_selectedDay}, ${selectedDay}');
                         if (_selectedDay == selectedDay) {
                           print('double tab!');
-                          showDaysEventsModal(context, display[onlyDate(_selectedDay)]);
+                          showDaysEventsModal(
+                              context, display[onlyDate(_selectedDay)]);
                         }
                         _selectedDay = selectedDay;
                         _focusedDay = focusedDay;
@@ -494,35 +538,37 @@ class _MainCalendarState extends State<MainCalendar> {
                     //onDayLongPressed: ,
                     eventLoader: (day) => display[day] ?? [],
                     calendarBuilders: CalendarBuilders(
-                      defaultBuilder: CustomCalendarBuilder,
-                      outsideBuilder: (context, day, focusedDay) {
-                        return CustomCalendarBuilder(
-                          context,
-                          day,
-                          focusedDay,
-                          dayColor: Color(0XFFAAAAAA),
-                        );
-                      },
-                      todayBuilder: CustomCalendarBuilder,
-                      selectedBuilder: CustomCalendarBuilder,
-                      markerBuilder: (context, day, focusedDay){
-                        return (
-                          Column(
+                        defaultBuilder: CustomCalendarBuilder,
+                        outsideBuilder: (context, day, focusedDay) {
+                          return CustomCalendarBuilder(
+                            context,
+                            day,
+                            focusedDay,
+                            dayColor: Color(0XFFAAAAAA),
+                          );
+                        },
+                        todayBuilder: CustomCalendarBuilder,
+                        selectedBuilder: CustomCalendarBuilder,
+                        markerBuilder: (context, day, focusedDay) {
+                          return (Column(
                             children: [
                               Expanded(
                                 child: Container(
                                   //color: Colors.yellow.withOpacity(0.3),
-                                  child: LayoutBuilder(builder: (context, constraints) {
+                                  child: LayoutBuilder(
+                                      builder: (context, constraints) {
                                     return EventMonthViewCell(
-                                        context, constraints, display[day], day, colorMap);
+                                        context,
+                                        constraints,
+                                        display[day],
+                                        day,
+                                        colorMap);
                                   }),
                                 ),
                               ),
                             ],
-                          )
-                        );
-                      }
-                    ),
+                          ));
+                        }),
                   ),
                 ),
               ],
@@ -567,7 +613,8 @@ class _MainCalendarState extends State<MainCalendar> {
   }
 }
 
-Widget? CustomCalendarBuilder (context, day, focusedDay, {Color dayColor = Colors.black}) {
+Widget? CustomCalendarBuilder(context, day, focusedDay,
+    {Color dayColor = Colors.black}) {
   Color selectedDay = Colors.transparent;
   Color dayWrapper = Colors.transparent;
 
@@ -576,7 +623,7 @@ Widget? CustomCalendarBuilder (context, day, focusedDay, {Color dayColor = Color
     dayColor = Colors.white;
   }
 
-  if(day == focusedDay){
+  if (day == focusedDay) {
     selectedDay = ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.05);
   }
 
@@ -587,9 +634,9 @@ Widget? CustomCalendarBuilder (context, day, focusedDay, {Color dayColor = Color
         color: selectedDay,
         border: const Border(
             top: BorderSide(
-              color: Color(0xFFE8EBED),
-              width: 0.5,
-            )),
+          color: Color(0xFFE8EBED),
+          width: 0.5,
+        )),
       ),
       child: Column(
         children: [
