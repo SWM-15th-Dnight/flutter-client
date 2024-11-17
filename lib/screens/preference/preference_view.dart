@@ -13,7 +13,9 @@ import 'package:mobile_client/common/component/setting_tile.dart';
 import 'package:mobile_client/entities/calendar.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/services/auth_service.dart';
+import 'package:mobile_client/services/dio_client.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../common/component/header_text.dart';
@@ -427,7 +429,70 @@ class _PreferenceViewState extends State<PreferenceView> {
                         },
                       ),
                       CustomDivider(),
-                      SettingTile(titleText: '일정 내보내기'),
+                      SettingTile(
+                        titleText: '일정 내보내기',
+                        onTapEvent: () async {
+                          final int calendarId = widget.currentCalendar.id;
+                          await widget.auth.checkToken();
+                          final refreshToken =
+                              await storage.read(key: REFRESH_TOKEN_KEY);
+
+                          try {
+                            if (await Permission.storage.request().isGranted) {
+                              print('저장소 권한 허용됨');
+                              Response response = await dio.get(
+                                '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/transport/export',
+                                queryParameters: {'calendarId': calendarId},
+                                options: Options(
+                                  headers: {
+                                    'authorization': 'Bearer $refreshToken',
+                                    'accept': 'multipart/form-data',
+                                  },
+                                  responseType: ResponseType.bytes,
+                                ),
+                              );
+
+                              /*
+                              options: Options(headers: {
+                                  'Content-Type': 'multipart/form-data',
+                                  'authorization': 'Bearer $refreshToken',
+                                }),
+                              * */
+
+                              if (response.statusCode == 200) {
+                                print('200! 200! 200! 200! 200!');
+                                // 디바이스의 문서 디렉토리 경로를 가져옵니다.
+                                Directory appDocDir =
+                                    await getApplicationDocumentsDirectory();
+                                String appDocPath = appDocDir.path;
+
+                                // 파일 경로와 파일명 설정 (여기서는 export.ics 파일명 사용)
+                                String filePath = '$appDocPath/export.ics';
+
+                                // 파일 생성 및 저장
+                                File file = File(filePath);
+                                await file.writeAsBytes(response.data);
+
+                                // 완료 메시지 출력
+                                print('ICS 파일 저장 완료: $filePath');
+                                showSnackbar(context, '일정이 저장되었습니다: $filePath');
+                              } else {
+                                print('일정 내보내기 실패');
+                                print('응답 데이터: ${response.data}');
+                              }
+                            } else {
+                              showSnackbar(context, '저장소 권한이 필요합니다.');
+                            }
+                          } on DioError catch (e) {
+                            print('DioError: ${e.response?.statusCode}');
+                            print('DioError: ${e.response?.data}');
+                            print('DioError: ${e.message}');
+                          } catch (e) {
+                            print('일정 내보내기 오류: $e');
+                            showSnackbar(context, '일정 내보내기 오류: $e');
+                          }
+                        },
+                      ),
                       CustomDivider(),
                       SettingTile(titleText: '이것은 설정입니다.'),
                     ],

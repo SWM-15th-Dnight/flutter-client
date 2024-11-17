@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/common/component/custom_divider.dart';
 import 'package:mobile_client/screens/calendar/form_bottom_sheet.dart';
 import 'package:mobile_client/services/auth_service.dart';
+import 'package:mobile_client/services/dio_client.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 import 'package:mobile_client/widget/custom_modal_bottom_sheet.dart';
 import 'package:mobile_client/widget/plain_text_input.dart';
@@ -98,6 +101,7 @@ class CustomSpeedDial extends ConsumerWidget {
               // TODO. 이미지 등록 기능 추가
               CustomModalBottomSheet(
                 context: context,
+                customHeight: MediaQuery.of(context).size.height * 0.24,
                 content: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -113,17 +117,91 @@ class CustomSpeedDial extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12.0),
                       child: Column(
                         children: [
-                          Container(
-                            color: ColorPalette.GRAY_COLOR[50]!,
-                            child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.80,
-                              height: 40,
-                              child: Center(
-                                child: Text(
-                                  '갤러리에서 선택',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
+                          GestureDetector(
+                            onTap: () async {
+                              final picker = ImagePicker();
+                              final pickedFile = await picker.pickImage(
+                                  source: ImageSource.gallery);
+
+                              if (pickedFile != null) {
+                                File imageFile = File(pickedFile.path);
+
+                                // TODO.
+                                int promptId = 1;
+                                int inputType = 3; // 3: 이미지
+
+                                FormData formData = FormData.fromMap({
+                                  'promptId': promptId,
+                                  'inputType': inputType,
+                                  'file': await MultipartFile.fromFile(
+                                    imageFile.path,
+                                    filename: 'selected_image.jpg',
+                                  ),
+                                });
+
+                                try {
+                                  await auth.checkToken();
+                                  final refreshToken = await storage.read(
+                                      key: REFRESH_TOKEN_KEY);
+                                  Response response = await Dio().post(
+                                    '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/eventProcessing/imageProcessing',
+                                    data: formData,
+                                    options: Options(headers: {
+                                      'authorization': 'Bearer $refreshToken',
+                                      'Content-Type': 'multipart/form-data',
+                                    }),
+                                  );
+
+                                  if (response.statusCode == 200) {
+                                    print('이미지 업로드 성공: ${response.data}');
+                                    //onEventAdded(response.data);
+                                    // Navigator.pop(context);4
+
+                                    showModalBottomSheet(
+                                        backgroundColor: Colors.transparent,
+                                        barrierColor: ColorPalette
+                                            .PRIMARY_COLOR[400]!
+                                            .withOpacity(0.1),
+                                        useSafeArea: true,
+                                        // TODO. 폼에 입력된 정보가 있을 경우, 경고창 띄우기
+                                        isDismissible: true,
+                                        isScrollControlled: true,
+                                        context: context,
+                                        builder: (context) {
+                                          return CustomBottomSheet(
+                                            currentCalendarId:
+                                                currentCalendarId,
+                                            onEventAdded: onEventAdded,
+                                            startTime: DateTime.now(),
+                                            responseData: response.data,
+                                          );
+                                        });
+                                  } else {
+                                    print('이미지 업로드 실패: ${response.data}');
+                                  }
+                                } on DioError catch (e) {
+                                  print('이미지 업로드 실패: $e');
+                                  print('이미지 업로드 실패: ${e.response}');
+                                  print('이미지 업로드 실패: ${e.response?.data}');
+                                  print(
+                                      '이미지 업로드 실패: ${e.response?.statusCode}');
+                                }
+                              } else {
+                                print('이미지 선택 취소');
+                              }
+                            },
+                            child: Container(
+                              color: ColorPalette.GRAY_COLOR[50]!,
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.90,
+                                height: 52,
+                                child: Center(
+                                  child: Text(
+                                    '갤러리에서 선택',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -133,8 +211,8 @@ class CustomSpeedDial extends ConsumerWidget {
                           Container(
                             color: ColorPalette.GRAY_COLOR[50]!,
                             child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.80,
-                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.90,
+                              height: 52,
                               child: Center(
                                 child: Text(
                                   '카메라로 촬영',

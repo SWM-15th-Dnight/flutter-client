@@ -6,6 +6,7 @@ Future<String?> CustomModalBottomSheet({
   required Widget content,
   Color? backgroundColor,
   bool isScrollControlled = false,
+  double? customHeight,
 }) {
   return showModalBottomSheet<String>(
     context: context,
@@ -19,7 +20,7 @@ Future<String?> CustomModalBottomSheet({
         ),
         child: Container(
           width: double.infinity,
-          height: MediaQuery.of(context).size.height * 0.25,
+          height: customHeight ?? MediaQuery.of(context).size.height * 0.25,
           color: backgroundColor ?? ColorPalette.GRAY_COLOR[100]!,
           child: content,
         ),
