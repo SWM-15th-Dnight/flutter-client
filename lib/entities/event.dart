@@ -89,9 +89,6 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
     else if(end == day) range = EventType.end;
     else range = EventType.during;
 
-    if(start != day){
-      summary = "";
-    }
     date = day;
   }
 
@@ -128,6 +125,11 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
       return EdgeInsets.all(2.0);
     }
 
+    String CalcSummary(){
+      if(range != EventType.start) return "";
+      return summary;
+    }
+
     if(isEmpty){
       return (ClipRRect(
         child: Padding(
@@ -158,7 +160,7 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
             child: Align(
               alignment: Alignment.center,
               child: Text(
-                summary,
+                CalcSummary(),
                 style: textStyle,
                 overflow: TextOverflow.clip,
                 maxLines: 1,
