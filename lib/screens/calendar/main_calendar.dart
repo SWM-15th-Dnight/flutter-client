@@ -125,12 +125,17 @@ class _MainCalendarState extends State<MainCalendar> {
 
   void showDaysEventsModal(
       BuildContext parentContext, List<DisplayEvent>? display) {
-    modal(
+    List<DisplayEvent> filtered = [];
+    for(DisplayEvent event in (display ?? [])){
+      if(event.isEmpty == false) filtered.add(event);
+    }
+
+    return modal(
       parentContext,
       DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay),
       ListView(
         children: [
-          for (DisplayEvent event in (display ?? []))
+          for (DisplayEvent event in (filtered ?? []))
             ListTile(
               title: Text(
                 event.summary,

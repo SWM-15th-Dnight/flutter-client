@@ -126,8 +126,9 @@ class DisplayEvent extends Event{ // DisplayEvent = 화면에 출력되는 값�
     }
 
     String CalcSummary(){
-      if(range != EventType.start) return "";
-      return summary;
+      if(range == EventType.start) return summary;
+      if(range == EventType.day) return summary;
+      return "";
     }
 
     if(isEmpty){
