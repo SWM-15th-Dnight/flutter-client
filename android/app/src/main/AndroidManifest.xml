@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <application
-        android:label="mobile_client"
+        android:label="Calinify"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <meta-data

@@ -148,6 +148,37 @@ class _PreferenceViewState extends State<PreferenceView> {
     );
   }
 
+  void saveIcsToDownloads(String internalFilePath) async {
+    File internalFile = File(internalFilePath);
+
+    if (await Permission.storage.request().isGranted) {
+      Directory downloadsDirectory = Directory('/storage/emulated/0/Download');
+
+      if (downloadsDirectory.existsSync()) {
+        // 현재 시간을 이용해 고유한 파일명 생성 (형식: yyMMdd_HHMMSS)
+        DateTime now = DateTime.now();
+        String formattedDateTime =
+            '${now.year % 100}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
+
+        String downloadPath =
+            '${downloadsDirectory.path}/export_$formattedDateTime.ics';
+
+        File downloadFile = File(downloadPath);
+
+        try {
+          await internalFile.copy(downloadFile.path);
+          print('ICS 파일이 공용 다운로드 폴더에 저장되었습니다: $downloadPath');
+        } catch (e) {
+          print('파일 저장 오류: $e');
+        }
+      } else {
+        print('다운로드 폴더에 접근할 수 없습니다.');
+      }
+    } else {
+      print('저장소 권한이 필요합니다.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double photoLength = 100.0;
@@ -460,22 +491,35 @@ class _PreferenceViewState extends State<PreferenceView> {
                               * */
 
                               if (response.statusCode == 200) {
-                                print('200! 200! 200! 200! 200!');
                                 // 디바이스의 문서 디렉토리 경로를 가져옵니다.
-                                Directory appDocDir =
-                                    await getApplicationDocumentsDirectory();
-                                String appDocPath = appDocDir.path;
+                                // Directory appDocDir =
+                                //     await getApplicationDocumentsDirectory();
+                                // String appDocPath = appDocDir.path;
 
+                                final directory =
+                                    await getApplicationDocumentsDirectory();
                                 // 파일 경로와 파일명 설정 (여기서는 export.ics 파일명 사용)
-                                String filePath = '$appDocPath/export.ics';
+                                String filePath =
+                                    '${directory.path}/export.ics';
 
                                 // 파일 생성 및 저장
                                 File file = File(filePath);
                                 await file.writeAsBytes(response.data);
 
+                                if (await Permission.storage
+                                    .request()
+                                    .isGranted) {
+                                  print('저장소 권한 허용됨');
+                                  print('내부 저장소 경로: $filePath');
+                                  saveIcsToDownloads(filePath);
+                                } else {
+                                  showSnackbar(context, '저장소 권한이 필요합니다.');
+                                }
+
                                 // 완료 메시지 출력
                                 print('ICS 파일 저장 완료: $filePath');
-                                showSnackbar(context, '일정이 저장되었습니다: $filePath');
+                                showSnackbar(
+                                    context, 'ICS 파일이 다운로드 폴더에 저장되었습니다');
                               } else {
                                 print('일정 내보내기 실패');
                                 print('응답 데이터: ${response.data}');
