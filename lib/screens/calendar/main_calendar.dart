@@ -126,8 +126,8 @@ class _MainCalendarState extends State<MainCalendar> {
   void showDaysEventsModal(
       BuildContext parentContext, List<DisplayEvent>? display) {
     List<DisplayEvent> filtered = [];
-    for(DisplayEvent event in (display ?? [])){
-      if(event.isEmpty == false) filtered.add(event);
+    for (DisplayEvent event in (display ?? [])) {
+      if (event.isEmpty == false) filtered.add(event);
     }
 
     return modal(
@@ -527,8 +527,10 @@ class _MainCalendarState extends State<MainCalendar> {
                     ),
                     selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                     onDaySelected: (selectedDay, focusedDay) {
+                      print('[main_calendar.dart] onDaySelected');
                       setState(() {
-                        print('selectdDay: ${_selectedDay}, ${selectedDay}');
+                        print(
+                            'selectdDay (1): ${_selectedDay}, ${selectedDay}');
                         if (_selectedDay == selectedDay) {
                           print('double tab!');
                           showDaysEventsModal(
@@ -536,11 +538,23 @@ class _MainCalendarState extends State<MainCalendar> {
                         }
                         _selectedDay = selectedDay;
                         _focusedDay = focusedDay;
-                        print('selectdDay: ${_selectedDay} ${selectedDay}');
+                        print('selectdDay (2): ${_selectedDay} ${selectedDay}');
                       });
                     },
-                    // TODO. onDayLongPressed
-                    //onDayLongPressed: ,
+                    onDayLongPressed: (selectedDay, focusedDay) {
+                      print('[main_calendar.dart] onDayLongPressed');
+                      setState(() {
+                        print(
+                            'selectdDay (1): ${_selectedDay}, ${selectedDay}');
+
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                        showDaysEventsModal(
+                            context, display[onlyDate(_selectedDay)]);
+
+                        print('selectdDay (2): ${_selectedDay} ${selectedDay}');
+                      });
+                    },
                     eventLoader: (day) => display[day] ?? [],
                     calendarBuilders: CalendarBuilders(
                         defaultBuilder: CustomCalendarBuilder,
