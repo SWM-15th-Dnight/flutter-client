@@ -19,6 +19,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:image/image.dart' as img;
 
+import '../common/component/loading_indicators.dart';
 import '../common/const/color.dart';
 import 'package:flutter/material.dart';
 
@@ -71,71 +72,100 @@ class CustomSpeedDial extends ConsumerWidget {
       return;
     }*/
 
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.10),
+        builder: (BuildContext dialogContext) {
+          return Center(
+            child: Container(
+              child: LoadingIndicators(
+                color: ColorPalette.PRIMARY_COLOR[400]!,
+              ),
+            ),
+          );
+        },
+      );
 
-    if (pickedFile != null) {
-      File imageFile = File(pickedFile.path);
-      // 이미지 크기 조정
-      imageFile = resizeImage(imageFile);
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: source);
 
-      // TODO.
-      int promptId = 1;
-      int inputType = 3; // 3: 이미지
+      if (pickedFile != null) {
+        File imageFile = File(pickedFile.path);
+        // 이미지 크기 조정
+        imageFile = resizeImage(imageFile);
 
-      FormData formData = FormData.fromMap({
-        'promptId': promptId,
-        'inputType': inputType,
-        'file': await MultipartFile.fromFile(
-          imageFile.path,
-          filename: 'selected_image.jpg',
-        ),
-      });
+        // TODO.
+        int promptId = 1;
+        int inputType = 3; // 3: 이미지
 
-      try {
-        await auth.checkToken();
-        final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
-        Response response = await Dio().post(
-          '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/eventProcessing/imageProcessing',
-          data: formData,
-          options: Options(headers: {
-            'authorization': 'Bearer $refreshToken',
-            'Content-Type': 'multipart/form-data',
-          }),
-        );
+        FormData formData = FormData.fromMap({
+          'promptId': promptId,
+          'inputType': inputType,
+          'file': await MultipartFile.fromFile(
+            imageFile.path,
+            filename: 'selected_image.jpg',
+          ),
+        });
 
-        if (response.statusCode == 200) {
-          print('이미지 업로드 성공: ${response.data}');
-          //onEventAdded(response.data);
-          // Navigator.pop(context);4
+        try {
+          await auth.checkToken();
+          final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
+          Response response = await Dio().post(
+            '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/eventProcessing/imageProcessing',
+            data: formData,
+            options: Options(headers: {
+              'authorization': 'Bearer $refreshToken',
+              'Content-Type': 'multipart/form-data',
+            }),
+          );
 
-          showModalBottomSheet(
-              backgroundColor: Colors.transparent,
-              barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
-              useSafeArea: true,
-              // TODO. 폼에 입력된 정보가 있을 경우, 경고창 띄우기
-              isDismissible: true,
-              isScrollControlled: true,
-              context: context,
-              builder: (context) {
-                return CustomBottomSheet(
-                  currentCalendarId: currentCalendarId,
-                  onEventAdded: onEventAdded,
-                  startTime: DateTime.now(),
-                  responseData: response.data,
-                );
-              });
-        } else {
-          print('이미지 업로드 실패: ${response.data}');
+          if (response.statusCode == 200) {
+            print('이미지 업로드 성공: ${response.data}');
+            //onEventAdded(response.data);
+
+            // Hide loading indicator
+            Navigator.of(context).pop();
+
+            showModalBottomSheet(
+                backgroundColor: Colors.transparent,
+                barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+                useSafeArea: true,
+                // TODO. 폼에 입력된 정보가 있을 경우, 경고창 띄우기
+                isDismissible: true,
+                isScrollControlled: true,
+                context: context,
+                builder: (context) {
+                  return CustomBottomSheet(
+                    currentCalendarId: currentCalendarId,
+                    onEventAdded: onEventAdded,
+                    startTime: DateTime.now(),
+                    responseData: response.data,
+                  );
+                });
+          } else {
+            print('이미지 업로드 실패: ${response.data}');
+            // Hide loading indicator
+            Navigator.of(context).pop();
+          }
+        } on DioError catch (e) {
+          print('이미지 업로드 실패: $e');
+          print('이미지 업로드 실패: ${e.response}');
+          print('이미지 업로드 실패: ${e.response?.data}');
+          print('이미지 업로드 실패: ${e.response?.statusCode}');
+          // Hide loading indicator
+          Navigator.of(context).pop();
         }
-      } on DioError catch (e) {
-        print('이미지 업로드 실패: $e');
-        print('이미지 업로드 실패: ${e.response}');
-        print('이미지 업로드 실패: ${e.response?.data}');
-        print('이미지 업로드 실패: ${e.response?.statusCode}');
+      } else {
+        print('이미지 선택 취소');
+        // Hide loading indicator
+        Navigator.of(context).pop();
       }
-    } else {
-      print('이미지 선택 취소');
+    } catch (e) {
+      // Hide loading indicator
+      Navigator.of(context).pop();
     }
   }
 
@@ -221,6 +251,7 @@ class CustomSpeedDial extends ConsumerWidget {
                         children: [
                           GestureDetector(
                             onTap: () async {
+                              Navigator.pop(context);
                               await _handleImageUpload(
                                   context, ImageSource.gallery);
                             },
@@ -244,6 +275,7 @@ class CustomSpeedDial extends ConsumerWidget {
                           CustomDivider(),
                           GestureDetector(
                             onTap: () async {
+                              Navigator.pop(context);
                               await _handleImageUpload(
                                   context, ImageSource.camera);
                             },
