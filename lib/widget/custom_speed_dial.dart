@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_client/common/component/custom_divider.dart';
+import 'package:mobile_client/common/component/snackbar_helper.dart';
 import 'package:mobile_client/screens/calendar/form_bottom_sheet.dart';
 import 'package:mobile_client/services/auth_service.dart';
 import 'package:mobile_client/services/dio_client.dart';
@@ -14,7 +15,9 @@ import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 import 'package:mobile_client/widget/custom_modal_bottom_sheet.dart';
 import 'package:mobile_client/widget/plain_text_input.dart';
 import 'package:mobile_client/widget/speech_to_text_input.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:image/image.dart' as img;
 
 import '../common/const/color.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +39,105 @@ class CustomSpeedDial extends ConsumerWidget {
     required this.auth,
     //this.startTime,
   });
+
+  File resizeImage(File originalImage) {
+    // 이미지 읽기
+    final image = img.decodeImage(originalImage.readAsBytesSync());
+
+    // 이미지 크기 조정 (예: 가로 800px로 축소)
+    final resized = img.copyResize(image!, width: 800);
+
+    // 임시 파일로 저장
+    final resizedFile = File('${originalImage.path}_resized.jpg')
+      ..writeAsBytesSync(img.encodeJpg(resized));
+
+    return resizedFile;
+  }
+
+  Future<void> _handleImageUpload(
+    BuildContext context,
+    ImageSource source,
+  ) async {
+    /*
+    if (source == ImageSource.camera &&
+        !(await Permission.camera.request().isGranted)) {
+      showSnackbar(context, '카메라 권한이 필요합니다.');
+      return;
+    }
+
+    if (source == ImageSource.gallery &&
+        !(await Permission.photos.request().isGranted)) {
+      showSnackbar(context, '갤러리 권한이 필요합니다.');
+      return;
+    }*/
+
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
+
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      // 이미지 크기 조정
+      imageFile = resizeImage(imageFile);
+
+      // TODO.
+      int promptId = 1;
+      int inputType = 3; // 3: 이미지
+
+      FormData formData = FormData.fromMap({
+        'promptId': promptId,
+        'inputType': inputType,
+        'file': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: 'selected_image.jpg',
+        ),
+      });
+
+      try {
+        await auth.checkToken();
+        final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
+        Response response = await Dio().post(
+          '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/eventProcessing/imageProcessing',
+          data: formData,
+          options: Options(headers: {
+            'authorization': 'Bearer $refreshToken',
+            'Content-Type': 'multipart/form-data',
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          print('이미지 업로드 성공: ${response.data}');
+          //onEventAdded(response.data);
+          // Navigator.pop(context);4
+
+          showModalBottomSheet(
+              backgroundColor: Colors.transparent,
+              barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1),
+              useSafeArea: true,
+              // TODO. 폼에 입력된 정보가 있을 경우, 경고창 띄우기
+              isDismissible: true,
+              isScrollControlled: true,
+              context: context,
+              builder: (context) {
+                return CustomBottomSheet(
+                  currentCalendarId: currentCalendarId,
+                  onEventAdded: onEventAdded,
+                  startTime: DateTime.now(),
+                  responseData: response.data,
+                );
+              });
+        } else {
+          print('이미지 업로드 실패: ${response.data}');
+        }
+      } on DioError catch (e) {
+        print('이미지 업로드 실패: $e');
+        print('이미지 업로드 실패: ${e.response}');
+        print('이미지 업로드 실패: ${e.response?.data}');
+        print('이미지 업로드 실패: ${e.response?.statusCode}');
+      }
+    } else {
+      print('이미지 선택 취소');
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -119,76 +221,8 @@ class CustomSpeedDial extends ConsumerWidget {
                         children: [
                           GestureDetector(
                             onTap: () async {
-                              final picker = ImagePicker();
-                              final pickedFile = await picker.pickImage(
-                                  source: ImageSource.gallery);
-
-                              if (pickedFile != null) {
-                                File imageFile = File(pickedFile.path);
-
-                                // TODO.
-                                int promptId = 1;
-                                int inputType = 3; // 3: 이미지
-
-                                FormData formData = FormData.fromMap({
-                                  'promptId': promptId,
-                                  'inputType': inputType,
-                                  'file': await MultipartFile.fromFile(
-                                    imageFile.path,
-                                    filename: 'selected_image.jpg',
-                                  ),
-                                });
-
-                                try {
-                                  await auth.checkToken();
-                                  final refreshToken = await storage.read(
-                                      key: REFRESH_TOKEN_KEY);
-                                  Response response = await Dio().post(
-                                    '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/eventProcessing/imageProcessing',
-                                    data: formData,
-                                    options: Options(headers: {
-                                      'authorization': 'Bearer $refreshToken',
-                                      'Content-Type': 'multipart/form-data',
-                                    }),
-                                  );
-
-                                  if (response.statusCode == 200) {
-                                    print('이미지 업로드 성공: ${response.data}');
-                                    //onEventAdded(response.data);
-                                    // Navigator.pop(context);4
-
-                                    showModalBottomSheet(
-                                        backgroundColor: Colors.transparent,
-                                        barrierColor: ColorPalette
-                                            .PRIMARY_COLOR[400]!
-                                            .withOpacity(0.1),
-                                        useSafeArea: true,
-                                        // TODO. 폼에 입력된 정보가 있을 경우, 경고창 띄우기
-                                        isDismissible: true,
-                                        isScrollControlled: true,
-                                        context: context,
-                                        builder: (context) {
-                                          return CustomBottomSheet(
-                                            currentCalendarId:
-                                                currentCalendarId,
-                                            onEventAdded: onEventAdded,
-                                            startTime: DateTime.now(),
-                                            responseData: response.data,
-                                          );
-                                        });
-                                  } else {
-                                    print('이미지 업로드 실패: ${response.data}');
-                                  }
-                                } on DioError catch (e) {
-                                  print('이미지 업로드 실패: $e');
-                                  print('이미지 업로드 실패: ${e.response}');
-                                  print('이미지 업로드 실패: ${e.response?.data}');
-                                  print(
-                                      '이미지 업로드 실패: ${e.response?.statusCode}');
-                                }
-                              } else {
-                                print('이미지 선택 취소');
-                              }
+                              await _handleImageUpload(
+                                  context, ImageSource.gallery);
                             },
                             child: Container(
                               color: ColorPalette.GRAY_COLOR[50]!,
@@ -208,17 +242,23 @@ class CustomSpeedDial extends ConsumerWidget {
                             ),
                           ),
                           CustomDivider(),
-                          Container(
-                            color: ColorPalette.GRAY_COLOR[50]!,
-                            child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.90,
-                              height: 52,
-                              child: Center(
-                                child: Text(
-                                  '카메라로 촬영',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
+                          GestureDetector(
+                            onTap: () async {
+                              await _handleImageUpload(
+                                  context, ImageSource.camera);
+                            },
+                            child: Container(
+                              color: ColorPalette.GRAY_COLOR[50]!,
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.90,
+                                height: 52,
+                                child: Center(
+                                  child: Text(
+                                    '카메라로 촬영',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),

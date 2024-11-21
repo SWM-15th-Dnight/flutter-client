@@ -300,7 +300,7 @@ class _PreferenceViewState extends State<PreferenceView> {
                             PlanBadge(tier: 'Basic'),
                             SizedBox(width: 8),
                             Text(
-                              '2024. 10. 1 ~ 11. 1',
+                              '2024. 11. 18 ~ 12. 18',
                               style: TextStyle(
                                 color: ColorPalette.GRAY_COLOR[400]!,
                                 fontSize: 12,
@@ -438,7 +438,7 @@ class _PreferenceViewState extends State<PreferenceView> {
                               await storage.read(key: REFRESH_TOKEN_KEY);
 
                           try {
-                            if (await Permission.storage.request().isGranted) {
+                            if (true /*await Permission.storage.request().isGranted*/) {
                               print('저장소 권한 허용됨');
                               Response response = await dio.get(
                                 '${dotenv.env['BACKEND_MAIN_URL']!}/api/v1/transport/export',
@@ -494,7 +494,27 @@ class _PreferenceViewState extends State<PreferenceView> {
                         },
                       ),
                       CustomDivider(),
-                      SettingTile(titleText: '이것은 설정입니다.'),
+                      SizedBox(height: 8.0),
+                      SettingTile(
+                          titleText: '주 번호 표시', trailingText: '표시하지 않음'),
+                      CustomDivider(),
+                      SettingTile(titleText: '음력 날짜 표시', trailingText: '표시함'),
+                      CustomDivider(),
+                      SettingTile(titleText: '화면 스타일', trailingText: '라이트 모드'),
+                      CustomDivider(),
+                      SettingTile(
+                          titleText: '토요일을 파란색으로 표시', trailingText: '표시함'),
+                      CustomDivider(),
+                      SettingTile(
+                          titleText: '매일 일정 요약 받기', trailingText: '오전 09:00'),
+                      SizedBox(height: 8.0),
+                      SettingTile(
+                          titleText: '외부 캘린더 연동',
+                          trailingText: 'Google Calendar 외 2개'),
+                      SettingTile(titleText: '지금 동기화'),
+                      SizedBox(height: 8.0),
+                      SettingTile(
+                          titleText: '소프트웨어 정보', trailingText: 'v1.0.1'),
                     ],
                   ),
                 ),
