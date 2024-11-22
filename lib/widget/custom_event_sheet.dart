@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_client/common/component/custom_alert_dialog.dart';
 import 'package:mobile_client/services/main_request.dart';
 import 'package:mobile_client/widget/custom_bottom_sheet.dart';
 
@@ -16,8 +17,7 @@ class CustomEventSheet extends StatefulWidget {
   // for back button
   final BuildContext parentContext;
   final List<DisplayEvent>? display;
-  final Function(BuildContext, List<DisplayEvent>?)
-      showDaysEventsModal;
+  final Function(BuildContext, List<DisplayEvent>?) showDaysEventsModal;
 
   CustomEventSheet({
     super.key,
@@ -65,7 +65,8 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
   void _checkMultiDayEvent() {
     if (widget.event.startAt.hour < 12 && widget.event.endAt.hour < 12) {
       isBothAMOrPM = true;
-    } else if (widget.event.startAt.hour >= 12 && widget.event.endAt.hour >= 12) {
+    } else if (widget.event.startAt.hour >= 12 &&
+        widget.event.endAt.hour >= 12) {
       isBothAMOrPM = true;
     }
   }
@@ -102,12 +103,15 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
   }
 
   void _setDisplayedDateTime() {
-    displayedDateTime =
-        dateFormat.format(event.startAt) + ' ' + startTimeFormat.format(event.startAt);
+    displayedDateTime = dateFormat.format(event.startAt) +
+        ' ' +
+        startTimeFormat.format(event.startAt);
 
     if (event.range != EventType.day) {
-      displayedDateTime +=
-          ' ~\n' + dateFormat.format(event.endAt) + ' ' + endTimeFormat.format(event.endAt);
+      displayedDateTime += ' ~\n' +
+          dateFormat.format(event.endAt) +
+          ' ' +
+          endTimeFormat.format(event.endAt);
     } else {
       displayedDateTime += ' - ' + endTimeFormat.format(event.endAt);
     }
@@ -137,17 +141,16 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
                     ListTile(
                       // icon for description
                       leading: Icon(Icons.comment_outlined),
-                      title: Text(
-                          widget.event.description.toString() == 'null'
-                              ? ''
-                              : widget.event.description.toString()),
+                      title: Text(widget.event.description.toString() == 'null'
+                          ? ''
+                          : widget.event.description.toString()),
                       // subtitle: Text('설명'),
                       onTap: () {},
                     ),
                     ListTile(
                       leading: Icon(Icons.flag),
-                      title: Text(
-                          '우선순위' + ' ' + widget.event.priority.toString()),
+                      title:
+                          Text('우선순위' + ' ' + widget.event.priority.toString()),
                       // subtitle: 'subtitle',
                       onTap: () {},
                     ),
@@ -254,39 +257,30 @@ class _CustomEventSheetState extends State<CustomEventSheet> {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          //title: Text('삭제 확인'),
-          content: Text('정말로 삭제하시겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text('취소'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-                var resp =
-                    await MainRequest().deleteEvent(widget.event.eventId);
+        return CustomAlertDialog(
+          title: '일정을 삭제합니다.',
+          content: '정말로 삭제하시겠습니까?',
+          onCancel: () {
+            Navigator.of(context).pop();
+          },
+          onAccept: () async {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+            var resp = await MainRequest().deleteEvent(widget.event.eventId);
 
-                if (resp.statusCode == 200) {
-                  // delete event from dataEvents
-                  String dateKey = DateFormat('yyyy-MM-dd').format(widget.event.startAt);
-                  widget.display?.removeWhere((element) => element.eventId == widget.event.eventId);
-                  widget.onEventEdited(widget.event.eventId);
-                }
+            if (resp.statusCode == 200) {
+              // delete event from dataEvents
+              String dateKey =
+                  DateFormat('yyyy-MM-dd').format(widget.event.startAt);
+              widget.display?.removeWhere(
+                  (element) => element.eventId == widget.event.eventId);
+              widget.onEventEdited(widget.event.eventId);
+            }
 
-                widget.showDaysEventsModal(
-                    widget.parentContext, widget.display);
-              },
-              child: Text(
-                '삭제',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
+            widget.showDaysEventsModal(widget.parentContext, widget.display);
+          },
+          cancelButtonText: '취소',
+          acceptButtonText: '삭제',
         );
       },
     );

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile_client/common/component/custom_alert_dialog.dart';
 import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/common/component/custom_divider.dart';
 import 'package:mobile_client/common/component/plan_badge.dart';
@@ -126,6 +127,21 @@ class _PreferenceViewState extends State<PreferenceView> {
     }
   }
 
+  void _showCustomAlertDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CustomAlertDialog(
+          title: 'title',
+          content: 'context',
+          onAccept: () {},
+          onCancel: () {},
+        );
+      },
+    );
+  }
+
+  // TODO. deperecated
   void _showAlertDialog(BuildContext context) {
     AlertDialog alert = AlertDialog(
       title: Text('로그아웃'),
@@ -208,7 +224,30 @@ class _PreferenceViewState extends State<PreferenceView> {
                   ),
                   onSelected: (int value) {
                     if (value == 1) {
-                      _showAlertDialog(context);
+                      showDialog(
+                        context: context,
+                        barrierColor:
+                            ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.15),
+                        builder: (BuildContext context) {
+                          return CustomAlertDialog(
+                            title: '로그아웃 하시겠습니까?',
+                            content:
+                                '다른 기기에서 업데이트된 내용을 확인할 수 없으며,\n일정에 대한 알림을 받을 수 없습니다.',
+                            onCancel: () {
+                              Navigator.pop(context);
+                            },
+                            onAccept: () {
+                              widget.auth.signOut();
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (context) => RootView(auth: auth)),
+                              );
+                            },
+                            cancelButtonText: '취소',
+                            acceptButtonText: '로그아웃',
+                          );
+                        },
+                      );
                     }
                     // TODO. show alert dialog for '회원탈퇴'
                   },
