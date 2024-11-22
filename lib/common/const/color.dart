@@ -86,6 +86,22 @@ class ColorPalette {
       800: const Color(0xFF65052F),
     },
   );
+
+  static const MaterialColor CALENDAR_COLOR = const MaterialColor(
+    _blackPrimaryValue,
+    const <int, Color>{
+      50: const Color(0xFF003C97),
+      100: const Color(0xFFF15928),
+      200: const Color(0xFF17A2B8),
+      300: const Color(0xFFFFC107),
+      400: const Color(0xFFDC3545),
+      500: const Color(0xFFFF6F91),
+      600: const Color(0xFF28A745),
+      700: const Color(0xFF343A40),
+      800: const Color(0xFF8B4513),
+      900: const Color(0xFF6F42C1),
+    },
+  );
 }
 
 /* transparency percentages and their hex values

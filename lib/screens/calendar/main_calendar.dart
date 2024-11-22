@@ -136,9 +136,64 @@ class _MainCalendarState extends State<MainCalendar> {
       if (event.isEmpty == false) filtered.add(event);
     }
 
+    showModalBottomSheet(
+      context: parentContext,
+      barrierColor: ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.15),
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.95,
+          decoration: BoxDecoration(
+            color: ColorPalette.GRAY_COLOR[50]!,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(0),
+              topRight: Radius.circular(0),
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: Column(
+              children: [
+                CustomAppBar(
+                  leftWidget: IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  centerContent:
+                      DateFormat('M월 d일, EEEE', 'ko_KR').format(_selectedDay),
+                  rightWidget: IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: () {
+                      // TODO. Add Event at selectedDay
+                    },
+                  ),
+                ),
+                ...filtered.map((event) => ListTile(
+                      title: Text(event.summary),
+                      subtitle: Text(
+                        '${DateFormat('aa h:mm', 'ko_KR').format(event.startAt)} ~ ${DateFormat('aa h:mm', 'ko_KR').format(event.endAt)}',
+                      ),
+                      onTap: () {
+                        print(event);
+                        Navigator.pop(context);
+                        // TODO: Show event details
+                        _showEventDetailModal(
+                            context, event, parentContext, display);
+                      },
+                    )),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    /*
     return modal(
       parentContext,
-      DateFormat('M월 d일 (EE)', 'ko_KR').format(_selectedDay),
+      DateFormat('M월 d일, EEEE', 'ko_KR').format(_selectedDay),
       ListView(
         children: [
           for (DisplayEvent event in (filtered ?? []))
@@ -164,6 +219,7 @@ class _MainCalendarState extends State<MainCalendar> {
         ],
       ),
     );
+    */
   }
 
   void _showEventDetailModal(
@@ -503,8 +559,9 @@ class _MainCalendarState extends State<MainCalendar> {
                                       setState(() {
                                         currentCalendarId = selectedCalendarId;
                                       });
-                                      showSnackbar(context,
-                                          '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
+                                      // TODO. 캘린더 선택 시 보다 괜찮은 방법 생각하기
+                                      // showSnackbar(context,
+                                      //     '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
                                     },
                                     onSelectedCalendarDeleted:
                                         (int primaryCalendarId) {

@@ -43,6 +43,9 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
   // for deleting calendar
   bool isDeleteMode = false;
 
+  // for select calendar layout
+  bool selectedCalendarLayout = true;
+
   @override
   void initState() {
     super.initState();
@@ -50,37 +53,135 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
 
   @override
   Widget build(BuildContext context) {
+    for (var test in widget.calendarMap.values) {
+      print('test.colorSetId: ${test.colorSetId}');
+    }
+
     // TODO: implement build
     return SafeArea(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.75,
         child: Column(
           children: [
-            CustomAppBar(
-              leftWidget: Image.asset(
-                'asset/img/logo/logo.png',
-                height: 34,
+            // AppBar with shadow-appbar
+            Container(
+              decoration: BoxDecoration(
+                color: ColorPalette.GRAY_COLOR[50]!,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-              centerContent: Text(
-                'Calinify',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'Rockwell',
+              child: CustomAppBar(
+                leftWidget: Image.asset(
+                  'asset/img/logo/logo.png',
+                  height: 34,
                 ),
+                centerContent: Text(
+                  'Calinify',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Rockwell',
+                  ),
+                ),
+                rightWidget: IconButton(
+                  icon: Icon(isDeleteMode ? Icons.check : Icons.edit),
+                  onPressed: _toggleDeleteMode,
+                ),
+                gutterSize: 20.0,
               ),
-              rightWidget: IconButton(
-                icon: Icon(isDeleteMode ? Icons.check : Icons.edit),
-                onPressed: _toggleDeleteMode,
-              ),
-              gutterSize: 20.0,
             ),
             Expanded(
                 child: Column(
               children: [
+                // Select Calendar Layout
+                ListTile(
+                  leading: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Icon(
+                      Icons.calendar_view_day,
+                      color: ColorPalette.GRAY_COLOR[600]!,
+                    ),
+                  ),
+                  title: Text(
+                    '타임라인으로 보기',
+                    style: TextStyle(
+                      color: ColorPalette.GRAY_COLOR[600]!,
+                    ),
+                  ),
+                  onTap: () {
+                    // TODO.
+                  },
+                ),
+                ListTile(
+                  leading: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Icon(
+                      Icons.calendar_view_week,
+                      color: ColorPalette.GRAY_COLOR[600]!,
+                    ),
+                  ),
+                  title: Text(
+                    '주간 일정 보기',
+                    style: TextStyle(
+                      color: ColorPalette.GRAY_COLOR[600]!,
+                    ),
+                  ),
+                  onTap: () {
+                    // TODO.
+                  },
+                ),
+                ListTile(
+                  leading: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Icon(
+                      Icons.calendar_view_month,
+                      color: selectedCalendarLayout
+                          ? ColorPalette.PRIMARY_COLOR[300]!
+                          : ColorPalette.GRAY_COLOR[600]!,
+                    ),
+                  ),
+                  title: Text(
+                    '월간 일정 보기',
+                    style: TextStyle(
+                      color: selectedCalendarLayout
+                          ? ColorPalette.PRIMARY_COLOR[300]!
+                          : ColorPalette.GRAY_COLOR[600]!,
+                    ),
+                  ),
+                  tileColor: selectedCalendarLayout
+                      ? ColorPalette.PRIMARY_COLOR[400]!.withOpacity(0.1)
+                      : Colors.transparent,
+                  onTap: () {
+                    // TODO.
+                  },
+                ),
+                // Divider with padding
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Divider(
+                    thickness: 1.0,
+                    color: ColorPalette.GRAY_COLOR[100]!,
+                    height: 0,
+                  ),
+                ),
+                // List of Calendars
                 for (var cal in widget.calendarMap.values)
                   containerList(cal, widget.colorMap),
-                // Spacer(),
+                // Divider with padding
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Divider(
+                    thickness: 1.0,
+                    color: ColorPalette.GRAY_COLOR[100]!,
+                    height: 0,
+                  ),
+                ),
+                // Add Calendar Tile
                 Container(
                   decoration: BoxDecoration(
                     color: isDeleteMode ? Colors.red : null,
@@ -163,7 +264,10 @@ class _CustomSidebarModalState extends State<CustomSidebarModal> {
               onChanged: (bool? value) {}),
       title: Text(calendar.title),
       trailing: IconButton(
-        icon: const Icon(Icons.more_vert),
+        icon: Icon(
+          Icons.more_horiz,
+          color: ColorPalette.GRAY_COLOR[400]!,
+        ),
         onPressed: () {
           editModal(context, calendar);
         },
