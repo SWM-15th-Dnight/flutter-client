@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
@@ -6,7 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_client/common/component/custom_app_bar.dart';
 import 'package:mobile_client/common/component/loading_indicators.dart';
@@ -15,6 +18,7 @@ import 'package:mobile_client/screens/root/root_view.dart';
 import 'package:mobile_client/screens/signIn/sign_in_view.dart';
 import 'package:mobile_client/services/dio_client.dart';
 import 'package:mobile_client/services/main_request.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -34,6 +38,8 @@ import '../../widget/custom_speed_dial.dart';
 import '../preference/preference_view.dart';
 import '../../entities/color_map.dart';
 import '../../widget/modal.dart';
+
+GlobalKey _calendarKey = GlobalKey();
 
 class MainCalendar extends StatefulWidget {
   final FBAuthService auth;
@@ -382,6 +388,35 @@ class _MainCalendarState extends State<MainCalendar> {
     _addEvent(_event.data);
   }
 
+  Future<void> _captureCalendar() async {
+    try {
+      RenderRepaintBoundary boundary = _calendarKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData != null) {
+        Uint8List pngBytes = byteData.buffer.asUint8List();
+
+        final result = await ImageGallerySaver.saveImage(
+          pngBytes,
+          quality: 80,
+          name: 'calinify_${DateTime.now().toIso8601String()}',
+        );
+
+        if (result['isSuccess']) {
+          showSnackbar(context, '캘린더 캡처 이미지가 저장 되었습니다.');
+        } else {
+          showSnackbar(context, '캘린더 캡처 이미지 저장에 실패했습니다.');
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!isGetEventListDone) {
@@ -442,155 +477,194 @@ class _MainCalendarState extends State<MainCalendar> {
       body: SafeArea(
         child: Stack(
           children: [
-            Column(
-              children: [
-                // TODO. image
-                CustomAppBar(
-                  leftWidget: IconButton(
-                    icon: Icon(Icons.menu),
-                    onPressed: () {
-                      showModalSideSheet(
-                        context: context,
-                        builder: (context) {
-                          return CustomSidebarModal(
-                            colorMap: colorMap,
-                            calendarMap: calendarMap,
-                            currentCalendarId: currentCalendarId,
-                            onCalendarSelected: (int selectedCalendarId) {
-                              print(
-                                  '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
-                              setState(() {
-                                currentCalendarId = selectedCalendarId;
-                              });
-                              showSnackbar(context,
-                                  '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
+            RepaintBoundary(
+              key: _calendarKey,
+              child: Column(
+                children: [
+                  Container(
+                    color: ColorPalette.GRAY_COLOR[50]!,
+                    child: CustomAppBar(
+                      leftWidget: Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.menu),
+                            onPressed: () {
+                              showModalSideSheet(
+                                context: context,
+                                builder: (context) {
+                                  return CustomSidebarModal(
+                                    colorMap: colorMap,
+                                    calendarMap: calendarMap,
+                                    currentCalendarId: currentCalendarId,
+                                    onCalendarSelected:
+                                        (int selectedCalendarId) {
+                                      print(
+                                          '(MainCalendar) Selected calendarId: ${selectedCalendarId}');
+                                      setState(() {
+                                        currentCalendarId = selectedCalendarId;
+                                      });
+                                      showSnackbar(context,
+                                          '현재 ${currentCalendarId}번 캘린더가 선택되었습니다!');
+                                    },
+                                    onSelectedCalendarDeleted:
+                                        (int primaryCalendarId) {
+                                      setState(() {
+                                        currentCalendarId = primaryCalendarId;
+                                      });
+                                    },
+                                    onCalendarCreated: getCalendarMap,
+                                  );
+                                },
+                              );
                             },
-                            onSelectedCalendarDeleted: (int primaryCalendarId) {
-                              setState(() {
-                                currentCalendarId = primaryCalendarId;
-                              });
-                            },
-                            onCalendarCreated: getCalendarMap,
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  centerContent: _focusedDay,
-                  rightWidget: IconButton(
-                    icon: Icon(Icons.account_circle),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => PreferenceView(
-                            auth: widget.auth,
-                            currentCalendar: calendarMap[currentCalendarId]!,
-                            onCalendarModified: getCalendarMap,
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: TableCalendar(
-                    locale: 'ko_KR',
-                    // notice. TableCalendar should be in Container
-                    shouldFillViewport: true,
-                    focusedDay: _focusedDay,
-                    firstDay: DateTime.utc(1800, 1, 1),
-                    lastDay: DateTime.utc(3000, 1, 1),
-                    onPageChanged: (focusedDay) {
-                      _onPageChanged(_selectedDay, focusedDay);
-                    },
-                    daysOfWeekHeight: 30.0,
-                    // TODO. WeekDays' Style
-                    daysOfWeekStyle: DaysOfWeekStyle(),
-                    calendarStyle: CalendarStyle(
-                      defaultTextStyle: TextStyle(color: Colors.black),
-                      //weekendTextStyle: TextStyle(color: Colors.red),
-                      cellMargin: EdgeInsets.symmetric(vertical: 12.0),
-                    ),
-                    headerVisible: false,
-                    headerStyle: HeaderStyle(
-                      titleCentered: true,
-                      // delete calendar view mode button
-                      // ex. 2 Weeks
-                      formatButtonVisible: false,
-                      titleTextStyle: TextStyle(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 16.0,
-                        color: ColorPalette.PRIMARY_COLOR[400],
+                          // Spacer IconButton
+                          IconButton(
+                            icon: Icon(Icons.menu, color: Colors.transparent),
+                            onPressed: null,
+                          ),
+                        ],
                       ),
-                      leftChevronVisible: false,
-                      rightChevronVisible: false,
-                    ),
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    onDaySelected: (selectedDay, focusedDay) {
-                      print('[main_calendar.dart] onDaySelected');
-                      setState(() {
-                        print(
-                            'selectdDay (1): ${_selectedDay}, ${selectedDay}');
-                        if (_selectedDay == selectedDay) {
-                          print('double tab!');
-                          showDaysEventsModal(
-                              context, display[onlyDate(_selectedDay)]);
-                        }
-                        _selectedDay = selectedDay;
-                        _focusedDay = focusedDay;
-                        print('selectdDay (2): ${_selectedDay} ${selectedDay}');
-                      });
-                    },
-                    onDayLongPressed: (selectedDay, focusedDay) {
-                      print('[main_calendar.dart] onDayLongPressed');
-                      setState(() {
-                        print(
-                            'selectdDay (1): ${_selectedDay}, ${selectedDay}');
-
-                        _selectedDay = selectedDay;
-                        _focusedDay = focusedDay;
-                        showDaysEventsModal(
-                            context, display[onlyDate(_selectedDay)]);
-
-                        print('selectdDay (2): ${_selectedDay} ${selectedDay}');
-                      });
-                    },
-                    eventLoader: (day) => display[day] ?? [],
-                    calendarBuilders: CalendarBuilders(
-                        defaultBuilder: CustomCalendarBuilder,
-                        outsideBuilder: (context, day, focusedDay) {
-                          return CustomCalendarBuilder(
-                            context,
-                            day,
-                            focusedDay,
-                            dayColor: Color(0XFFAAAAAA),
-                          );
-                        },
-                        todayBuilder: CustomCalendarBuilder,
-                        selectedBuilder: CustomCalendarBuilder,
-                        markerBuilder: (context, day, focusedDay) {
-                          return (Column(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  //color: Colors.yellow.withOpacity(0.3),
-                                  child: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                    return EventMonthViewCell(
-                                        context,
-                                        constraints,
-                                        display[day],
-                                        day,
-                                        colorMap);
-                                  }),
+                      centerContent: _focusedDay,
+                      rightWidget: Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.save_outlined),
+                            onPressed: () async {
+                              if (await Permission.storage
+                                  .request()
+                                  .isGranted) {
+                                _captureCalendar();
+                              } else {
+                                showSnackbar(context, '저장소 권한을 허용해주세요.');
+                              }
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.account_circle),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => PreferenceView(
+                                    auth: widget.auth,
+                                    currentCalendar:
+                                        calendarMap[currentCalendarId]!,
+                                    onCalendarModified: getCalendarMap,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ));
-                        }),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: Container(
+                      color: ColorPalette.GRAY_COLOR[50]!,
+                      child: TableCalendar(
+                        locale: 'ko_KR',
+                        // notice. TableCalendar should be in Container
+                        shouldFillViewport: true,
+                        focusedDay: _focusedDay,
+                        firstDay: DateTime.utc(1800, 1, 1),
+                        lastDay: DateTime.utc(3000, 1, 1),
+                        onPageChanged: (focusedDay) {
+                          _onPageChanged(_selectedDay, focusedDay);
+                        },
+                        daysOfWeekHeight: 30.0,
+                        // TODO. WeekDays' Style
+                        daysOfWeekStyle: DaysOfWeekStyle(),
+                        calendarStyle: CalendarStyle(
+                          defaultTextStyle: TextStyle(color: Colors.black),
+                          //weekendTextStyle: TextStyle(color: Colors.red),
+                          cellMargin: EdgeInsets.symmetric(vertical: 12.0),
+                        ),
+                        headerVisible: false,
+                        headerStyle: HeaderStyle(
+                          titleCentered: true,
+                          // delete calendar view mode button
+                          // ex. 2 Weeks
+                          formatButtonVisible: false,
+                          titleTextStyle: TextStyle(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 16.0,
+                            color: ColorPalette.PRIMARY_COLOR[400],
+                          ),
+                          leftChevronVisible: false,
+                          rightChevronVisible: false,
+                        ),
+                        selectedDayPredicate: (day) =>
+                            isSameDay(_selectedDay, day),
+                        onDaySelected: (selectedDay, focusedDay) {
+                          print('[main_calendar.dart] onDaySelected');
+                          setState(() {
+                            print(
+                                'selectdDay (1): ${_selectedDay}, ${selectedDay}');
+                            if (_selectedDay == selectedDay) {
+                              print('double tab!');
+                              showDaysEventsModal(
+                                  context, display[onlyDate(_selectedDay)]);
+                            }
+                            _selectedDay = selectedDay;
+                            _focusedDay = focusedDay;
+                            print(
+                                'selectdDay (2): ${_selectedDay} ${selectedDay}');
+                          });
+                        },
+                        onDayLongPressed: (selectedDay, focusedDay) {
+                          print('[main_calendar.dart] onDayLongPressed');
+                          setState(() {
+                            print(
+                                'selectdDay (1): ${_selectedDay}, ${selectedDay}');
+
+                            _selectedDay = selectedDay;
+                            _focusedDay = focusedDay;
+                            showDaysEventsModal(
+                                context, display[onlyDate(_selectedDay)]);
+
+                            print(
+                                'selectdDay (2): ${_selectedDay} ${selectedDay}');
+                          });
+                        },
+                        eventLoader: (day) => display[day] ?? [],
+                        calendarBuilders: CalendarBuilders(
+                            defaultBuilder: CustomCalendarBuilder,
+                            outsideBuilder: (context, day, focusedDay) {
+                              return CustomCalendarBuilder(
+                                context,
+                                day,
+                                focusedDay,
+                                dayColor: Color(0XFFAAAAAA),
+                              );
+                            },
+                            todayBuilder: CustomCalendarBuilder,
+                            selectedBuilder: CustomCalendarBuilder,
+                            markerBuilder: (context, day, focusedDay) {
+                              return (Column(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      //color: Colors.yellow.withOpacity(0.3),
+                                      child: LayoutBuilder(
+                                          builder: (context, constraints) {
+                                        return EventMonthViewCell(
+                                            context,
+                                            constraints,
+                                            display[day],
+                                            day,
+                                            colorMap);
+                                      }),
+                                    ),
+                                  ),
+                                ],
+                              ));
+                            }),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             // TODO.
             //FormBottomSheet(),
