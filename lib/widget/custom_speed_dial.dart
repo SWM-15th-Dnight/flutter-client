@@ -147,6 +147,7 @@ class CustomSpeedDial extends ConsumerWidget {
                 });
           } else {
             print('이미지 업로드 실패: ${response.data}');
+            showSnackbar(context, '이미지 업로드 중 오류가 발생했습니다.');
             // Hide loading indicator
             Navigator.of(context).pop();
           }
@@ -155,6 +156,13 @@ class CustomSpeedDial extends ConsumerWidget {
           print('이미지 업로드 실패: ${e.response}');
           print('이미지 업로드 실패: ${e.response?.data}');
           print('이미지 업로드 실패: ${e.response?.statusCode}');
+
+          if (e.response?.statusCode == 422) {
+            showSnackbar(context, '일정 데이터 포착 실패, 다시 시도해주세요.');
+          } else {
+            showSnackbar(context, '이미지 업로드 중 오류가 발생했습니다.');
+          }
+
           // Hide loading indicator
           Navigator.of(context).pop();
         }
